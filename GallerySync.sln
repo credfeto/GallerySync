@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeClient", "HomeClient\HomeClient.csproj", "{BA85614C-6109-47A8-8D01-7E851C8100FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanner", "Scanner\Scanner.csproj", "{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectModel", "ObjectModel\ObjectModel.csproj", "{7A5F8CCB-3D18-4FB0-AEE7-3037B8000EBC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA85614C-6109-47A8-8D01-7E851C8100FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA85614C-6109-47A8-8D01-7E851C8100FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA85614C-6109-47A8-8D01-7E851C8100FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA85614C-6109-47A8-8D01-7E851C8100FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A5F8CCB-3D18-4FB0-AEE7-3037B8000EBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A5F8CCB-3D18-4FB0-AEE7-3037B8000EBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A5F8CCB-3D18-4FB0-AEE7-3037B8000EBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A5F8CCB-3D18-4FB0-AEE7-3037B8000EBC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
