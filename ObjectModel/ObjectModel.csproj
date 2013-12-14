@@ -42,6 +42,7 @@
     <Compile Include="ComponentFile.cs" />
     <Compile Include="Photo.cs" />
     <Compile Include="PhotoDeployment.cs" />
+    <Compile Include="PhotoMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

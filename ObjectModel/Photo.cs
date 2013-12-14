@@ -17,5 +17,7 @@ namespace Twaddle.Gallery.ObjectModel
         public string ImageExtension { get; set; }
 
         public List<ComponentFile> Files { get; set; }
+
+        public List<PhotoMetadata> Metadata { get; set; }
     }
 }

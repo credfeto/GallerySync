@@ -40,5 +40,14 @@ namespace OutputBuilderClient.Properties {
                 return ((string)(this["DatabaseInputFolder"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("I:\\Photos\\Sorted")]
+        public string RootFolder {
+            get {
+                return ((string)(this["RootFolder"]));
+            }
+        }
     }
 }
