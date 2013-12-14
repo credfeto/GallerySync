@@ -19,5 +19,15 @@ namespace Twaddle.Gallery.ObjectModel
         public List<ComponentFile> Files { get; set; }
 
         public List<PhotoMetadata> Metadata { get; set; }
+
+        public List<ImageSize> ImageSizes { get; set; }
+    }
+
+    [Serializable]
+    [DebuggerDisplay("Width: {Width}, Height:{Height}")]
+    public class ImageSize
+    {
+        int Width { get; set; }
+        int Height { get; set; }
     }
 }

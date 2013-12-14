@@ -11,5 +11,26 @@
     <Setting Name="RootFolder" Type="System.String" Scope="Application">
       <Value Profile="(Default)">I:\Photos\Sorted</Value>
     </Setting>
+    <Setting Name="ImageMaximumDimensions" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">400,600,800,1024,1600</Value>
+    </Setting>
+    <Setting Name="ThumbnailSize" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">150</Value>
+    </Setting>
+    <Setting Name="ImageMagickConvertExecutable" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">D:\Utils\imageprocessing\convert.exe</Value>
+    </Setting>
+    <Setting Name="DCRAWExecutable" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">D:\Utils\imageprocessing\dcraw.exe</Value>
+    </Setting>
+    <Setting Name="ImagesOutputPath" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">E:\Gallery\Images\Output</Value>
+    </Setting>
+    <Setting Name="JpegOutputQuality" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">70</Value>
+    </Setting>
+    <Setting Name="WatermarkImage" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">D:\Utils\Gallery\watermark.png</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

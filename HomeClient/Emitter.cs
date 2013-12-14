@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using FileNaming;
 using Raven.Client.Embedded;
 using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
@@ -11,16 +12,6 @@ namespace HomeClient
 {
     public sealed class Emitter : IFileEmitter
     {
-        private const string Replacementchar = "-";
-
-        private static readonly Regex AcceptableUrlCharacters = new Regex(@"[^\w\-/]",
-                                                                          RegexOptions.Compiled |
-                                                                          RegexOptions.CultureInvariant);
-
-        private static readonly Regex NoRepeatingHyphens = new Regex(@"(\-{2,})",
-                                                                     RegexOptions.Compiled |
-                                                                     RegexOptions.CultureInvariant);
-
         private readonly EmbeddableDocumentStore _documentStore;
 
         public Emitter(EmbeddableDocumentStore documentStore)
@@ -49,7 +40,7 @@ namespace HomeClient
 
         private Photo CreatePhotoRecord(FileEntry entry, string basePath)
         {
-            string urlSafePath = BuildUrlSafePath(basePath);
+            string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
             var item = new Photo
                 {
@@ -70,15 +61,6 @@ namespace HomeClient
             Console.WriteLine("Found: {0}", basePath);
 
             return item;
-        }
-
-        private static string BuildUrlSafePath(string basePath)
-        {
-            return
-                NoRepeatingHyphens.Replace(
-                    AcceptableUrlCharacters.Replace(basePath.Trim().Replace(@"\", @"/"), Replacementchar),
-                    Replacementchar)
-                                  .TrimEnd(Replacementchar.ToCharArray()).ToLowerInvariant();
         }
 
         private void AppendComponentFile(Photo item, string fileName)

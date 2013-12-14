@@ -96,6 +96,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FileNaming\FileNaming.csproj">
+      <Project>{15f89a2f-bb27-4be5-ac83-6353a7295d36}</Project>
+      <Name>FileNaming</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ObjectModel\ObjectModel.csproj">
       <Project>{7a5f8ccb-3d18-4fb0-aee7-3037b8000ebc}</Project>
       <Name>ObjectModel</Name>
