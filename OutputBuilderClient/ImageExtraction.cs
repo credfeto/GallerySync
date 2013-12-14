@@ -95,9 +95,7 @@ namespace OutputBuilderClient
 
                             string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
                                                                   HashNaming.PathifyHash(sourcePhoto.PathHash),
-                                                                  string.Format("{0}-{1}x{2}.jpg",
-                                                                                Path.GetFileName(sourcePhoto.BasePath),
-                                                                                resized.Width, resized.Height));
+                                                                  IndividualResizeFileName(sourcePhoto, resized));
 
                             WriteImage(resizedFileName, resizedBytes);
                         }
@@ -110,6 +108,15 @@ namespace OutputBuilderClient
             }
 
             return sizes;
+        }
+
+        private static string IndividualResizeFileName(Photo sourcePhoto, Image resized)
+        {
+            return UrlNaming.BuildUrlSafePath(
+                string.Format("{0}-{1}x{2}",
+                              Path.GetFileName(
+                                  sourcePhoto.BasePath),
+                              resized.Width, resized.Height)) + ".jpg";
         }
 
         /// <summary>
@@ -200,7 +207,7 @@ namespace OutputBuilderClient
 
             var converters = new Dictionary<string, IImageConverter>();
 
-            Assembly ass = typeof(IImageConverter).Assembly;
+            Assembly ass = typeof (IImageConverter).Assembly;
 
             Type[] types = ass.GetTypes();
             foreach (Type t in types.Where(t => ImplementsInterface(t, typeof (IImageConverter))))
@@ -571,7 +578,7 @@ namespace OutputBuilderClient
                 return;
             }
 
-            var folder = Path.GetDirectoryName(fileName);
+            string folder = Path.GetDirectoryName(fileName);
 
             if (!Directory.Exists(folder))
             {
@@ -596,7 +603,6 @@ namespace OutputBuilderClient
             }
             catch
             {
-                
             }
         }
     }
