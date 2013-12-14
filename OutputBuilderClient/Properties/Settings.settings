@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OutputBuilderClient.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="DatabaseOutputFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">I:\Database\Current</Value>
+    </Setting>
+    <Setting Name="DatabaseInputFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">I:\Database\Latest</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

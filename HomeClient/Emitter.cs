@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -55,7 +56,8 @@ namespace HomeClient
                     BasePath = basePath,
                     UrlSafePath = urlSafePath,
                     PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
-                    ImageExtension = Path.GetExtension(entry.LocalFileName)
+                    ImageExtension = Path.GetExtension(entry.LocalFileName), Files = new List<ComponentFile>()
+                    
                 };
 
             AppendComponentFile(item, Path.Combine(entry.Folder, entry.LocalFileName));
@@ -74,9 +76,9 @@ namespace HomeClient
         {
             return
                 NoRepeatingHyphens.Replace(
-                    AcceptableUrlCharacters.Replace(basePath.Trim(), Replacementchar),
+                    AcceptableUrlCharacters.Replace(basePath.Trim().Replace(@"\", @"/"), Replacementchar),
                     Replacementchar)
-                                  .Replace(@"\", @"/").TrimEnd(Replacementchar.ToCharArray());
+                                  .TrimEnd(Replacementchar.ToCharArray()).ToLowerInvariant();
         }
 
         private void AppendComponentFile(Photo item, string fileName)
@@ -89,7 +91,7 @@ namespace HomeClient
                     Hash = Hasher.HashFile(fileName)
                 };
 
-            item.Files.Add(extension.ToLowerInvariant(), file);
+            item.Files.Add(file);
         }
     }
 }
