@@ -7,8 +7,9 @@ using ExifLib;
 using OutputBuilderClient.Properties;
 using TagLib;
 using TagLib.Image;
+using TagLib.Xmp;
 using Twaddle.Gallery.ObjectModel;
-using File = TagLib.File;
+using File = System.IO.File;
 
 namespace OutputBuilderClient
 {
@@ -18,15 +19,12 @@ namespace OutputBuilderClient
         {
             string rootFolder = Settings.Default.RootFolder;
 
-            ComponentFile xmpFile =
-                sourcePhoto.Files.FirstOrDefault(
-                    IsXmp);
 
             var metadata = new List<PhotoMetadata>();
 
-            if (xmpFile != null)
+            if (ExtractXmpMetadata(sourcePhoto, metadata, rootFolder))
             {
-                ExtractMetadataFromXmp(metadata, Path.Combine(rootFolder, sourcePhoto.BasePath + xmpFile.Extension));
+                return metadata;
             }
 
             foreach (
@@ -44,16 +42,63 @@ namespace OutputBuilderClient
             return metadata;
         }
 
+        private static bool ExtractXmpMetadata(Photo sourcePhoto, List<PhotoMetadata> metadata, string rootFolder)
+        {
+            ComponentFile xmpFile =
+                sourcePhoto.Files.FirstOrDefault(
+                    IsXmp);
+
+            if (xmpFile != null)            
+            {
+                var sidecarFileName = Path.Combine(rootFolder,sourcePhoto.BasePath + xmpFile.Extension);
+                ExtractMetadataFromXmpSideCar(metadata, sidecarFileName );
+                if (metadata.Any())
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                string xmpFileName = Path.Combine(rootFolder, sourcePhoto.BasePath + ".xmp");
+                if (File.Exists(xmpFileName))
+                {
+                    ExtractMetadataFromXmpSideCar(metadata, xmpFileName);
+                    if (metadata.Any())
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public static bool IsXmp(ComponentFile candidate)
         {
             return StringComparer.InvariantCulture.Equals(".xmp", candidate.Extension);
         }
 
+        public static void ExtractMetadataFromXmpSideCar(List<PhotoMetadata> metadata, string fileName)
+        {
+            string xmp = File.ReadAllText(fileName);
+
+            XmpTag tag = null;
+            try
+            {
+                tag = new XmpTag(xmp, null);
+            }
+            catch (Exception)
+            {
+                return ;
+            }
+
+            ExtractXmpTagCommon(metadata, tag);
+        }
         public static void ExtractMetadataFromXmp(List<PhotoMetadata> metadata, string fileName)
         {
             try
             {
-                var file = File.Create(fileName) as TagLib.Image.File;
+                var file = TagLib.File.Create(fileName) as TagLib.Image.File;
                 if (file == null)
                 {
                     return;
@@ -62,69 +107,74 @@ namespace OutputBuilderClient
                 var tag = file.GetTag(TagTypes.XMP) as ImageTag;
                 if (tag != null && !tag.IsEmpty)
                 {
-                    if (!String.IsNullOrWhiteSpace(tag.Comment))
-                    {
-                        AppendMetadata(metadata, MetadataNames.Comment, tag.Comment);
-                    }
-                    string keywords = String.Join(",", tag.Keywords);
-                    if (!String.IsNullOrWhiteSpace(keywords))
-                    {
-                        AppendMetadata(metadata, MetadataNames.Keywords, keywords);
-                    }
-
-                    AppendMetadata(metadata, MetadataNames.Rating, tag.Rating.GetValueOrDefault(1));
-
-                    if (tag.DateTime.HasValue)
-                    {
-                        AppendMetadata(metadata, MetadataNames.DateTaken, tag.DateTime.Value);
-                    }
-                    AppendMetadata(metadata, MetadataNames.Orientation, tag.Orientation.ToString());
-                    if (tag.Latitude.HasValue && tag.Longitude.HasValue)
-                    {
-                        AppendMetadata(metadata, MetadataNames.Latitude, tag.Latitude.Value);
-                        AppendMetadata(metadata, MetadataNames.Longitude, tag.Longitude.Value);
-                    }
-                    if (tag.Altitude.HasValue)
-                    {
-                        AppendMetadata(metadata, MetadataNames.Altitude, tag.Altitude.Value);
-                    }
-                    if (tag.ExposureTime.HasValue)
-                    {
-                        AppendMetadata(metadata, MetadataNames.ExposureTime, tag.ExposureTime.Value);
-                    }
-                    if (tag.FNumber.HasValue)
-                    {
-                        AppendMetadata(metadata, MetadataNames.FNumber, String.Format("F/{0}", tag.FNumber.Value));
-                    }
-                    if (tag.ISOSpeedRatings.HasValue)
-                    {
-                        AppendMetadata(metadata, MetadataNames.ISOSpeed, tag.ISOSpeedRatings.Value);
-                    }
-                    if (tag.FocalLength.HasValue)
-                    {
-                        AppendMetadata(metadata, MetadataNames.FocalLength, tag.FocalLength.Value);
-                    }
-                    else if (tag.FocalLengthIn35mmFilm.HasValue)
-                    {
-                        AppendMetadata(metadata, MetadataNames.FocalLength, tag.FocalLengthIn35mmFilm.Value);
-                    }
-                    if (!String.IsNullOrWhiteSpace(tag.Make))
-                    {
-                        AppendMetadata(metadata, MetadataNames.CameraManufacturer, tag.Make);
-                    }
-                    if (!String.IsNullOrWhiteSpace(tag.Model))
-                    {
-                        AppendMetadata(metadata, MetadataNames.CameraModel, tag.Model);
-                    }
-
-                    if (!String.IsNullOrWhiteSpace(tag.Creator))
-                    {
-                        AppendMetadata(metadata, MetadataNames.Photographer, tag.Creator);
-                    }
+                    ExtractXmpTagCommon(metadata, tag);
                 }
             }
             catch (Exception)
             {
+            }
+        }
+
+        private static void ExtractXmpTagCommon(List<PhotoMetadata> metadata, ImageTag tag)
+        {
+            if (!String.IsNullOrWhiteSpace(tag.Comment))
+            {
+                AppendMetadata(metadata, MetadataNames.Comment, tag.Comment);
+            }
+            string keywords = String.Join(",", tag.Keywords);
+            if (!String.IsNullOrWhiteSpace(keywords))
+            {
+                AppendMetadata(metadata, MetadataNames.Keywords, keywords);
+            }
+
+            AppendMetadata(metadata, MetadataNames.Rating, tag.Rating.GetValueOrDefault(1));
+
+            if (tag.DateTime.HasValue)
+            {
+                AppendMetadata(metadata, MetadataNames.DateTaken, tag.DateTime.Value);
+            }
+            AppendMetadata(metadata, MetadataNames.Orientation, tag.Orientation.ToString());
+            if (tag.Latitude.HasValue && tag.Longitude.HasValue)
+            {
+                AppendMetadata(metadata, MetadataNames.Latitude, tag.Latitude.Value);
+                AppendMetadata(metadata, MetadataNames.Longitude, tag.Longitude.Value);
+            }
+            if (tag.Altitude.HasValue)
+            {
+                AppendMetadata(metadata, MetadataNames.Altitude, tag.Altitude.Value);
+            }
+            if (tag.ExposureTime.HasValue)
+            {
+                AppendMetadata(metadata, MetadataNames.ExposureTime, tag.ExposureTime.Value);
+            }
+            if (tag.FNumber.HasValue)
+            {
+                AppendMetadata(metadata, MetadataNames.FNumber, String.Format("F/{0}", tag.FNumber.Value));
+            }
+            if (tag.ISOSpeedRatings.HasValue)
+            {
+                AppendMetadata(metadata, MetadataNames.ISOSpeed, tag.ISOSpeedRatings.Value);
+            }
+            if (tag.FocalLength.HasValue)
+            {
+                AppendMetadata(metadata, MetadataNames.FocalLength, tag.FocalLength.Value);
+            }
+            else if (tag.FocalLengthIn35mmFilm.HasValue)
+            {
+                AppendMetadata(metadata, MetadataNames.FocalLength, tag.FocalLengthIn35mmFilm.Value);
+            }
+            if (!String.IsNullOrWhiteSpace(tag.Make))
+            {
+                AppendMetadata(metadata, MetadataNames.CameraManufacturer, tag.Make);
+            }
+            if (!String.IsNullOrWhiteSpace(tag.Model))
+            {
+                AppendMetadata(metadata, MetadataNames.CameraModel, tag.Model);
+            }
+
+            if (!String.IsNullOrWhiteSpace(tag.Creator))
+            {
+                AppendMetadata(metadata, MetadataNames.Photographer, tag.Creator);
             }
         }
 

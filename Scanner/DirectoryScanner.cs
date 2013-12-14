@@ -89,19 +89,22 @@ namespace Twaddle.Directory.Scanner
 
             List<string> scores = new[]
                 {
+                    ".xmp",
                     ".jpg",
                     ".cr2",
                     ".mrw",
                     ".rw2",
                     ".tif",
                     ".tiff",
-                    ".psd",
+                    ".psd"
                 }.ToList();
 
             var grouped = from record in raw
-                          where scores.Contains(Path.GetExtension(record).ToLowerInvariant())
+                          let extension = Path.GetExtension(record).ToLowerInvariant()             
+                          where scores.Contains(extension) 
                           group record by Path.GetFileNameWithoutExtension(record).ToLowerInvariant()
                           into matches
+                          where matches.Any(match => !StringComparer.InvariantCultureIgnoreCase.Equals(Path.GetExtension(match), ".xmp"))
                           select new
                               {
                                   BaseName = matches.Key,
