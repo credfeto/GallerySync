@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using HomeClient.Properties;
 using Raven.Client.Embedded;
 using Twaddle.Directory.Scanner;
@@ -44,7 +45,24 @@ namespace HomeClient
 
             var emitter = new Emitter(documentStore);
 
-            long filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter);
+            var scores = new[]
+                {
+                    ".xmp",
+                    ".jpg",
+                    ".cr2",
+                    ".mrw",
+                    ".rw2",
+                    ".tif",
+                    ".tiff",
+                    ".psd"
+                };
+
+            var sidecarFiles = new[]
+                {
+                    ".xmp"
+                };
+
+            long filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
 
             Console.WriteLine("Files Found: {0}", filesFound);
         }

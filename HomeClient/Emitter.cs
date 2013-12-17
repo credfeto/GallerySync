@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using FileNaming;
+using Raven.Client;
 using Raven.Client.Embedded;
 using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
@@ -20,7 +22,7 @@ namespace HomeClient
         }
 
         public void FileFound(FileEntry entry)
-        {            
+        {
             string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
             Photo item = CreatePhotoRecord(entry, basePath);
@@ -30,10 +32,10 @@ namespace HomeClient
 
         private void Store(Photo photo)
         {
-            using (var session = _documentStore.OpenSession())
+            using (IDocumentSession session = _documentStore.OpenSession())
             {
                 session.Store(photo, photo.PathHash);
-                
+
                 session.SaveChanges();
             }
         }
@@ -42,38 +44,49 @@ namespace HomeClient
         {
             string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
+            var componentFiles = new List<ComponentFile>();
+
+            TaskFactory<ComponentFile> factory = Task<ComponentFile>.Factory;
+
+            Task<ComponentFile>[] tasks =
+                entry.AlternateFileNames.Concat(new[] {entry.LocalFileName})
+                     .Select(fileName => ReadComponentFile(factory, Path.Combine(entry.Folder, fileName)))
+                     .ToArray();
+
             var item = new Photo
                 {
                     BasePath = basePath,
                     UrlSafePath = urlSafePath,
                     PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
-                    ImageExtension = Path.GetExtension(entry.LocalFileName), Files = new List<ComponentFile>()
-                    
+                    ImageExtension = Path.GetExtension(entry.LocalFileName),
+                    Files = componentFiles
                 };
 
-            AppendComponentFile(item, Path.Combine(entry.Folder, entry.LocalFileName));
-
-            foreach (string fileName in entry.AlternateFileNames)
-            {
-                AppendComponentFile(item, Path.Combine(entry.Folder, fileName));
-            }
+            Task.WhenAll(tasks).ContinueWith(t => componentFiles.AddRange(t.Result)).Wait();
 
             Console.WriteLine("Found: {0}", basePath);
 
             return item;
         }
 
-        private void AppendComponentFile(Photo item, string fileName)
+        private static Task<ComponentFile> ReadComponentFile(TaskFactory<ComponentFile> factory, string fileName)
         {
-            string extension = Path.GetExtension(fileName);
+            return factory.StartNew(() => ReadComponentFIle2(fileName));
+        }
 
-            var file = new ComponentFile
+        private static ComponentFile ReadComponentFIle2(string fileName)
+        {
+            string hash = Hasher.HashFile(fileName);
+            var info = new FileInfo(fileName);
+            string extension = info.Extension.ToLowerInvariant();
+
+            return new ComponentFile
                 {
                     Extension = extension,
-                    Hash = Hasher.HashFile(fileName)
+                    Hash = hash,
+                    LastModified = info.LastWriteTimeUtc,
+                    FileSize = info.Length
                 };
-
-            item.Files.Add(file);
         }
     }
 }

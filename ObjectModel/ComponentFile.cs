@@ -10,5 +10,9 @@ namespace Twaddle.Gallery.ObjectModel
         public string Extension { get; set; }
 
         public string Hash { get; set; }
+
+        public DateTime LastModified { get; set; }
+
+        public long FileSize { get; set; }
     }
 }
