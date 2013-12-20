@@ -130,7 +130,9 @@ namespace Twaddle.Directory.Scanner
 
         private static bool IsSkipFolderName(string folder)
         {
-            return StringComparer.InvariantCultureIgnoreCase.Equals(folder, "Sort");
+            var badFolders = new[] {"Sort", ".SyncArchive", ".git", ".svn"};
+
+            return badFolders.Any(candidate => StringComparer.InvariantCultureIgnoreCase.Equals(folder, candidate));
         }
 
         private sealed class Context
