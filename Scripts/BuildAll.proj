@@ -17,11 +17,18 @@
       <SharedFolder>E:\Shared</SharedFolder>
     </PropertyGroup>
     <Delete Files="..\Gallery.zip" ContinueOnError="true"/>
+
+    <!-- Add the build utilities -->
+    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*"  WorkingDirectory="$(MSBuildProjectDirectory)\..\Utils"/>
+
+    <!-- Add the Searcher -->
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*"  WorkingDirectory="$(MSBuildProjectDirectory)\..\HomeClient\bin\Release"/>
+
+    <!-- Add the Output processor -->
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\OutputBuilderClient\bin\Release" />
 
-    <Delete Files="($SharedFolder)\Gallery.zip" ContinueOnError="true"/>
-    <Copy SourceFiles="$(OutputZip)" DestinationFiles="($SharedFolder)\Gallery.zip"  />
+    <Delete Files="$(SharedFolder)\Gallery.zip" ContinueOnError="true"/>
+    <Copy SourceFiles="$(OutputZip)" DestinationFiles="$(SharedFolder)\Gallery.zip"  />
 	</Target>
 
 </Project>
