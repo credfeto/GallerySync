@@ -11,6 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutputBuilderClient", "Outp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileNaming", "FileNaming\FileNaming.csproj", "{15F89A2F-BB27-4BE5-AC83-6353A7295D36}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{33315911-4476-4C70-8141-E74BFBF88454}"
+	ProjectSection(SolutionItems) = preProject
+		Scripts\BuildAll.proj = Scripts\BuildAll.proj
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

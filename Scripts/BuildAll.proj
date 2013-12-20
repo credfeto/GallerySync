@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MSBuild Schema -->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="BuildAll" InitialTargets="BuildAll">
+
+	<Target Name="BuildAll" DependsOnTargets="BuildSource;PackageExecutables">
+		<Message Importance="high" Text="Build Complete"/>
+	</Target>
+
+	<Target Name="BuildSource">
+		<MSBuild Projects="..\GallerySync.sln" BuildInParallel="True" Properties="Configuration=Release;Platform=Any CPU" />
+	</Target>
+
+	<Target Name="PackageExecutables" DependsOnTargets="BuildSource">
+    <PropertyGroup>
+      <ZipExecutable>$(MSBuildProjectDirectory)\..\BuildHelpers\zip.exe</ZipExecutable>
+      <OutputZip>$(MSBuildProjectDirectory)\..\Gallery.zip</OutputZip>
+    </PropertyGroup>
+    <Delete Files="..\Gallery.zip" ContinueOnError="true"/>
+    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*"  WorkingDirectory="$(MSBuildProjectDirectory)\..\HomeClient\bin\Release"/>
+    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\OutputBuilderClient\bin\Release" />
+	</Target>
+
+</Project>
