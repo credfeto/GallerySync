@@ -14,10 +14,14 @@
     <PropertyGroup>
       <ZipExecutable>$(MSBuildProjectDirectory)\..\BuildHelpers\zip.exe</ZipExecutable>
       <OutputZip>$(MSBuildProjectDirectory)\..\Gallery.zip</OutputZip>
+      <SharedFolder>E:\Shared</SharedFolder>
     </PropertyGroup>
     <Delete Files="..\Gallery.zip" ContinueOnError="true"/>
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*"  WorkingDirectory="$(MSBuildProjectDirectory)\..\HomeClient\bin\Release"/>
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\OutputBuilderClient\bin\Release" />
+
+    <Delete Files="($SharedFolder)\Gallery.zip" ContinueOnError="true"/>
+    <Copy SourceFiles="$(OutputZip)" DestinationFiles="($SharedFolder)\Gallery.zip"  />
 	</Target>
 
 </Project>
