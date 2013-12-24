@@ -83,7 +83,9 @@ namespace OutputBuilderClient
                 using (Bitmap sourceBitmap = converter.LoadImage(filename))
                 {
                     int sourceImageWidth = sourceBitmap.Width;
-                    foreach (int dimension in imageSizes.Where(size => size < sourceImageWidth))
+                    int sourceImageHeight = sourceBitmap.Height;
+
+                    foreach (int dimension in imageSizes.Where(size => ResziedImageWillNotBeBigger(size, sourceImageWidth, sourceImageHeight) ))
                     {
                         using (Image resized = ResizeImage(sourceBitmap, dimension))
                         {
@@ -111,6 +113,13 @@ namespace OutputBuilderClient
             }
 
             return sizes;
+        }
+
+        private static bool ResziedImageWillNotBeBigger(int size, int sourceImageWidth, int sourceImageHeight)
+        {
+            // || size <= sourceImageHeight
+
+            return size <= sourceImageWidth ;
         }
 
         private static int[] StandardImageSizesWithThumbnailSize()
