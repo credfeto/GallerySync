@@ -21,6 +21,9 @@
     <!-- Add the build utilities -->
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*"  WorkingDirectory="$(MSBuildProjectDirectory)\..\Utils"/>
 
+    <!-- Add the zip utilities -->
+    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*"  WorkingDirectory="$(MSBuildProjectDirectory)\..\BuildHelpers"/>
+
     <!-- Add the Searcher -->
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*"  WorkingDirectory="$(MSBuildProjectDirectory)\..\HomeClient\bin\Release"/>
 
