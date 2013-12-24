@@ -30,6 +30,9 @@
     <!-- Add the Output processor -->
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\OutputBuilderClient\bin\Release" />
 
+    <!-- Add the Uploader processor -->
+    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\UploadToAmazon\bin\Release" />
+
     <Delete Files="$(SharedFolder)\Gallery.zip" ContinueOnError="true"/>
     <Copy SourceFiles="$(OutputZip)" DestinationFiles="$(SharedFolder)\Gallery.zip"  />
 	</Target>
