@@ -52,14 +52,39 @@ namespace OutputBuilderClient
 
             documentStoreOutput.Initialize();
 
-            Process(documentStoreInput, documentStoreOutput);
+            HashSet<string> liveItems = Process(documentStoreInput, documentStoreOutput);
+
+            KillDeadItems(documentStoreOutput, liveItems);
         }
 
-        private static void Process(EmbeddableDocumentStore documentStoreInput,
-                                    EmbeddableDocumentStore documentStoreOutput)
+        private static void KillDeadItems(EmbeddableDocumentStore documentStoreOutput, HashSet<string> liveItems)
+        {
+            using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
+            {
+                foreach (Photo sourcePhoto in GetAll(outputSession))
+                {
+                    if (liveItems.Contains(sourcePhoto.PathHash))
+                    {
+                        continue;
+                    }
+
+                    using (IDocumentSession deletionSession = documentStoreOutput.OpenSession())
+                    {
+                        deletionSession.Delete(deletionSession);
+
+                        deletionSession.SaveChanges();
+                    }
+                }
+            }
+        }
+
+        private static HashSet<string> Process(EmbeddableDocumentStore documentStoreInput,
+                                               EmbeddableDocumentStore documentStoreOutput)
         {
             using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
+                var items = new HashSet<string>();
+
                 foreach (Photo sourcePhoto in GetAll(inputSession))
                 {
                     try
@@ -86,6 +111,8 @@ namespace OutputBuilderClient
                                 Console.WriteLine("Unchanged: {0}", targetPhoto.UrlSafePath);
                             }
                         }
+
+                        items.Add(sourcePhoto.PathHash);
                     }
                     catch (Exception exception)
                     {
@@ -93,6 +120,8 @@ namespace OutputBuilderClient
                                           exception.Message);
                     }
                 }
+
+                return items;
             }
         }
 
