@@ -7,7 +7,7 @@ namespace Twaddle.Gallery.ObjectModel
     [DebuggerDisplay("Width: {Width}, Height:{Height}")]
     public class ImageSize
     {
-        int Width { get; set; }
-        int Height { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }

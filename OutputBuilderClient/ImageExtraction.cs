@@ -75,18 +75,15 @@ namespace OutputBuilderClient
             if (RegisteredConverters.TryGetValue(rawExtension, out converter))
             {
                 int[] imageSizes =
-                    Settings.Default.ImageMaximumDimensions.Split(',')
-                            .Select(value => Convert.ToInt32(value))
-                            .Concat(new[] {Settings.Default.ThumbnailSize})
-                            .OrderByDescending(x => x)
-                            .ToArray();
+                    StandardImageSizesWithThumbnailSize();
 
                 string filename = Path.Combine(Settings.Default.RootFolder,
                                                sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
                 using (Bitmap sourceBitmap = converter.LoadImage(filename))
                 {
-                    foreach (int dimension in imageSizes)
+                    int sourceImageWidth = sourceBitmap.Width;
+                    foreach (int dimension in imageSizes.Where(size => size < sourceImageWidth))
                     {
                         using (Image resized = ResizeImage(sourceBitmap, dimension))
                         {
@@ -98,6 +95,12 @@ namespace OutputBuilderClient
                                                                   IndividualResizeFileName(sourcePhoto, resized));
 
                             WriteImage(resizedFileName, resizedBytes);
+
+                            sizes.Add(new ImageSize
+                                {
+                                    Width = resized.Width,
+                                    Height = resized.Height
+                                });
                         }
                     }
                 }
@@ -108,6 +111,15 @@ namespace OutputBuilderClient
             }
 
             return sizes;
+        }
+
+        private static int[] StandardImageSizesWithThumbnailSize()
+        {
+            return Settings.Default.ImageMaximumDimensions.Split(',')
+                           .Select(value => Convert.ToInt32(value))
+                           .Concat(new[] {Settings.Default.ThumbnailSize})
+                           .OrderByDescending(x => x)
+                           .ToArray();
         }
 
         private static string IndividualResizeFileName(Photo sourcePhoto, Image resized)
