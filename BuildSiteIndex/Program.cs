@@ -137,9 +137,11 @@ namespace BuildSiteIndex
                                  }).ToArray()
                 };
 
+            var outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
+
             string json = JsonConvert.SerializeObject(data);
             byte[] encoded = Encoding.UTF8.GetBytes(json);
-            File.WriteAllBytes(@"E:\GalleryMetadata\site.js", encoded);
+            File.WriteAllBytes(outputFilename, encoded);
         }
 
         private static void AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path,

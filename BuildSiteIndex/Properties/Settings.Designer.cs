@@ -31,5 +31,14 @@ namespace BuildSiteIndex.Properties {
                 return ((string)(this["DatabaseInputFolder"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("E:\\GalleryMetadata")]
+        public string OutputFolder {
+            get {
+                return ((string)(this["OutputFolder"]));
+            }
+        }
     }
 }
