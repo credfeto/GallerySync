@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using FileNaming;
 using OutputBuilderClient.Properties;
 using Raven.Abstractions.Data;
 using Raven.Client;
@@ -98,6 +99,16 @@ namespace OutputBuilderClient
                             {
                                 Console.WriteLine("Rebuild: {0}", sourcePhoto.UrlSafePath);
 
+                                foreach (
+                                    ComponentFile file in
+                                        sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
+                                {
+                                    string filename = Path.Combine(Settings.Default.RootFolder,
+                                                                   sourcePhoto.BasePath + file.Extension);
+
+                                    file.Hash = Hasher.HashFile(filename);
+                                }
+
                                 sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
 
                                 sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto);
@@ -141,6 +152,24 @@ namespace OutputBuilderClient
 
                 if (found != null)
                 {
+                    if (componentFile.FileSize != found.FileSize)
+                    {
+                        return true;
+                    }
+
+                    if (componentFile.LastModified != found.LastModified)
+                    {
+                        return true;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(found.Hash))
+                    {
+                        string filename = Path.Combine(Settings.Default.RootFolder,
+                                                       sourcePhoto.BasePath + componentFile.Extension);
+
+                        found.Hash = Hasher.HashFile(filename);
+                    }
+
                     if (componentFile.Hash != found.Hash)
                     {
                         return true;

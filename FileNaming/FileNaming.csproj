@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Hasher.cs" />
     <Compile Include="HashNaming.cs" />
     <Compile Include="MetadataNames.cs" />
     <Compile Include="UrlNaming.cs" />

@@ -76,14 +76,13 @@ namespace HomeClient
 
         private static ComponentFile ReadComponentFIle2(string fileName)
         {
-            string hash = Hasher.HashFile(fileName);
             var info = new FileInfo(fileName);
             string extension = info.Extension.ToLowerInvariant();
 
             return new ComponentFile
                 {
                     Extension = extension,
-                    Hash = hash,
+                    Hash = string.Empty,
                     LastModified = info.LastWriteTimeUtc,
                     FileSize = info.Length
                 };
