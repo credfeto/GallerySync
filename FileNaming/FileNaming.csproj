@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HashNaming.cs" />
+    <Compile Include="MetadataNames.cs" />
     <Compile Include="UrlNaming.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

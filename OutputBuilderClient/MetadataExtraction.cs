@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using ExifLib;
+using FileNaming;
 using OutputBuilderClient.Properties;
 using TagLib;
 using TagLib.Image;

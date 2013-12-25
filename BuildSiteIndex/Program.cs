@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using BuildSiteIndex.Properties;
+using FileNaming;
+using Newtonsoft.Json;
 using Raven.Abstractions.Data;
 using Raven.Client;
 using Raven.Client.Embedded;
@@ -50,44 +55,233 @@ namespace BuildSiteIndex
             {
                 foreach (Photo sourcePhoto in GetAll(inputSession))
                 {
-                    string path = albumsRoot + "/" + sourcePhoto.UrlSafePath;
-                    string breadcrumbs = albumsTitle + "\\" + sourcePhoto.BasePath;
+                    string path = EnsureTerminatedPath("/" + albumsRoot + "/" + sourcePhoto.UrlSafePath);
+                    string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + albumsTitle + "\\" + sourcePhoto.BasePath);
                     Console.WriteLine("Item: {0}", path);
 
-                    string[] pathFragments = path.Split('/');
-                    string[] breadcrumbFragments = breadcrumbs.Split('\\');
+                    string[] pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
+                    string[] breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
 
                     EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
-                    string parentLevel = "/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1));
+                    string parentLevel = EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
 
+                    var title = breadcrumbFragments[breadcrumbFragments.Length - 1];
 
-                    AppendPhotoEntry(contents, parentLevel, path, breadcrumbFragments[breadcrumbFragments.Length - 1], sourcePhoto);
+                    AppendPhotoEntry(contents, parentLevel, path,
+                                     title,
+                                     sourcePhoto);
                 }
             }
 
             Console.WriteLine("Found {0} items total", contents.Count);
+
+            ProduceJsonFile(contents);
         }
 
-        private static void AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path, string title, Photo sourcePhoto)
+        private static string EnsureTerminatedPath(string path)
         {
-            // TODO: Extract dates out of the metadata
-            var dateCreated = sourcePhoto.Files.Min(file => file.LastModified);
-            var dateUpdated = sourcePhoto.Files.Min(file => file.LastModified);
+            return EnsureEndsWithSpecificTerminator(path, "/");
+        }
 
-            //var taken = sourcePhoto.Metadata.FirstOrDefault(item => item.Name == MetadataNames.DateTaken);
-            //if (taken != null)
-            //{
-            //    // Extract the date from the value;
-            //}
+        private static string EnsureTerminatedBreadcrumbs(string path)
+        {
+            
+            return EnsureEndsWithSpecificTerminator(path, "\\");
+        }
 
-            AppendEntry(contents, parentLevel, "/" + path, new GalleryEntry
+        private static string EnsureEndsWithSpecificTerminator(string path, string terminator)
+        {
+            if (!path.EndsWith(terminator, StringComparison.Ordinal))
+            {
+                return path + terminator;
+            }
+            return path;
+        }
+
+        private static bool IsNotEmpty(string arg)
+        {
+            return !string.IsNullOrWhiteSpace(arg);
+        }
+
+        private static void ProduceJsonFile(Dictionary<string, GalleryEntry> contents)
+        {
+            var data = new
                 {
+                    version = 1,
+                    items = (from parentRecord in contents.Values
+                             select new
+                                 {
+                                     parentRecord.Path,
+                                     parentRecord.Title,
+                                     parentRecord.Description,
+                                     parentRecord.DateCreated,
+                                     parentRecord.DateUpdated,
+                                     parentRecord.Location,
+                                     Type = parentRecord.Children.Any() ? "folder" : "photo",
+                                     ImageSizes = parentRecord.ImageSizes ?? new List<ImageSize>(),
+                                     Metadata = parentRecord.Metadata ?? new List<PhotoMetadata>(),
+                                     Keywords = parentRecord.Keywords ?? new List<string>(),
+                                     Children = (from childRecord in parentRecord.Children
+                                                 select new
+                                                     {
+                                                         childRecord.Path,
+                                                         childRecord.Title,
+                                                         childRecord.Description,
+                                                         childRecord.DateCreated,
+                                                         childRecord.DateUpdated,
+                                                         childRecord.Location,
+                                                         Type = childRecord.Children.Any() ? "folder" : "photo",
+                                                         ImageSizes = childRecord.ImageSizes ?? new List<ImageSize>()
+                                                     }).ToArray()
+                                 }).ToArray()
+                };
+
+            string json = JsonConvert.SerializeObject(data);
+            byte[] encoded = Encoding.UTF8.GetBytes(json);
+            File.WriteAllBytes(@"E:\GalleryMetadata\site.js", encoded);
+        }
+
+        private static void AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path,
+                                             string title, Photo sourcePhoto)
+        {
+            DateTime dateCreated;
+            DateTime dateUpdated;
+            ExtractDates(sourcePhoto, out dateCreated, out dateUpdated);
+
+            string description = ExtractDescription(sourcePhoto);
+
+            Location location = ExtractLocation(sourcePhoto);
+
+            int rating = ExtractRating(sourcePhoto);
+
+            List<string> keywords = ExtractKeywords(sourcePhoto);
+
+            AppendEntry(contents, parentLevel, path, new GalleryEntry
+                {
+                    Path = path,
                     Title = title,
+                    Description = description,
                     Children = new List<GalleryEntry>(),
+                    Location = location,
+                    ImageSizes = sourcePhoto.ImageSizes,
+                    Rating = rating,
+                    Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata).ToList(),
+                    Keywords = keywords,
                     DateCreated = dateCreated,
                     DateUpdated = dateUpdated
                 });
+        }
+
+        private static List<string> ExtractKeywords(Photo sourcePhoto)
+        {
+            PhotoMetadata kwd = sourcePhoto.Metadata.FirstOrDefault(
+                item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Keywords));
+            if (kwd != null)
+            {
+                return kwd.Value.Split(',').Where(IsValidKeywordName).ToList();
+            }
+
+            return new List<string>();
+        }
+
+        private static bool IsValidKeywordName(string s)
+        {
+            return !string.IsNullOrWhiteSpace(s);
+        }
+
+        private static bool IsPublishableMetadata(PhotoMetadata metadata)
+        {
+            var notPublishable = new[]
+                {
+                    MetadataNames.DateTaken,
+                    MetadataNames.Keywords,
+                    MetadataNames.Rating,
+                    MetadataNames.Latitude,
+                    MetadataNames.Longitude,
+                    MetadataNames.Comment
+                };
+
+            return notPublishable.All(item => !StringComparer.InvariantCultureIgnoreCase.Equals(item, metadata.Name));
+        }
+
+        private static int ExtractRating(Photo sourcePhoto)
+        {
+            int rating = 1;
+            PhotoMetadata rat = sourcePhoto.Metadata.FirstOrDefault(
+                item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Rating));
+            if (rat != null)
+            {
+                if (!int.TryParse(rat.Value, out rating) || rating < 1 || rating > 5)
+                {
+                    rating = 1;
+                }
+            }
+            return rating;
+        }
+
+        private static void ExtractDates(Photo sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated)
+        {
+            dateCreated = sourcePhoto.Files.Min(file => file.LastModified);
+            dateUpdated = sourcePhoto.Files.Max(file => file.LastModified);
+
+            PhotoMetadata taken =
+                sourcePhoto.Metadata.FirstOrDefault(
+                    item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.DateTaken));
+            if (taken != null)
+            {
+                // Extract the date from the value;
+                DateTime when;
+                if (DateTime.TryParse(taken.Value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces,
+                                      out when))
+                {
+                    if (when < dateCreated)
+                    {
+                        dateCreated = when;
+                    }
+
+                    if (when > dateUpdated)
+                    {
+                        dateUpdated = when;
+                    }
+                }
+            }
+        }
+
+        private static string ExtractDescription(Photo sourcePhoto)
+        {
+            string description = string.Empty;
+            PhotoMetadata desc =
+                sourcePhoto.Metadata.FirstOrDefault(
+                    item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
+            if (desc != null)
+            {
+                description = desc.Value;
+            }
+            return description;
+        }
+
+        private static Location ExtractLocation(Photo sourcePhoto)
+        {
+            Location location = null;
+            PhotoMetadata lat = sourcePhoto.Metadata.FirstOrDefault(
+                item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Latitude));
+            PhotoMetadata lng = sourcePhoto.Metadata.FirstOrDefault(
+                item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Longitude));
+            if (lat != null && lng != null)
+            {
+                double latitude;
+                double longitude;
+                if (double.TryParse(lat.Value, out latitude) && double.TryParse(lng.Value, out longitude))
+                {
+                    location = new Location
+                        {
+                            Latitude = latitude,
+                            Longitude = longitude
+                        };
+                }
+            }
+            return location;
         }
 
         private static void EnsureParentFoldersExist(string[] pathFragments, string[] breadcrumbFragments,
@@ -95,16 +289,18 @@ namespace BuildSiteIndex
         {
             for (int folderLevel = 1; folderLevel < pathFragments.Length; ++folderLevel)
             {
-                string level = "/" + string.Join("/", pathFragments.Take(folderLevel));
+                string level = EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(folderLevel)));
 
                 GalleryEntry item;
                 if (!contents.TryGetValue(level, out item))
                 {
-                    string parentLevel = "/" + string.Join("/", pathFragments.Take(folderLevel - 1));
+                    string parentLevel = EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(folderLevel - 1)));
 
                     AppendEntry(contents, parentLevel, level, new GalleryEntry
                         {
+                            Path = level,
                             Title = breadcrumbFragments[folderLevel - 1],
+                            Description = string.Empty,
                             Children = new List<GalleryEntry>(),
                             DateCreated = DateTime.MaxValue,
                             DateUpdated = DateTime.MinValue
@@ -133,7 +329,9 @@ namespace BuildSiteIndex
         {
             var entry = new GalleryEntry
                 {
+                    Path = "/",
                     Title = "Mark's Photos",
+                    Description = "Photos taken by Mark Ridgwell.",
                     Children = new List<GalleryEntry>(),
                     DateCreated = DateTime.MaxValue,
                     DateUpdated = DateTime.MinValue

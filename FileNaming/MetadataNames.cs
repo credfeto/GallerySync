@@ -1,6 +1,6 @@
-﻿namespace OutputBuilderClient
+﻿namespace FileNaming
 {
-    internal static class MetadataNames
+    public static class MetadataNames
     {
         public const string CameraModel = "Camera Model";
 

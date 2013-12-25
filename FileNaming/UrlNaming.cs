@@ -16,9 +16,11 @@ namespace FileNaming
 
         public static string BuildUrlSafePath(string basePath)
         {
+            string root = basePath.Trim() + "/";
+
             return
                 NoRepeatingHyphens.Replace(
-                    AcceptableUrlCharacters.Replace(basePath.Trim().Replace(@"\", @"/"), Replacementchar),
+                    AcceptableUrlCharacters.Replace(root.Replace(@"\", @"/"), Replacementchar),
                     Replacementchar)
                                   .TrimEnd(Replacementchar.ToCharArray()).ToLowerInvariant();
         }
