@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using FileNaming;
 using OutputBuilderClient.Properties;
 using Raven.Abstractions.Data;
@@ -113,8 +114,18 @@ namespace OutputBuilderClient
 
                                 sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto);
 
+                                if (targetPhoto != null)
+                                {
+                                    UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
 
-                                outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
+                                    outputSession.Store(targetPhoto, targetPhoto.PathHash);
+                                }
+                                else
+                                {
+                                    outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
+                                    
+                                }
+
                                 outputSession.SaveChanges();
                             }
                             else
@@ -135,6 +146,29 @@ namespace OutputBuilderClient
                 return items;
             }
         }
+
+        private static void UpdateTargetWithSourceProperties(Photo targetPhoto, Photo sourcePhoto)
+        {
+            targetPhoto.UrlSafePath = sourcePhoto.UrlSafePath;
+            targetPhoto.BasePath = sourcePhoto.BasePath;
+            targetPhoto.PathHash = sourcePhoto.PathHash;
+            targetPhoto.ImageExtension = sourcePhoto.ImageExtension;
+            targetPhoto.Files = sourcePhoto.Files;
+            targetPhoto.Metadata = sourcePhoto.Metadata;
+            targetPhoto.ImageSizes = sourcePhoto.ImageSizes;
+        }
+
+        private void SyncDetachedObjectToSession<T>(T sessionObject, T
+                                                                         detachedObject)
+        {
+            PropertyInfo[] properties = typeof (T).GetProperties();
+            foreach (PropertyInfo property in properties)
+            {
+                object propertyValue =
+                    property.GetValue(detachedObject, null);
+                property.SetValue(sessionObject, propertyValue, null);
+            }
+        } 
 
         private static bool HaveFilesChanged(Photo sourcePhoto, Photo targetPhoto)
         {
