@@ -35,12 +35,59 @@ namespace OutputBuilderClient
             {
                 string filename = Path.Combine(rootFolder, sourcePhoto.BasePath + extension.Extension);
 
-                ExtractMetadataFromXmp(metadata, filename);
-                ExtractMetadataFromImage(metadata, filename);
+                if (SupportsXmp(extension.Extension))
+                {
+                    ExtractMetadataFromXmp(metadata, filename);
+                }
+
+                if (SupportsExif(extension.Extension))
+                {
+                    ExtractMetadataFromImage(metadata, filename);
+                }
             }
 
 
             return metadata;
+        }
+
+        private static bool SupportsExif(string extension)
+        {
+            var supportedExtensions = new[]
+                {
+                    ".jpg",
+                    ".jpeg",
+                    ".jpe",
+                    ".gif",
+                    ".tiff",
+                    ".tif"
+                };
+
+            return supportedExtensions.Any(ext => StringComparer.InvariantCultureIgnoreCase.Equals(ext, extension));
+        }
+
+        private static bool SupportsXmp(string extension)
+        {
+            var supportedExtensions = new[]
+                {
+                    "arw",
+                    "cf2",
+                    "cr2",
+                    "crw",
+                    "dng",
+                    "erf",
+                    "mef",
+                    "mrw",
+                    "nef",
+                    "orf",
+                    "pef",
+                    "raf",
+                    "raw",
+                    "rw2",
+                    "sr2",
+                    "x3f"
+                };
+
+            return supportedExtensions.Any(ext => StringComparer.InvariantCultureIgnoreCase.Equals(ext, extension));
         }
 
         private static bool ExtractXmpMetadata(Photo sourcePhoto, List<PhotoMetadata> metadata, string rootFolder)
