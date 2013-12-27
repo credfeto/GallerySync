@@ -80,7 +80,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GalleryChildItem.cs" />
     <Compile Include="GalleryEntry.cs" />
+    <Compile Include="GalleryItem.cs" />
+    <Compile Include="GallerySiteIndex.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">

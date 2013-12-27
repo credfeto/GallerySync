@@ -106,35 +106,36 @@ namespace BuildSiteIndex
 
         private static void ProduceJsonFile(Dictionary<string, GalleryEntry> contents)
         {
-            var data = new
+            var data = new GallerySiteIndex
                 {
                     version = 1,
                     items = (from parentRecord in contents.Values
-                             select new
+                             select new GalleryItem
                                  {
-                                     parentRecord.Path,
-                                     parentRecord.Title,
-                                     parentRecord.Description,
-                                     parentRecord.DateCreated,
-                                     parentRecord.DateUpdated,
-                                     parentRecord.Location,
+                                     Path = parentRecord.Path,
+                                     Title = parentRecord.Title,
+                                     Description = parentRecord.Description,
+                                     DateCreated = parentRecord.DateCreated,
+                                     DateUpdated = parentRecord.DateUpdated,
+                                     Location = parentRecord.Location,
                                      Type = parentRecord.Children.Any() ? "folder" : "photo",
                                      ImageSizes = parentRecord.ImageSizes ?? new List<ImageSize>(),
                                      Metadata = parentRecord.Metadata ?? new List<PhotoMetadata>(),
                                      Keywords = parentRecord.Keywords ?? new List<string>(),
                                      Children = (from childRecord in parentRecord.Children
-                                                 select new
+                                                 select new GalleryChildItem
                                                      {
-                                                         childRecord.Path,
-                                                         childRecord.Title,
-                                                         childRecord.Description,
-                                                         childRecord.DateCreated,
-                                                         childRecord.DateUpdated,
-                                                         childRecord.Location,
+                                                         Path = childRecord.Path,
+                                                         Title = childRecord.Title,
+                                                         Description = childRecord.Description,
+                                                         DateCreated = childRecord.DateCreated,
+                                                         DateUpdated = childRecord.DateUpdated,
+                                                         Location = childRecord.Location,
                                                          Type = childRecord.Children.Any() ? "folder" : "photo",
                                                          ImageSizes = childRecord.ImageSizes ?? new List<ImageSize>()
-                                                     }).ToArray()
-                                 }).ToArray()
+                                                     }).ToList()
+                                 }).ToList(),
+                        deletedItems = new List<string>()
                 };
 
             var outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
