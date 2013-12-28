@@ -35,5 +35,7 @@
         public const string Keywords = "Keywords";
 
         public const string Comment = "Comment";
+
+        public static string Title = "Title";    
     }
 }

@@ -66,7 +66,12 @@ namespace BuildSiteIndex
 
                     string parentLevel = EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
 
-                    var title = breadcrumbFragments[breadcrumbFragments.Length - 1];
+                    var title = ExtractTitle(sourcePhoto);
+                    if (string.IsNullOrWhiteSpace(title))
+                    {
+                        // fallback to a title based on the filename
+                        title = breadcrumbFragments[breadcrumbFragments.Length - 1];
+                    }
 
                     AppendPhotoEntry(contents, parentLevel, path,
                                      title,
@@ -197,6 +202,7 @@ namespace BuildSiteIndex
         {
             var notPublishable = new[]
                 {
+                    MetadataNames.Title,
                     MetadataNames.DateTaken,
                     MetadataNames.Keywords,
                     MetadataNames.Rating,
@@ -249,6 +255,20 @@ namespace BuildSiteIndex
                     }
                 }
             }
+        }
+
+        private static string ExtractTitle(Photo sourcePhoto)
+        {
+            string description = string.Empty;
+            PhotoMetadata desc =
+                sourcePhoto.Metadata.FirstOrDefault(
+                    item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Title));
+            if (desc != null)
+            {
+                description = desc.Value;
+            }
+            
+            return description;
         }
 
         private static string ExtractDescription(Photo sourcePhoto)

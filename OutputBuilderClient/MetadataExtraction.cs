@@ -165,7 +165,11 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpTagCommon(List<PhotoMetadata> metadata, ImageTag tag)
         {
-            if (!String.IsNullOrWhiteSpace(tag.Comment))
+            if (!String.IsNullOrWhiteSpace(tag.Title))
+            {
+                AppendMetadata(metadata, MetadataNames.Title, tag.Title);
+            }
+            if (!String.IsNullOrWhiteSpace(tag.Comment) && !IsStupidManufacturerComment(tag.Comment))
             {
                 AppendMetadata(metadata, MetadataNames.Comment, tag.Comment);
             }
@@ -245,7 +249,6 @@ namespace OutputBuilderClient
                 {
                     AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
                 }
-
                 double[] exposureTime;
                 if (reader.GetTagValue(ExifTags.ExposureTime, out exposureTime))
                 {
@@ -325,10 +328,27 @@ namespace OutputBuilderClient
                 {
                     AppendMetadata(metadata, MetadataNames.CameraModel, cameraModel);
                 }
+
+                string userComment;
+                if (reader.GetTagValue(ExifTags.UserComment, out userComment))
+                {
+                    if (!string.IsNullOrWhiteSpace(userComment) && !IsStupidManufacturerComment(userComment))
+                    {
+                        AppendMetadata(metadata, MetadataNames.Comment, userComment);
+                    }
+                }
             }
             catch
             {
             }
+        }
+
+        private static bool IsStupidManufacturerComment(string userComment)
+        {
+            // Why companies put this crap in the metadata when they already set the model and manufacturer I've no idea.
+            var badComments = new[] {"GE", "OLYMPUS DIGITAL CAMERA", "Minolta DSC"};
+
+            return badComments.Any(text => StringComparer.InvariantCultureIgnoreCase.Equals(text, userComment.Trim()));
         }
 
         public static void AppendMetadata(List<PhotoMetadata> metadata, string name, DateTime value)
