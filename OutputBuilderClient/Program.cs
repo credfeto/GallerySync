@@ -14,8 +14,12 @@ namespace OutputBuilderClient
 {
     internal class Program
     {
+        private static readonly object _lock = new object();
+
         private static int Main()
         {
+            BoostPriority();
+
             try
             {
                 ProcessGallery();
@@ -24,8 +28,20 @@ namespace OutputBuilderClient
             }
             catch (Exception exception)
             {
-                Console.WriteLine("Error: {0}", exception.Message);
+                OutputText("Error: {0}", exception.Message);
                 return 1;
+            }
+        }
+
+        private static void BoostPriority()
+        {
+            try
+            {
+                System.Diagnostics.Process.GetCurrentProcess().PriorityClass =
+                    System.Diagnostics.ProcessPriorityClass.High;
+            }
+            catch (Exception)
+            {
             }
         }
 
@@ -82,68 +98,108 @@ namespace OutputBuilderClient
 
         private static HashSet<string> Process(EmbeddableDocumentStore documentStoreInput,
                                                EmbeddableDocumentStore documentStoreOutput)
-        {
+        {           
             using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
                 var items = new HashSet<string>();
 
-                foreach (Photo sourcePhoto in GetAll(inputSession))
+                foreach (Photo sourcePhoto in GetAll(inputSession).AsParallel())
                 {
-                    try
-                    {
-                        using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
-                        {
-                            var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
-                            bool rebuild = targetPhoto == null || HaveFilesChanged(sourcePhoto, targetPhoto);
-
-                            if (rebuild)
-                            {
-                                Console.WriteLine("Rebuild: {0}", sourcePhoto.UrlSafePath);
-
-                                foreach (
-                                    ComponentFile file in
-                                        sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
-                                {
-                                    string filename = Path.Combine(Settings.Default.RootFolder,
-                                                                   sourcePhoto.BasePath + file.Extension);
-
-                                    file.Hash = Hasher.HashFile(filename);
-                                }
-
-                                sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
-
-                                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto);
-
-                                if (targetPhoto != null)
-                                {
-                                    UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
-
-                                    outputSession.Store(targetPhoto, targetPhoto.PathHash);
-                                }
-                                else
-                                {
-                                    outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
-                                    
-                                }
-
-                                outputSession.SaveChanges();
-                            }
-                            else
-                            {
-                                Console.WriteLine("Unchanged: {0}", targetPhoto.UrlSafePath);
-                            }
-                        }
-
-                        items.Add(sourcePhoto.PathHash);
-                    }
-                    catch (Exception exception)
-                    {
-                        Console.WriteLine("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
-                                          exception.Message);
-                    }
+                    ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
                 }
 
                 return items;
+            }
+        }
+
+        private static void ProcessSinglePhoto(EmbeddableDocumentStore documentStoreOutput, Photo sourcePhoto, HashSet<string> items)
+        {
+            try
+            {
+                using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
+                {
+                    var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
+                    bool build = targetPhoto == null;
+                    bool rebuild = targetPhoto != null && HaveFilesChanged(sourcePhoto, targetPhoto);
+
+                    if (build || rebuild)
+                    {
+                        OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
+
+                        UpdateFileHashes(targetPhoto, sourcePhoto);
+
+                        sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
+
+                        sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto);
+
+                        if (targetPhoto != null)
+                        {
+                            UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
+
+                            outputSession.Store(targetPhoto, targetPhoto.PathHash);
+                        }
+                        else
+                        {
+                            outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
+                        }
+
+                        outputSession.SaveChanges();
+                    }
+                    else
+                    {
+                        OutputText("Unchanged: {0}", targetPhoto.UrlSafePath);
+                    }
+                }
+
+                lock (_lock)
+                {
+                    items.Add(sourcePhoto.PathHash);
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
+                                  exception.Message);
+            }
+        }
+
+        private static void OutputText(string formatString, params object[] parameters)
+        {
+            var text = string.Format(formatString, parameters);
+
+            lock (_lock)
+            {
+                Console.WriteLine(text);
+            }
+        }
+
+        private static void UpdateFileHashes(Photo targetPhoto, Photo sourcePhoto)
+        {
+            if (targetPhoto != null)
+            {
+                foreach (
+                    ComponentFile sourceFile in
+                        sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
+                {
+                    ComponentFile targetFile =
+                        targetPhoto.Files.FirstOrDefault(s =>
+                                                         s.Extension == sourceFile.Extension &&
+                                                         !string.IsNullOrWhiteSpace(s.Hash));
+                    if (targetFile != null)
+                    {
+                        sourceFile.Hash = targetFile.Hash;
+                    }
+                }
+            }
+
+            foreach (
+                ComponentFile file in
+                    sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
+            {
+                string filename = Path.Combine(Settings.Default.RootFolder,
+                                               sourcePhoto.BasePath + file.Extension);
+
+                file.Hash = Hasher.HashFile(filename);
             }
         }
 
@@ -157,18 +213,6 @@ namespace OutputBuilderClient
             targetPhoto.Metadata = sourcePhoto.Metadata;
             targetPhoto.ImageSizes = sourcePhoto.ImageSizes;
         }
-
-        private void SyncDetachedObjectToSession<T>(T sessionObject, T
-                                                                         detachedObject)
-        {
-            PropertyInfo[] properties = typeof (T).GetProperties();
-            foreach (PropertyInfo property in properties)
-            {
-                object propertyValue =
-                    property.GetValue(detachedObject, null);
-                property.SetValue(sessionObject, propertyValue, null);
-            }
-        } 
 
         private static bool HaveFilesChanged(Photo sourcePhoto, Photo targetPhoto)
         {
@@ -191,9 +235,10 @@ namespace OutputBuilderClient
                         return true;
                     }
 
-                    if (componentFile.LastModified != found.LastModified)
+                    if (componentFile.LastModified == found.LastModified)
                     {
-                        return true;
+                        // Assume if file modified date not changed then the file itself hasn't changed
+                        continue;
                     }
 
                     if (string.IsNullOrWhiteSpace(found.Hash))
