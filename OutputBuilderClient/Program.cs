@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using FileNaming;
 using OutputBuilderClient.Properties;
 using Raven.Abstractions.Data;
@@ -38,7 +38,7 @@ namespace OutputBuilderClient
             try
             {
                 System.Diagnostics.Process.GetCurrentProcess().PriorityClass =
-                    System.Diagnostics.ProcessPriorityClass.High;
+                    ProcessPriorityClass.High;
             }
             catch (Exception)
             {
@@ -79,7 +79,7 @@ namespace OutputBuilderClient
         {
             using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
             {
-                foreach (Photo sourcePhoto in GetAll(outputSession))
+                foreach (Photo sourcePhoto in GetAll(outputSession).AsParallel())
                 {
                     if (liveItems.Contains(sourcePhoto.PathHash))
                     {
@@ -88,9 +88,18 @@ namespace OutputBuilderClient
 
                     using (IDocumentSession deletionSession = documentStoreOutput.OpenSession())
                     {
-                        deletionSession.Delete(deletionSession);
+                        var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
+                        if (targetPhoto != null)
+                        {
+                            OutputText("Deleting {0} as no longer exists", sourcePhoto.UrlSafePath);
+                            deletionSession.Delete(targetPhoto);
 
-                        deletionSession.SaveChanges();
+                            deletionSession.SaveChanges();
+                        }
+                        else
+                        {
+                            OutputText("Could not delete {0}", sourcePhoto.UrlSafePath);
+                        }
                     }
                 }
             }
@@ -98,7 +107,7 @@ namespace OutputBuilderClient
 
         private static HashSet<string> Process(EmbeddableDocumentStore documentStoreInput,
                                                EmbeddableDocumentStore documentStoreOutput)
-        {           
+        {
             using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
                 var items = new HashSet<string>();
@@ -112,7 +121,8 @@ namespace OutputBuilderClient
             }
         }
 
-        private static void ProcessSinglePhoto(EmbeddableDocumentStore documentStoreOutput, Photo sourcePhoto, HashSet<string> items)
+        private static void ProcessSinglePhoto(EmbeddableDocumentStore documentStoreOutput, Photo sourcePhoto,
+                                               HashSet<string> items)
         {
             try
             {
@@ -158,14 +168,14 @@ namespace OutputBuilderClient
             }
             catch (Exception exception)
             {
-                Console.WriteLine("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
-                                  exception.Message);
+                OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
+                           exception.Message);
             }
         }
 
         private static void OutputText(string formatString, params object[] parameters)
         {
-            var text = string.Format(formatString, parameters);
+            string text = string.Format(formatString, parameters);
 
             lock (_lock)
             {

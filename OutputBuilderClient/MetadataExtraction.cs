@@ -96,10 +96,10 @@ namespace OutputBuilderClient
                 sourcePhoto.Files.FirstOrDefault(
                     IsXmp);
 
-            if (xmpFile != null)            
+            if (xmpFile != null)
             {
-                var sidecarFileName = Path.Combine(rootFolder,sourcePhoto.BasePath + xmpFile.Extension);
-                ExtractMetadataFromXmpSideCar(metadata, sidecarFileName );
+                string sidecarFileName = Path.Combine(rootFolder, sourcePhoto.BasePath + xmpFile.Extension);
+                ExtractMetadataFromXmpSideCar(metadata, sidecarFileName);
                 if (metadata.Any())
                 {
                     return true;
@@ -137,11 +137,12 @@ namespace OutputBuilderClient
             }
             catch (Exception)
             {
-                return ;
+                return;
             }
 
             ExtractXmpTagCommon(metadata, tag);
         }
+
         public static void ExtractMetadataFromXmp(List<PhotoMetadata> metadata, string fileName)
         {
             try
@@ -275,21 +276,30 @@ namespace OutputBuilderClient
 
                 double[] latitudeComponents;
                 double[] longitudeComponents;
-                string lattitudeRef;
-                string longitudeRef;
                 if (reader.GetTagValue(ExifTags.GPSLatitude, out latitudeComponents) &&
-                    reader.GetTagValue(ExifTags.GPSLongitude, out longitudeComponents) &&
-                    reader.GetTagValue(ExifTags.GPSLatitudeRef, out lattitudeRef) &&
-                    reader.GetTagValue(ExifTags.GPSLongitudeRef, out longitudeRef))
+                    reader.GetTagValue(ExifTags.GPSLongitude, out longitudeComponents)
+                    )
                 {
+                    string lattitudeRef;
+                    if (!reader.GetTagValue(ExifTags.GPSLatitudeRef, out lattitudeRef))
+                    {
+                        lattitudeRef = "N";
+                    }
+
+                    string longitudeRef;
+                    if (!reader.GetTagValue(ExifTags.GPSLongitudeRef, out longitudeRef))
+                    {
+                        longitudeRef = "E";
+                    }
+
                     double latitude = latitudeComponents[0] + latitudeComponents[1]/60 + latitudeComponents[2]/3600;
-                    double longitude = longitudeComponents[0] + longitudeComponents[1]/60 + longitudeComponents[2]/3600;
 
                     if (StringComparer.InvariantCultureIgnoreCase.Equals("S", lattitudeRef))
                     {
                         latitude = -latitude;
                     }
 
+                    double longitude = longitudeComponents[0] + longitudeComponents[1] / 60 + longitudeComponents[2] / 3600;
                     if (StringComparer.InvariantCultureIgnoreCase.Equals("W", longitudeRef))
                     {
                         longitude = -longitude;
