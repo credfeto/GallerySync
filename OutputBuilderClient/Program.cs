@@ -86,21 +86,26 @@ namespace OutputBuilderClient
                         continue;
                     }
 
-                    using (IDocumentSession deletionSession = documentStoreOutput.OpenSession())
-                    {
-                        var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
-                        if (targetPhoto != null)
-                        {
-                            OutputText("Deleting {0} as no longer exists", sourcePhoto.UrlSafePath);
-                            deletionSession.Delete(targetPhoto);
+                    KillOnePhoto(documentStoreOutput, sourcePhoto);
+                }
+            }
+        }
 
-                            deletionSession.SaveChanges();
-                        }
-                        else
-                        {
-                            OutputText("Could not delete {0}", sourcePhoto.UrlSafePath);
-                        }
-                    }
+        private static void KillOnePhoto(EmbeddableDocumentStore documentStoreOutput, Photo sourcePhoto)
+        {
+            using (IDocumentSession deletionSession = documentStoreOutput.OpenSession())
+            {
+                var targetPhoto = deletionSession.Load<Photo>(sourcePhoto.PathHash);
+                if (targetPhoto != null)
+                {
+                    OutputText("Deleting {0} as no longer exists", sourcePhoto.UrlSafePath);
+                    deletionSession.Delete(targetPhoto);
+
+                    deletionSession.SaveChanges();
+                }
+                else
+                {
+                    OutputText("Could not delete {0}", sourcePhoto.UrlSafePath);
                 }
             }
         }
