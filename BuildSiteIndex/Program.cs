@@ -115,6 +115,7 @@ namespace BuildSiteIndex
                 {
                     version = 1,
                     items = (from parentRecord in contents.Values
+                             orderby parentRecord.Path
                              select new GalleryItem
                                  {
                                      Path = parentRecord.Path,
@@ -128,6 +129,7 @@ namespace BuildSiteIndex
                                      Metadata = parentRecord.Metadata ?? new List<PhotoMetadata>(),
                                      Keywords = parentRecord.Keywords ?? new List<string>(),
                                      Children = (from childRecord in parentRecord.Children
+                                                 orderby childRecord.Path
                                                  select new GalleryChildItem
                                                      {
                                                          Path = childRecord.Path,
