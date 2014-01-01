@@ -1,8 +1,7 @@
-﻿using System;
+﻿using System.IO;
 using Amazon;
 using Amazon.S3;
-using Amazon.S3.IO;
-using UploadToAmazon.Properties;
+using Amazon.S3.Transfer;
 
 namespace UploadToAmazon
 {
@@ -15,22 +14,15 @@ namespace UploadToAmazon
                 IAmazonS3 client = AWSClientFactory.CreateAmazonS3Client(awsAccessKey, awsSecretAccessKey,
                                                                          regionEndpoint))
             {
-                var rootDirectory = new S3DirectoryInfo(client, bucketName);
-                rootDirectory.Create();
-
-
-                DateTime updateSTartTime = DateTime.UtcNow;
-                DateTime lastSuccessfulUpdloadDate = Settings.Default.LastSuccessfulUploadDate;
-                if (lastSuccessfulUpdloadDate == DateTime.MinValue)
+                using (var x = new TransferUtility(client))
                 {
-                    rootDirectory.CopyFromLocal(localSourceFolder);
-                }
-                else
-                {
-                    rootDirectory.CopyFromLocal(localSourceFolder, lastSuccessfulUpdloadDate);
+                    x.UploadDirectory(localSourceFolder, bucketName, "*.js", SearchOption.TopDirectoryOnly);
                 }
 
-                Settings.Default.LastSuccessfulUploadDate = updateSTartTime;
+                using (var x = new TransferUtility(client))
+                {
+                    x.UploadDirectory(localSourceFolder, bucketName, "*.jpg", SearchOption.AllDirectories);
+                }
             }
         }
     }
