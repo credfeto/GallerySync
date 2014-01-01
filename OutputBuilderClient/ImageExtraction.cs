@@ -85,7 +85,10 @@ namespace OutputBuilderClient
                     int sourceImageWidth = sourceBitmap.Width;
                     int sourceImageHeight = sourceBitmap.Height;
 
-                    foreach (int dimension in imageSizes.Where(size => ResziedImageWillNotBeBigger(size, sourceImageWidth, sourceImageHeight) ))
+                    foreach (
+                        int dimension in
+                            imageSizes.Where(
+                                size => ResziedImageWillNotBeBigger(size, sourceImageWidth, sourceImageHeight)))
                     {
                         using (Image resized = ResizeImage(sourceBitmap, dimension))
                         {
@@ -119,7 +122,7 @@ namespace OutputBuilderClient
         {
             // || size <= sourceImageHeight
 
-            return size <= sourceImageWidth ;
+            return size <= sourceImageWidth;
         }
 
         private static int[] StandardImageSizesWithThumbnailSize()
@@ -133,11 +136,13 @@ namespace OutputBuilderClient
 
         private static string IndividualResizeFileName(Photo sourcePhoto, Image resized)
         {
-            return UrlNaming.BuildUrlSafePath(
+            string basePath = UrlNaming.BuildUrlSafePath(
                 string.Format("{0}-{1}x{2}",
                               Path.GetFileName(
                                   sourcePhoto.BasePath),
-                              resized.Width, resized.Height)) + ".jpg";
+                              resized.Width, resized.Height)).TrimEnd('/');
+
+            return basePath + ".jpg";
         }
 
         /// <summary>
