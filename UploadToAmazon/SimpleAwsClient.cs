@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Amazon;
 using Amazon.S3;
 using Amazon.S3.Transfer;
@@ -14,16 +15,35 @@ namespace UploadToAmazon
                 IAmazonS3 client = AWSClientFactory.CreateAmazonS3Client(awsAccessKey, awsSecretAccessKey,
                                                                          regionEndpoint))
             {
-                using (var x = new TransferUtility(client))
+                using (var transferUtility = new TransferUtility(client))
                 {
-                    x.UploadDirectory(localSourceFolder, bucketName, "*.js", SearchOption.TopDirectoryOnly);
-                }
+                    UploadDirectory(transferUtility, localSourceFolder, bucketName, "*.js",
+                                    SearchOption.TopDirectoryOnly);
 
-                using (var x = new TransferUtility(client))
-                {
-                    x.UploadDirectory(localSourceFolder, bucketName, "*.jpg", SearchOption.AllDirectories);
+                    UploadDirectory(transferUtility, localSourceFolder, bucketName, "*.jpg", SearchOption.AllDirectories);
                 }
             }
+        }
+
+        private static void UploadDirectory(TransferUtility transferUtility, string localSourceFolder, string bucketName, 
+                                            string searchPattern, SearchOption searchOption)
+        {
+            var req = new TransferUtilityUploadDirectoryRequest
+                {
+                    BucketName = bucketName,
+                    Directory = localSourceFolder,
+                    SearchPattern = searchPattern,
+                    SearchOption = searchOption
+                };
+
+            req.UploadDirectoryProgressEvent += req_UploadDirectoryProgressEvent;
+            transferUtility.UploadDirectory(req);
+        }
+
+        private static void req_UploadDirectoryProgressEvent(object sender, UploadDirectoryProgressArgs e)
+        {
+            double transferProgress = (e.TransferredBytesForCurrentFile / (double)e.TotalNumberOfBytesForCurrentFile) * 100;
+            Console.WriteLine("\rUploaded: {0} ({1}%)", e.CurrentFile, transferProgress );
         }
     }
 }
