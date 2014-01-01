@@ -16,7 +16,7 @@
 
         public const string Latitude = "Latitude";
 
-        public const string Longitude = "Altitude";
+        public const string Longitude = "Longitude";
 
         public const string FocalLength = "Focal Length";
 

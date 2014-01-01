@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using ExifLib;
 using FileNaming;
+using OutputBuilderClient.Metadata;
 using OutputBuilderClient.Properties;
 using TagLib;
 using TagLib.Image;
@@ -23,10 +24,7 @@ namespace OutputBuilderClient
 
             var metadata = new List<PhotoMetadata>();
 
-            if (ExtractXmpMetadata(sourcePhoto, metadata, rootFolder))
-            {
-                return metadata;
-            }
+            ExtractXmpMetadata(sourcePhoto, metadata, rootFolder);
 
             foreach (
                 ComponentFile extension in
@@ -99,6 +97,7 @@ namespace OutputBuilderClient
             if (xmpFile != null)
             {
                 string sidecarFileName = Path.Combine(rootFolder, sourcePhoto.BasePath + xmpFile.Extension);
+                ExtractXmpSidecareAlternative(metadata, sidecarFileName);
                 ExtractMetadataFromXmpSideCar(metadata, sidecarFileName);
                 if (metadata.Any())
                 {
@@ -110,6 +109,7 @@ namespace OutputBuilderClient
                 string xmpFileName = Path.Combine(rootFolder, sourcePhoto.BasePath + ".xmp");
                 if (File.Exists(xmpFileName))
                 {
+                    ExtractXmpSidecareAlternative(metadata, xmpFileName);
                     ExtractMetadataFromXmpSideCar(metadata, xmpFileName);
                     if (metadata.Any())
                     {
@@ -120,6 +120,69 @@ namespace OutputBuilderClient
 
             return false;
         }
+
+        private static void ExtractXmpSidecareAlternative(List<PhotoMetadata> metadata, string sidecarFileName)
+        {
+            try
+            {
+                Dictionary<string, string> properties = XmpFile.ExtractProperties(sidecarFileName);
+
+                string latStr;
+                string lngStr;
+                if (properties.TryGetValue(MetadataNames.Latitude, out latStr) &&
+                    properties.TryGetValue(MetadataNames.Longitude, out lngStr))
+                {
+                    string[] latParts = latStr.Split(',');
+                    string[] lngParts = lngStr.Split(',');
+
+                    if (latParts.Length == 3 && lngParts.Length == 3)
+                    {
+                        double lat = ExtractGpsMetadata(latParts, 'N', 'S');
+                        double lng = ExtractGpsMetadata(lngParts, 'E', 'W');
+
+                        AppendMetadata(metadata, MetadataNames.Latitude, lat);
+                        AppendMetadata(metadata, MetadataNames.Longitude, lng);
+                    }
+                }
+
+
+                foreach (var item in properties.Where(v => !IsLocation(v)))
+                {
+                    if (!string.IsNullOrWhiteSpace(item.Value))
+                    {
+                        AppendMetadata(metadata, item.Key, item.Value);
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private static double ExtractGpsMetadata(string[] parts, char positive, char negative)
+        {
+            double part1 = Convert.ToDouble(parts[0]);
+            double part2 = Convert.ToDouble(parts[1]);
+            double part3 =
+                Convert.ToDouble(parts[2].TrimEnd(positive, negative, char.ToLowerInvariant(positive),
+                                                  char.ToLowerInvariant(negative)));
+
+            double baseValue = part1 + part2/60 + part3/3600;
+            if (parts[2].EndsWith(negative.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                baseValue = -baseValue;
+            }
+
+            return baseValue;
+        }
+
+        private static bool IsLocation(KeyValuePair<string, string> keyValuePair)
+        {
+            var p = new[] {MetadataNames.Latitude, MetadataNames.Longitude};
+
+            return p.Any(v => StringComparer.InvariantCultureIgnoreCase.Equals(v, keyValuePair.Key));
+        }
+
 
         public static bool IsXmp(ComponentFile candidate)
         {
@@ -233,120 +296,195 @@ namespace OutputBuilderClient
 
         public static void ExtractMetadataFromImage(List<PhotoMetadata> metadata, string fileName)
         {
+            TryIgnore(() =>
+                {
+                    var reader = new ExifReader(fileName);
+
+                    TryIgnore(() => ExtractXmpDateTime(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpExposureTime(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpFNumber(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpAperture(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpFocalLength(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpGpsLocation(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpIsoSpeed(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpArtist(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpCopyright(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpCameraMake(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpCameraModel(metadata, reader));
+
+                    TryIgnore(() => ExtractXmpUserComment(metadata, reader));
+                }
+                );
+        }
+
+        private static void ExtractXmpUserComment(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            string userComment;
+            if (reader.GetTagValue(ExifTags.UserComment, out userComment))
+            {
+                if (!string.IsNullOrWhiteSpace(userComment) && !IsStupidManufacturerComment(userComment))
+                {
+                    AppendMetadata(metadata, MetadataNames.Comment, userComment);
+                }
+            }
+        }
+
+        private static void ExtractXmpCameraModel(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            string cameraModel;
+            if (reader.GetTagValue(ExifTags.Model, out cameraModel))
+            {
+                AppendMetadata(metadata, MetadataNames.CameraModel, cameraModel);
+            }
+        }
+
+        private static void ExtractXmpCameraMake(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            string cameraMake;
+            if (reader.GetTagValue(ExifTags.Make, out cameraMake))
+            {
+                AppendMetadata(metadata, MetadataNames.CameraManufacturer, cameraMake);
+            }
+        }
+
+        private static void ExtractXmpCopyright(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            string copyright;
+            if (reader.GetTagValue(ExifTags.Artist, out copyright))
+            {
+                AppendMetadata(metadata, MetadataNames.Copyright, copyright);
+            }
+        }
+
+        private static void ExtractXmpArtist(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            string artist;
+            if (reader.GetTagValue(ExifTags.Artist, out artist))
+            {
+                AppendMetadata(metadata, MetadataNames.Photographer, artist);
+            }
+        }
+
+        private static void ExtractXmpIsoSpeed(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            UInt16 isoSpeed;
+            if (reader.GetTagValue(ExifTags.ISOSpeedRatings, out isoSpeed) )
+            {
+                AppendMetadata(metadata, MetadataNames.ISOSpeed, isoSpeed);
+            }
+        }
+
+        private static void ExtractXmpGpsLocation(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            double[] latitudeComponents;
+            double[] longitudeComponents;
+            if (reader.GetTagValue(ExifTags.GPSLatitude, out latitudeComponents) &&
+                reader.GetTagValue(ExifTags.GPSLongitude, out longitudeComponents)
+                )
+            {
+                string lattitudeRef;
+                if (!reader.GetTagValue(ExifTags.GPSLatitudeRef, out lattitudeRef))
+                {
+                    lattitudeRef = "N";
+                }
+
+                string longitudeRef;
+                if (!reader.GetTagValue(ExifTags.GPSLongitudeRef, out longitudeRef))
+                {
+                    longitudeRef = "E";
+                }
+
+                double latitude = latitudeComponents[0] + latitudeComponents[1]/60 +
+                                  latitudeComponents[2]/3600;
+
+                if (StringComparer.InvariantCultureIgnoreCase.Equals("S", lattitudeRef))
+                {
+                    latitude = -latitude;
+                }
+
+                double longitude = longitudeComponents[0] + longitudeComponents[1]/60 +
+                                   longitudeComponents[2]/3600;
+                if (StringComparer.InvariantCultureIgnoreCase.Equals("W", longitudeRef))
+                {
+                    longitude = -longitude;
+                }
+
+                AppendMetadata(metadata, MetadataNames.Latitude, latitude);
+                AppendMetadata(metadata, MetadataNames.Longitude, longitude);
+            }
+        }
+
+        private static void ExtractXmpDateTime(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            DateTime whenTaken;
+            if (reader.GetTagValue(ExifTags.DateTimeDigitized, out whenTaken))
+            {
+                AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
+            }
+            else if (reader.GetTagValue(ExifTags.DateTime, out whenTaken))
+            {
+                AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
+            }
+            else if (reader.GetTagValue(ExifTags.DateTimeOriginal, out whenTaken))
+            {
+                AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
+            }
+        }
+
+        private static void ExtractXmpExposureTime(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            UInt32[] exposureTime;
+            if (reader.GetTagValue(ExifTags.ExposureTime, out exposureTime))
+            {
+                AppendMetadata(metadata, MetadataNames.ExposureTime,
+                               exposureTime[0]/(double) exposureTime[1]);
+            }
+        }
+
+        private static void ExtractXmpFNumber(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            UInt32[] fNumber;
+            if (reader.GetTagValue(ExifTags.FNumber, out fNumber))
+            {
+                AppendMetadata(metadata, MetadataNames.FNumber,
+                               String.Format("F/{0}", fNumber[0]/(double)fNumber[1]));
+            }
+        }
+
+        private static void ExtractXmpAperture(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            UInt32[] aperture;
+            if (reader.GetTagValue(ExifTags.ApertureValue, out aperture))
+            {
+                AppendMetadata(metadata, MetadataNames.Aperture,
+                               String.Format("{0}/{1}", aperture[0],aperture[1]));
+            }
+        }
+
+        private static void ExtractXmpFocalLength(List<PhotoMetadata> metadata, ExifReader reader)
+        {
+            UInt32[] focalLength;
+            if (reader.GetTagValue(ExifTags.FocalLength, out focalLength))
+            {
+                AppendMetadata(metadata, MetadataNames.FocalLength, focalLength[0]/(double) focalLength[1]);
+            }
+        }
+
+        private static void TryIgnore(Action action)
+        {
             try
             {
-                var reader = new ExifReader(fileName);
-
-                DateTime whenTaken;
-                if (reader.GetTagValue(ExifTags.DateTimeDigitized, out whenTaken))
-                {
-                    AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
-                }
-                else if (reader.GetTagValue(ExifTags.DateTime, out whenTaken))
-                {
-                    AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
-                }
-                else if (reader.GetTagValue(ExifTags.DateTimeOriginal, out whenTaken))
-                {
-                    AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
-                }
-                double[] exposureTime;
-                if (reader.GetTagValue(ExifTags.ExposureTime, out exposureTime))
-                {
-                    AppendMetadata(metadata, MetadataNames.ExposureTime, exposureTime[0]/exposureTime[1]);
-                }
-
-                double[] fNumber;
-                if (reader.GetTagValue(ExifTags.FNumber, out fNumber))
-                {
-                    AppendMetadata(metadata, MetadataNames.FNumber, String.Format("F/{0}", fNumber[0]/fNumber[1]));
-                }
-
-                double[] aperture;
-                if (reader.GetTagValue(ExifTags.ApertureValue, out aperture))
-                {
-                    AppendMetadata(metadata, MetadataNames.Aperture, String.Format("{0}/{1}", aperture[0]/aperture[1]));
-                }
-
-                double[] focalLength;
-                if (reader.GetTagValue(ExifTags.ApertureValue, out focalLength))
-                {
-                    AppendMetadata(metadata, MetadataNames.FocalLength, focalLength[0]/focalLength[1]);
-                }
-
-                double[] latitudeComponents;
-                double[] longitudeComponents;
-                if (reader.GetTagValue(ExifTags.GPSLatitude, out latitudeComponents) &&
-                    reader.GetTagValue(ExifTags.GPSLongitude, out longitudeComponents)
-                    )
-                {
-                    string lattitudeRef;
-                    if (!reader.GetTagValue(ExifTags.GPSLatitudeRef, out lattitudeRef))
-                    {
-                        lattitudeRef = "N";
-                    }
-
-                    string longitudeRef;
-                    if (!reader.GetTagValue(ExifTags.GPSLongitudeRef, out longitudeRef))
-                    {
-                        longitudeRef = "E";
-                    }
-
-                    double latitude = latitudeComponents[0] + latitudeComponents[1]/60 + latitudeComponents[2]/3600;
-
-                    if (StringComparer.InvariantCultureIgnoreCase.Equals("S", lattitudeRef))
-                    {
-                        latitude = -latitude;
-                    }
-
-                    double longitude = longitudeComponents[0] + longitudeComponents[1] / 60 + longitudeComponents[2] / 3600;
-                    if (StringComparer.InvariantCultureIgnoreCase.Equals("W", longitudeRef))
-                    {
-                        longitude = -longitude;
-                    }
-
-                    AppendMetadata(metadata, MetadataNames.Latitude, latitude);
-                    AppendMetadata(metadata, MetadataNames.Longitude, longitude);
-                }
-
-                int isoSpeed;
-                if (reader.GetTagValue(ExifTags.ISOSpeedRatings, out isoSpeed))
-                {
-                    AppendMetadata(metadata, MetadataNames.ISOSpeed, isoSpeed);
-                }
-
-                string artist;
-                if (reader.GetTagValue(ExifTags.Artist, out artist))
-                {
-                    AppendMetadata(metadata, MetadataNames.Photographer, artist);
-                }
-
-                string copyright;
-                if (reader.GetTagValue(ExifTags.Artist, out copyright))
-                {
-                    AppendMetadata(metadata, MetadataNames.Copyright, copyright);
-                }
-
-                string cameraMake;
-                if (reader.GetTagValue(ExifTags.Make, out cameraMake))
-                {
-                    AppendMetadata(metadata, MetadataNames.CameraManufacturer, cameraMake);
-                }
-
-                string cameraModel;
-                if (reader.GetTagValue(ExifTags.Model, out cameraModel))
-                {
-                    AppendMetadata(metadata, MetadataNames.CameraModel, cameraModel);
-                }
-
-                string userComment;
-                if (reader.GetTagValue(ExifTags.UserComment, out userComment))
-                {
-                    if (!string.IsNullOrWhiteSpace(userComment) && !IsStupidManufacturerComment(userComment))
-                    {
-                        AppendMetadata(metadata, MetadataNames.Comment, userComment);
-                    }
-                }
+                action();
             }
             catch
             {

@@ -94,6 +94,12 @@
     <Compile Include="ImageConverters\RAWImageConverter.cs" />
     <Compile Include="ImageExtraction.cs" />
     <Compile Include="MetadataExtraction.cs" />
+    <Compile Include="Metadata\AttributeItemLoader.cs" />
+    <Compile Include="Metadata\ElementItemListLoader.cs" />
+    <Compile Include="Metadata\ElementItemLoader.cs" />
+    <Compile Include="Metadata\IItemLoader.cs" />
+    <Compile Include="Metadata\ItemLoaderBase.cs" />
+    <Compile Include="Metadata\XmpFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
