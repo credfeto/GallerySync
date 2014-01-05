@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using HomeClient.Properties;
@@ -11,6 +12,8 @@ namespace HomeClient
     {
         private static int Main()
         {
+            BoostPriority();
+
             try
             {
                 ProcessGallery();
@@ -21,6 +24,18 @@ namespace HomeClient
             {
                 Console.WriteLine("Error: {0}", exception.Message);
                 return 1;
+            }
+        }
+
+        private static void BoostPriority()
+        {
+            try
+            {
+                System.Diagnostics.Process.GetCurrentProcess().PriorityClass =
+                    ProcessPriorityClass.High;
+            }
+            catch (Exception)
+            {
             }
         }
 

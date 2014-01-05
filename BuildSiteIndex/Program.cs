@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace BuildSiteIndex
     {
         private static int Main()
         {
+            BoostPriority();
+
             try
             {
                 ProcessGallery();
@@ -28,6 +31,18 @@ namespace BuildSiteIndex
             {
                 Console.WriteLine("Error: {0}", exception.Message);
                 return 1;
+            }
+        }
+
+        private static void BoostPriority()
+        {
+            try
+            {
+                Process.GetCurrentProcess().PriorityClass =
+                    ProcessPriorityClass.High;
+            }
+            catch (Exception)
+            {
             }
         }
 
@@ -64,9 +79,10 @@ namespace BuildSiteIndex
 
                     EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
-                    string parentLevel = EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
+                    string parentLevel =
+                        EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
 
-                    var title = ExtractTitle(sourcePhoto);
+                    string title = ExtractTitle(sourcePhoto);
                     if (string.IsNullOrWhiteSpace(title))
                     {
                         // fallback to a title based on the filename
@@ -91,7 +107,6 @@ namespace BuildSiteIndex
 
         private static string EnsureTerminatedBreadcrumbs(string path)
         {
-            
             return EnsureEndsWithSpecificTerminator(path, "\\");
         }
 
@@ -142,10 +157,10 @@ namespace BuildSiteIndex
                                                          ImageSizes = childRecord.ImageSizes ?? new List<ImageSize>()
                                                      }).ToList()
                                  }).ToList(),
-                        deletedItems = new List<string>()
+                    deletedItems = new List<string>()
                 };
 
-            var outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
+            string outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
 
             string json = JsonConvert.SerializeObject(data);
             byte[] encoded = Encoding.UTF8.GetBytes(json);
@@ -269,7 +284,7 @@ namespace BuildSiteIndex
             {
                 description = desc.Value;
             }
-            
+
             return description;
         }
 
@@ -319,7 +334,8 @@ namespace BuildSiteIndex
                 GalleryEntry item;
                 if (!contents.TryGetValue(level, out item))
                 {
-                    string parentLevel = EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(folderLevel - 1)));
+                    string parentLevel =
+                        EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(folderLevel - 1)));
 
                     AppendEntry(contents, parentLevel, level, new GalleryEntry
                         {
