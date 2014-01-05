@@ -28,6 +28,7 @@ namespace UploadToAmazon
         private static void UploadDirectory(TransferUtility transferUtility, string localSourceFolder, string bucketName, 
                                             string searchPattern, SearchOption searchOption)
         {
+            // TODO: Work out how to ignore what's aready there
             var req = new TransferUtilityUploadDirectoryRequest
                 {
                     BucketName = bucketName,
