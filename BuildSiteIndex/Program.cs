@@ -131,6 +131,15 @@ namespace BuildSiteIndex
                     version = 1,
                     items = (from parentRecord in contents.Values
                              orderby parentRecord.Path
+                             let siblings = GetSiblings(contents, parentRecord)
+                             let firstItem =
+                                 GetFirstItem(siblings, parentRecord)
+                             let lastItem =
+                                 GetLastItem(siblings, parentRecord)
+                             let previousItem =
+                                 GetPreviousItem(siblings, parentRecord, firstItem)
+                             let nextItem =
+                                 GetNextItem(siblings, parentRecord, lastItem)
                              select new GalleryItem
                                  {
                                      Path = parentRecord.Path,
@@ -143,19 +152,13 @@ namespace BuildSiteIndex
                                      ImageSizes = parentRecord.ImageSizes ?? new List<ImageSize>(),
                                      Metadata = parentRecord.Metadata ?? new List<PhotoMetadata>(),
                                      Keywords = parentRecord.Keywords ?? new List<string>(),
+                                     First = firstItem,
+                                     Previous = previousItem,
+                                     Next = nextItem,
+                                     Last = lastItem,
                                      Children = (from childRecord in parentRecord.Children
                                                  orderby childRecord.Path
-                                                 select new GalleryChildItem
-                                                     {
-                                                         Path = childRecord.Path,
-                                                         Title = childRecord.Title,
-                                                         Description = childRecord.Description,
-                                                         DateCreated = childRecord.DateCreated,
-                                                         DateUpdated = childRecord.DateUpdated,
-                                                         Location = childRecord.Location,
-                                                         Type = childRecord.Children.Any() ? "folder" : "photo",
-                                                         ImageSizes = childRecord.ImageSizes ?? new List<ImageSize>()
-                                                     }).ToList()
+                                                 select CreateGalleryChildItem(childRecord)).ToList(),
                                  }).ToList(),
                     deletedItems = new List<string>()
                 };
@@ -166,6 +169,129 @@ namespace BuildSiteIndex
             byte[] encoded = Encoding.UTF8.GetBytes(json);
             File.WriteAllBytes(outputFilename, encoded);
         }
+
+        private static GalleryChildItem GetNextItem(List<GalleryEntry> siblings, GalleryEntry parentRecord,
+                                                    GalleryChildItem lastItem)
+        {
+            GalleryChildItem candidate = siblings.SkipWhile(x => x != parentRecord)
+                                                 .Skip(1)
+                                                 .Select(CreateGalleryChildItem).FirstOrDefault();
+
+            return SkipKnownItem(candidate, lastItem);
+        }
+
+        private static GalleryChildItem SkipKnownItem(GalleryChildItem candidate,
+                                                      GalleryChildItem itemToIgnoreIfMataches)
+        {
+            if (candidate != null && candidate.Path == itemToIgnoreIfMataches.Path)
+            {
+                return null;
+            }
+
+            return candidate;
+        }
+
+        private static GalleryChildItem GetFirstItem(List<GalleryEntry> siblings, GalleryEntry parentRecord)
+        {
+            GalleryChildItem candidate = siblings
+                .Select(CreateGalleryChildItem).FirstOrDefault();
+
+            return SkipKnownItem(candidate, parentRecord);
+        }
+
+        private static GalleryChildItem SkipKnownItem(GalleryChildItem candidate, GalleryEntry itemToIgnoreIfMataches)
+        {
+            if (candidate != null && candidate.Path == itemToIgnoreIfMataches.Path)
+            {
+                return null;
+            }
+
+            return candidate;
+        }
+
+        private static GalleryChildItem CreateGalleryChildItem(GalleryEntry firstRecord)
+        {
+            return new GalleryChildItem
+                {
+                    Path = firstRecord.Path,
+                    Title = firstRecord.Title,
+                    Description = firstRecord.Description,
+                    DateCreated = firstRecord.DateCreated,
+                    DateUpdated = firstRecord.DateUpdated,
+                    Location = firstRecord.Location,
+                    Type = firstRecord.Children.Any() ? "folder" : "photo",
+                    ImageSizes = firstRecord.ImageSizes ?? new List<ImageSize>()
+                };
+        }
+
+        private static GalleryChildItem GetLastItem(List<GalleryEntry> siblings, GalleryEntry parentRecord)
+        {
+            GalleryChildItem candidate = siblings
+                .Select(CreateGalleryChildItem).LastOrDefault();
+
+            return SkipKnownItem(candidate, parentRecord);
+        }
+
+        private static GalleryChildItem GetPreviousItem(List<GalleryEntry> siblings, GalleryEntry parentRecord,
+                                                        GalleryChildItem firstItem)
+        {
+            GalleryChildItem candidate = siblings.TakeWhile(x => x != parentRecord)
+                                                 .Select(CreateGalleryChildItem).LastOrDefault();
+
+            return SkipKnownItem(candidate, firstItem);
+        }
+
+        public IEnumerable<Tuple<T, T, T>> WithNextAndPrevious<T>(IEnumerable<T> source)
+        {
+            // Actually yield "the previous two" as well as the current one - this
+            // is easier to implement than "previous and next" but they're equivalent
+            using (IEnumerator<T> iterator = source.GetEnumerator())
+            {
+                if (!iterator.MoveNext())
+                {
+                    yield break;
+                }
+                T lastButOne = iterator.Current;
+                if (!iterator.MoveNext())
+                {
+                    yield break;
+                }
+                T previous = iterator.Current;
+                while (iterator.MoveNext())
+                {
+                    T current = iterator.Current;
+                    yield return Tuple.Create(lastButOne, previous, current);
+                    lastButOne = previous;
+                    previous = current;
+                }
+            }
+        }
+
+
+        private static List<GalleryEntry> GetSiblings(Dictionary<string, GalleryEntry> contents, GalleryEntry entry)
+        {
+            if (entry.Path.Length == 1)
+            {
+                return new List<GalleryEntry>();
+            }
+
+            int parentPathIndex = entry.Path.LastIndexOf('/', entry.Path.Length - 2);
+            if (parentPathIndex == -1)
+            {
+                return new List<GalleryEntry>();
+            }
+
+            string parentPath = entry.Path.Substring(0, parentPathIndex + 1);
+
+            GalleryEntry parentItem;
+            if (contents.TryGetValue(parentPath, out parentItem) && parentItem != null)
+            {
+                return new List<GalleryEntry>(parentItem.Children.OrderBy(item => item.Path));
+            }
+
+            return new List<GalleryEntry>();
+        }
+
 
         private static void AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path,
                                              string title, Photo sourcePhoto)
