@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
@@ -17,7 +16,6 @@ using Newtonsoft.Json.Serialization;
 using Raven.Abstractions.Data;
 using Raven.Client;
 using Raven.Client.Embedded;
-using Raven.Client.Linq;
 using Twaddle.Gallery.ObjectModel;
 
 namespace BuildSiteIndex
@@ -200,14 +198,40 @@ namespace BuildSiteIndex
                     }
                 }
             }
+            else
+            {
+                UploadAllItems(data);
+            }
 
             byte[] encoded = Encoding.UTF8.GetBytes(json);
             File.WriteAllBytes(outputFilename, encoded);
         }
 
+        private static void UploadAllItems(GallerySiteIndex data)
+        {
+            foreach (
+                GalleryItem item in UploadOrdering(data))
+            {
+                UploadOneItem(data, item);
+            }
+        }
+
+        private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
+        {
+            return data.items.OrderBy(StrictTypeOrdering)
+                       .OrderByDescending(candidate => candidate.Path);
+        }
+
+        private static int StrictTypeOrdering(GalleryItem candidate)
+        {
+            // Photos first... albums after
+            return candidate.Type == "photo" ? 1 : 2;
+        }
+
         private static void UploadChanges(GallerySiteIndex data, GallerySiteIndex oldData)
         {
-            foreach (GalleryItem item in data.items.OrderByDescending(candidate => candidate.Path.Length).OrderBy(candidate => candidate.Path))
+            foreach (
+                GalleryItem item in UploadOrdering(data))
             {
                 GalleryItem oldItem = oldData.items.FirstOrDefault(candidate => candidate.Path == item.Path);
                 if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
@@ -228,19 +252,17 @@ namespace BuildSiteIndex
             //    UseProxy = true
             //};
 
-            using (var client = new HttpClient()
+            using (var client = new HttpClient
                 {
-                    BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)                    
+                    BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)
                 })
             {
-
-
                 Console.WriteLine("Uploading: {0}", item.Path);
 
                 client.DefaultRequestHeaders.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/json"));
 
-                
+
                 var formatter = new JsonMediaTypeFormatter
                     {
                         SerializerSettings = {ContractResolver = new DefaultContractResolver()}
@@ -258,22 +280,6 @@ namespace BuildSiteIndex
             }
         }
 
-
-        public class ConverterContractResolver : DefaultContractResolver
-        {
-          public static readonly ConverterContractResolver Instance = new ConverterContractResolver();
-
-          protected override JsonContract CreateContract(Type objectType)
-          {
-            JsonContract contract = base.CreateContract(objectType);
-
-            // this will only be called once and then cached
-            if (objectType == typeof(DateTime) || objectType == typeof(DateTimeOffset))
-              contract.Converter = new JavaScriptDateTimeConverter();
-
-            return contract;
-          }
-        }
 
         private static GallerySiteIndex CreateItemToPost(GallerySiteIndex data, GalleryItem item)
         {
@@ -637,6 +643,22 @@ namespace BuildSiteIndex
                 {
                     yield return enumerator.Current.Document;
                 }
+        }
+
+        public class ConverterContractResolver : DefaultContractResolver
+        {
+            public static readonly ConverterContractResolver Instance = new ConverterContractResolver();
+
+            protected override JsonContract CreateContract(Type objectType)
+            {
+                JsonContract contract = base.CreateContract(objectType);
+
+                // this will only be called once and then cached
+                if (objectType == typeof (DateTime) || objectType == typeof (DateTimeOffset))
+                    contract.Converter = new JavaScriptDateTimeConverter();
+
+                return contract;
+            }
         }
     }
 }
