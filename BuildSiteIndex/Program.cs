@@ -4,15 +4,20 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Text;
 using BuildSiteIndex.Properties;
 using FileNaming;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using Raven.Abstractions.Data;
 using Raven.Client;
 using Raven.Client.Embedded;
+using Raven.Client.Linq;
 using Twaddle.Gallery.ObjectModel;
 
 namespace BuildSiteIndex
@@ -202,7 +207,7 @@ namespace BuildSiteIndex
 
         private static void UploadChanges(GallerySiteIndex data, GallerySiteIndex oldData)
         {
-            foreach (GalleryItem item in data.items.OrderByDescending(candidate => candidate.Path.Length))
+            foreach (GalleryItem item in data.items.OrderByDescending(candidate => candidate.Path.Length).OrderBy(candidate => candidate.Path))
             {
                 GalleryItem oldItem = oldData.items.FirstOrDefault(candidate => candidate.Path == item.Path);
                 if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
@@ -216,19 +221,58 @@ namespace BuildSiteIndex
         {
             GallerySiteIndex itemToPost = CreateItemToPost(data, item);
 
-            using (var client = new HttpClient
+            //var handler = new HttpClientHandler
+            //{
+            //    UseDefaultCredentials = false,
+            //    Proxy = new WebProxy("http://localhost:8888", false, new string[] { }),
+            //    UseProxy = true
+            //};
+
+            using (var client = new HttpClient()
                 {
-                    BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)
+                    BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)                    
                 })
             {
+
+
                 Console.WriteLine("Uploading: {0}", item.Path);
 
                 client.DefaultRequestHeaders.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/json"));
 
-                HttpResponseMessage response = client.PostAsJsonAsync("tasks/sync", itemToPost).Result;
+                
+                var formatter = new JsonMediaTypeFormatter
+                    {
+                        SerializerSettings = {ContractResolver = new DefaultContractResolver()}
+                    };
+
+                var content = new ObjectContent<GallerySiteIndex>(itemToPost, formatter);
+
+                HttpResponseMessage response = client.PostAsync("tasks/sync", content).Result;
                 Console.WriteLine("Status: {0}", response.StatusCode);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+                }
             }
+        }
+
+
+        public class ConverterContractResolver : DefaultContractResolver
+        {
+          public static readonly ConverterContractResolver Instance = new ConverterContractResolver();
+
+          protected override JsonContract CreateContract(Type objectType)
+          {
+            JsonContract contract = base.CreateContract(objectType);
+
+            // this will only be called once and then cached
+            if (objectType == typeof(DateTime) || objectType == typeof(DateTimeOffset))
+              contract.Converter = new JavaScriptDateTimeConverter();
+
+            return contract;
+          }
         }
 
         private static GallerySiteIndex CreateItemToPost(GallerySiteIndex data, GalleryItem item)
