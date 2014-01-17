@@ -125,7 +125,7 @@ namespace BuildSiteIndex
         }
 
         private static void ProduceJsonFile(Dictionary<string, GalleryEntry> contents)
-        {
+        {            
             var data = new GallerySiteIndex
                 {
                     version = 1,
@@ -166,6 +166,18 @@ namespace BuildSiteIndex
             string outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
 
             string json = JsonConvert.SerializeObject(data);
+            if (File.Exists(outputFilename))
+            {
+                Console.WriteLine("Previous Json file exists");
+                var originalBytes = File.ReadAllBytes(outputFilename);
+                var decoded = Encoding.UTF8.GetString(originalBytes);
+                if (decoded == json)
+                {
+                    Console.WriteLine("No changes since last run");
+                    return;
+                }
+            }
+
             byte[] encoded = Encoding.UTF8.GetBytes(json);
             File.WriteAllBytes(outputFilename, encoded);
         }
