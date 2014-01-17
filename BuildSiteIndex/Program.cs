@@ -196,6 +196,10 @@ namespace BuildSiteIndex
                     {
                         UploadChanges(data, oldData);
                     }
+                    else
+                    {
+                        UploadAllItems(data);
+                    }
                 }
             }
             else
