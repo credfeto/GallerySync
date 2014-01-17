@@ -40,5 +40,14 @@ namespace BuildSiteIndex.Properties {
                 return ((string)(this["OutputFolder"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://localhost:8080/")]
+        public string WebServerBaseAddress {
+            get {
+                return ((string)(this["WebServerBaseAddress"]));
+            }
+        }
     }
 }

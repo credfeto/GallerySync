@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using BuildSiteIndex.Properties;
 using FileNaming;
@@ -125,7 +127,7 @@ namespace BuildSiteIndex
         }
 
         private static void ProduceJsonFile(Dictionary<string, GalleryEntry> contents)
-        {            
+        {
             var data = new GallerySiteIndex
                 {
                     version = 1,
@@ -169,17 +171,78 @@ namespace BuildSiteIndex
             if (File.Exists(outputFilename))
             {
                 Console.WriteLine("Previous Json file exists");
-                var originalBytes = File.ReadAllBytes(outputFilename);
-                var decoded = Encoding.UTF8.GetString(originalBytes);
+                byte[] originalBytes = File.ReadAllBytes(outputFilename);
+                string decoded = Encoding.UTF8.GetString(originalBytes);
                 if (decoded == json)
                 {
                     Console.WriteLine("No changes since last run");
                     return;
                 }
+                else
+                {
+                    GallerySiteIndex oldData = null;
+                    try
+                    {
+                        oldData = JsonConvert.DeserializeObject<GallerySiteIndex>(decoded);
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+                    if (oldData != null)
+                    {
+                        UploadChanges(data, oldData);
+                    }
+                }
             }
 
             byte[] encoded = Encoding.UTF8.GetBytes(json);
             File.WriteAllBytes(outputFilename, encoded);
+        }
+
+        private static void UploadChanges(GallerySiteIndex data, GallerySiteIndex oldData)
+        {
+            foreach (GalleryItem item in data.items.OrderByDescending(candidate => candidate.Path.Length))
+            {
+                GalleryItem oldItem = oldData.items.FirstOrDefault(candidate => candidate.Path == item.Path);
+                if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
+                {
+                    UploadOneItem(data, item);
+                }
+            }
+        }
+
+        private static void UploadOneItem(GallerySiteIndex data, GalleryItem item)
+        {
+            GallerySiteIndex itemToPost = CreateItemToPost(data, item);
+
+            using (var client = new HttpClient
+                {
+                    BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)
+                })
+            {
+                Console.WriteLine("Uploading: {0}", item.Path);
+
+                client.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage response = client.PostAsJsonAsync("tasks/sync", itemToPost).Result;
+                Console.WriteLine("Status: {0}", response.StatusCode);
+            }
+        }
+
+        private static GallerySiteIndex CreateItemToPost(GallerySiteIndex data, GalleryItem item)
+        {
+            var itemToPost = new GallerySiteIndex
+                {
+                    version = data.version,
+                    items = new List<GalleryItem>
+                        {
+                            item
+                        },
+                    deletedItems = new List<string>()
+                };
+            return itemToPost;
         }
 
         private static GalleryChildItem GetNextItem(List<GalleryEntry> siblings, GalleryEntry parentRecord,
