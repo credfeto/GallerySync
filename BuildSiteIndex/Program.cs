@@ -70,6 +70,10 @@ namespace BuildSiteIndex
             const string albumsRoot = "albums";
             const string albumsTitle = "Albums";
 
+            const string keywordsRoot = "keywords";
+            const string keywordsTitle = "Keywords";
+
+            var keywords = new Dictionary<string, KeywordEntry>();
 
             using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
@@ -97,10 +101,45 @@ namespace BuildSiteIndex
                     AppendPhotoEntry(contents, parentLevel, path,
                                      title,
                                      sourcePhoto);
+
+                    PhotoMetadata keywordMetadata =
+                        sourcePhoto.Metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.Keywords);
+                    if (keywordMetadata != null)
+                    {
+                        foreach (
+                            string keyword in
+                                keywordMetadata.Value.Split(',')
+                                               .Where(candidate => !string.IsNullOrWhiteSpace(candidate)))
+                        {
+                            KeywordEntry entry;
+                            if (!keywords.TryGetValue(keyword.ToLowerInvariant(), out entry))
+                            {
+                                entry = new KeywordEntry(keyword);
+                                keywords.Add(keyword.ToLowerInvariant(), entry);
+                            }
+
+                            entry.Photos.Add(sourcePhoto);
+                        }
+                    }
                 }
             }
 
             Console.WriteLine("Found {0} items total", contents.Count);
+            Console.WriteLine("Found {0} keyword items total", keywords.Count);
+
+            foreach (var keyword in keywords.Values)
+            {
+                foreach (var sourcePhoto in keyword.Photos)
+                {
+                    string path = EnsureTerminatedPath("/" + keywordsRoot + "/" + keyword.Keyword.ToLowerInvariant() + "/" + sourcePhoto.UrlSafePath);
+                    string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + keywordsTitle + "\\" + keyword.Keyword +"\\" + sourcePhoto.BasePath);
+                    Console.WriteLine("Item: {0}", path);
+
+                    string[] pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
+                    string[] breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+                }
+
+            }
 
             ProduceJsonFile(contents);
         }

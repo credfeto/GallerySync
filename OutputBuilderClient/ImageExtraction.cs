@@ -65,7 +65,7 @@ namespace OutputBuilderClient
             }
         }
 
-        public static List<ImageSize> BuildImages(Photo sourcePhoto)
+        public static List<ImageSize> BuildImages(Photo sourcePhoto, List<string> filesCreated )
         {
             var sizes = new List<ImageSize>();
 
@@ -100,6 +100,8 @@ namespace OutputBuilderClient
                                                                   IndividualResizeFileName(sourcePhoto, resized));
 
                             WriteImage(resizedFileName, resizedBytes);
+                            filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
+                                                   IndividualResizeFileName(sourcePhoto, resized));
 
                             sizes.Add(new ImageSize
                                 {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using FileNaming;
 using OutputBuilderClient.Properties;
 using Raven.Abstractions.Data;
@@ -99,7 +100,7 @@ namespace OutputBuilderClient
                 if (targetPhoto != null)
                 {
                     OutputText("Deleting {0} as no longer exists", sourcePhoto.UrlSafePath);
-                    deletionSession.Delete(targetPhoto);
+                    deletionSession.Delete(targetPhoto);                    
 
                     deletionSession.SaveChanges();
                 }
@@ -139,26 +140,7 @@ namespace OutputBuilderClient
 
                     if (build || rebuild)
                     {
-                        OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
-
-                        UpdateFileHashes(targetPhoto, sourcePhoto);
-
-                        sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
-
-                        sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto);
-
-                        if (targetPhoto != null)
-                        {
-                            UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
-
-                            outputSession.Store(targetPhoto, targetPhoto.PathHash);
-                        }
-                        else
-                        {
-                            outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
-                        }
-
-                        outputSession.SaveChanges();
+                        ProcessOneFile(outputSession, sourcePhoto, targetPhoto, rebuild);
                     }
                     else
                     {
@@ -175,6 +157,62 @@ namespace OutputBuilderClient
             {
                 OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
                            exception.Message);
+            }
+        }
+
+        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto, bool rebuild)
+        {
+            OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
+
+            UpdateFileHashes(targetPhoto, sourcePhoto);
+
+            sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
+
+            List<string> filesCreated = new List<string>();
+            sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated);
+
+            if (targetPhoto != null)
+            {
+                UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
+
+                AddUploadFiles(filesCreated, outputSession);
+
+                outputSession.Store(targetPhoto, targetPhoto.PathHash);
+            }
+            else
+            {
+                AddUploadFiles(filesCreated, outputSession);
+                outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
+            }
+
+            outputSession.SaveChanges();
+        }
+
+        private static void AddUploadFiles(List<string> filesCreated, IDocumentSession outputSession)
+        {
+            foreach (var file in filesCreated)
+            {
+                var key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(file));
+
+                var existing = outputSession.Load<FileToUpload>(key);
+                if (existing == null)
+                {
+                    var fileToUpload = new FileToUpload
+                        {
+                            FileName = file,
+                            Completed = false
+                        };
+
+                    outputSession.Store(fileToUpload, key);
+                }
+                else
+                {
+                    if (existing.Completed)
+                    {
+                        existing.Completed = false;
+                        outputSession.Store(existing, key);
+                    }
+                }
             }
         }
 

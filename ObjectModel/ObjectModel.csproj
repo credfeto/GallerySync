@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ComponentFile.cs" />
+    <Compile Include="FileToUpload.cs" />
     <Compile Include="ImageSize.cs" />
     <Compile Include="Photo.cs" />
     <Compile Include="PhotoDeployment.cs" />

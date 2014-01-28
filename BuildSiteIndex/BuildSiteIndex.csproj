@@ -90,6 +90,7 @@
     <Compile Include="GalleryItem.cs" />
     <Compile Include="GallerySiteIndex.cs" />
     <Compile Include="ItemUpdateHelpers.cs" />
+    <Compile Include="KeywordEntry.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
