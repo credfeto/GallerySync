@@ -207,7 +207,7 @@ namespace BuildSiteIndex
                                  }).ToList(),
                     deletedItems = new List<string>()
                 };
-
+            
             string outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
 
             string json = JsonConvert.SerializeObject(data);
@@ -234,7 +234,29 @@ namespace BuildSiteIndex
 
                     if (oldData != null)
                     {
+                        var deletedItems = FindDeletedItems(oldData, data);
+                        data.deletedItems.AddRange(deletedItems.OrderBy( x => x));
+
                         UploadChanges(data, oldData);
+
+                        const int batchSize = 100;
+                        List<string> batch = null;
+                        foreach (var deletedItem in deletedItems)
+                        {
+                            if (batch == null)
+                            {
+                                batch = new List<string>();
+                            }
+
+                            batch.Add(deletedItem);
+
+                            if (batch.Count >= batchSize)
+                            {
+                                UploadDeletionBatch(data, batch);
+                                batch = null;
+
+                            }
+                        }
                     }
                     else
                     {
@@ -249,6 +271,26 @@ namespace BuildSiteIndex
 
             byte[] encoded = Encoding.UTF8.GetBytes(json);
             File.WriteAllBytes(outputFilename, encoded);
+        }
+        
+        private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
+        {
+            var oldItems = oldData.items.Select(r => r.Path).ToList();
+            var newItems = data.items.Select(r => r.Path).ToList();
+
+            var deletedItems = oldItems.Where(oldItem => !newItems.Contains(oldItem)).ToList();
+
+            if (oldData.deletedItems != null)
+            {
+                foreach (var oldDeletedItem in oldData.deletedItems)
+                {
+                    if (!newItems.Contains(oldDeletedItem) && !deletedItems.Contains(oldDeletedItem))
+                    {
+                        deletedItems.Add(oldDeletedItem);
+                    }
+                }
+            }
+            return deletedItems;
         }
 
         private static void UploadAllItems(GallerySiteIndex data)
@@ -289,6 +331,13 @@ namespace BuildSiteIndex
         {
             GallerySiteIndex itemToPost = CreateItemToPost(data, item);
 
+            var progressText = item.Path;
+
+            UploadItem(itemToPost, progressText);
+        }
+
+        private static void UploadItem(GallerySiteIndex itemToPost, string progressText)
+        {
             //var handler = new HttpClientHandler
             //{
             //    UseDefaultCredentials = false,
@@ -301,7 +350,7 @@ namespace BuildSiteIndex
                     BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)
                 })
             {
-                Console.WriteLine("Uploading: {0}", item.Path);
+                Console.WriteLine("Uploading: {0}", progressText);
 
                 client.DefaultRequestHeaders.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/json"));
@@ -337,6 +386,26 @@ namespace BuildSiteIndex
                     deletedItems = new List<string>()
                 };
             return itemToPost;
+        }
+
+        private static GallerySiteIndex CreateItemToPost(GallerySiteIndex data, List<string> itemsToDelete)
+        {
+            var itemToPost = new GallerySiteIndex
+            {
+                version = data.version,
+                items = new List<GalleryItem>(),
+                deletedItems = new List<string>(itemsToDelete)
+            };
+            return itemToPost;
+        }
+
+        private static void UploadDeletionBatch(GallerySiteIndex data, List<string> batch)
+        {
+            GallerySiteIndex itemToPost = CreateItemToPost(data, batch);
+
+            var progressText = string.Format("Deletion batch of size {0} starting with {1}", batch.Count, batch.FirstOrDefault());
+
+            UploadItem(itemToPost, progressText);
         }
 
         private static GalleryChildItem GetNextItem(List<GalleryEntry> siblings, GalleryEntry parentRecord,
