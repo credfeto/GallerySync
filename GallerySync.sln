@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UploadToAmazon", "UploadToA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildSiteIndex", "BuildSiteIndex\BuildSiteIndex.csproj", "{0DB62336-4B3A-4AA7-8EF5-FADF44A4E519}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StorageHelpers", "StorageHelpers\StorageHelpers.csproj", "{08172B08-5233-4626-BE5B-D4FBCCCAA14B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{0DB62336-4B3A-4AA7-8EF5-FADF44A4E519}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DB62336-4B3A-4AA7-8EF5-FADF44A4E519}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DB62336-4B3A-4AA7-8EF5-FADF44A4E519}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08172B08-5233-4626-BE5B-D4FBCCCAA14B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08172B08-5233-4626-BE5B-D4FBCCCAA14B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08172B08-5233-4626-BE5B-D4FBCCCAA14B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08172B08-5233-4626-BE5B-D4FBCCCAA14B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

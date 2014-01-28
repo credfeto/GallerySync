@@ -23,15 +23,30 @@ namespace UploadToAmazon.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2000-01-01")]
-        public global::System.DateTime LastSuccessfulUploadDate {
+        [global::System.Configuration.DefaultSettingValueAttribute("I:\\Database\\Current")]
+        public string DatabaseInputFolder {
             get {
-                return ((global::System.DateTime)(this["LastSuccessfulUploadDate"]));
+                return ((string)(this["DatabaseInputFolder"]));
             }
-            set {
-                this["LastSuccessfulUploadDate"] = value;
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("E:\\Gallery\\Images\\Output")]
+        public string SourceImagesFolder {
+            get {
+                return ((string)(this["SourceImagesFolder"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("E:\\GalleryUpload")]
+        public string OutputFolder {
+            get {
+                return ((string)(this["OutputFolder"]));
             }
         }
     }

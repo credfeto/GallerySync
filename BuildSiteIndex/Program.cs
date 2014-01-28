@@ -16,6 +16,7 @@ using Newtonsoft.Json.Serialization;
 using Raven.Abstractions.Data;
 using Raven.Client;
 using Raven.Client.Embedded;
+using StorageHelpers;
 using Twaddle.Gallery.ObjectModel;
 
 namespace BuildSiteIndex
@@ -77,7 +78,7 @@ namespace BuildSiteIndex
 
             using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
-                foreach (Photo sourcePhoto in GetAll(inputSession))
+                foreach (Photo sourcePhoto in inputSession.GetAll<Photo>())
                 {
                     string path = EnsureTerminatedPath("/" + albumsRoot + "/" + sourcePhoto.UrlSafePath);
                     string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + albumsTitle + "\\" + sourcePhoto.BasePath);
@@ -674,18 +675,6 @@ namespace BuildSiteIndex
 
 
             contents.Add("/", entry);
-        }
-
-        private static IEnumerable<Photo> GetAll(IDocumentSession session)
-        {
-            using (
-                IEnumerator<StreamResult<Photo>> enumerator = session.Advanced.Stream<Photo>(fromEtag: Etag.Empty,
-                                                                                             start: 0,
-                                                                                             pageSize: int.MaxValue))
-                while (enumerator.MoveNext())
-                {
-                    yield return enumerator.Current.Document;
-                }
         }
 
         public class ConverterContractResolver : DefaultContractResolver

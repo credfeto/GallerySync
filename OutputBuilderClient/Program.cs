@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using FileNaming;
 using OutputBuilderClient.Properties;
-using Raven.Abstractions.Data;
 using Raven.Client;
 using Raven.Client.Embedded;
+using StorageHelpers;
 using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
@@ -80,7 +80,7 @@ namespace OutputBuilderClient
         {
             using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
             {
-                foreach (Photo sourcePhoto in GetAll(outputSession).AsParallel())
+                foreach (Photo sourcePhoto in outputSession.GetAll<Photo>().AsParallel())
                 {
                     if (liveItems.Contains(sourcePhoto.PathHash))
                     {
@@ -100,7 +100,7 @@ namespace OutputBuilderClient
                 if (targetPhoto != null)
                 {
                     OutputText("Deleting {0} as no longer exists", sourcePhoto.UrlSafePath);
-                    deletionSession.Delete(targetPhoto);                    
+                    deletionSession.Delete(targetPhoto);
 
                     deletionSession.SaveChanges();
                 }
@@ -118,7 +118,7 @@ namespace OutputBuilderClient
             {
                 var items = new HashSet<string>();
 
-                foreach (Photo sourcePhoto in GetAll(inputSession).AsParallel())
+                foreach (Photo sourcePhoto in inputSession.GetAll<Photo>().AsParallel())
                 {
                     ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
                 }
@@ -160,7 +160,8 @@ namespace OutputBuilderClient
             }
         }
 
-        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto, bool rebuild)
+        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto,
+                                           bool rebuild)
         {
             OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
@@ -168,7 +169,7 @@ namespace OutputBuilderClient
 
             sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
 
-            List<string> filesCreated = new List<string>();
+            var filesCreated = new List<string>();
             sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated);
 
             if (targetPhoto != null)
@@ -190,9 +191,9 @@ namespace OutputBuilderClient
 
         private static void AddUploadFiles(List<string> filesCreated, IDocumentSession outputSession)
         {
-            foreach (var file in filesCreated)
+            foreach (string file in filesCreated)
             {
-                var key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(file));
+                string key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(file));
 
                 var existing = outputSession.Load<FileToUpload>(key);
                 if (existing == null)
@@ -314,18 +315,6 @@ namespace OutputBuilderClient
             }
 
             return false;
-        }
-
-        private static IEnumerable<Photo> GetAll(IDocumentSession session)
-        {
-            using (
-                IEnumerator<StreamResult<Photo>> enumerator = session.Advanced.Stream<Photo>(fromEtag: Etag.Empty,
-                                                                                             start: 0,
-                                                                                             pageSize: int.MaxValue))
-                while (enumerator.MoveNext())
-                {
-                    yield return enumerator.Current.Document;
-                }
         }
     }
 }

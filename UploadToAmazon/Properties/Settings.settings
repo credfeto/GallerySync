@@ -2,8 +2,14 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="UploadToAmazon.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="LastSuccessfulUploadDate" Type="System.DateTime" Scope="User">
-      <Value Profile="(Default)">2000-01-01</Value>
+    <Setting Name="DatabaseInputFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">I:\Database\Current</Value>
+    </Setting>
+    <Setting Name="SourceImagesFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">E:\Gallery\Images\Output</Value>
+    </Setting>
+    <Setting Name="OutputFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">E:\GalleryUpload</Value>
     </Setting>
   </Settings>
 </SettingsFile>

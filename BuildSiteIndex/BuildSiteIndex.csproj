@@ -117,6 +117,10 @@
       <Project>{7a5f8ccb-3d18-4fb0-aee7-3037b8000ebc}</Project>
       <Name>ObjectModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj">
+      <Project>{08172b08-5233-4626-be5b-d4fbcccaa14b}</Project>
+      <Name>StorageHelpers</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
