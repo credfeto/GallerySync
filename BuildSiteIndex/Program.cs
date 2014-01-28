@@ -751,7 +751,6 @@ namespace BuildSiteIndex
                     DateUpdated = DateTime.MinValue
                 };
 
-
             contents.Add("/", entry);
         }
 
