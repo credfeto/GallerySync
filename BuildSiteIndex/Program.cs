@@ -239,24 +239,7 @@ namespace BuildSiteIndex
 
                         UploadChanges(data, oldData);
 
-                        const int batchSize = 100;
-                        List<string> batch = null;
-                        foreach (var deletedItem in deletedItems)
-                        {
-                            if (batch == null)
-                            {
-                                batch = new List<string>();
-                            }
-
-                            batch.Add(deletedItem);
-
-                            if (batch.Count >= batchSize)
-                            {
-                                UploadDeletionBatch(data, batch);
-                                batch = null;
-
-                            }
-                        }
+                        UploadItemsToDelete(data, deletedItems);
                     }
                     else
                     {
@@ -272,7 +255,33 @@ namespace BuildSiteIndex
             byte[] encoded = Encoding.UTF8.GetBytes(json);
             File.WriteAllBytes(outputFilename, encoded);
         }
-        
+
+        private static void UploadItemsToDelete(GallerySiteIndex data, List<string> deletedItems)
+        {
+            const int batchSize = 100;
+            List<string> batch = null;
+            foreach (var deletedItem in deletedItems)
+            {
+                if (batch == null)
+                {
+                    batch = new List<string>();
+                }
+
+                batch.Add(deletedItem);
+
+                if (batch.Count >= batchSize)
+                {
+                    UploadDeletionBatch(data, batch);
+                    batch = null;
+                }
+            }
+
+            if (batch != null && batch.Count != 0)
+            {
+                UploadDeletionBatch(data, batch);
+            }
+        }
+
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
         {
             var oldItems = oldData.items.Select(r => r.Path).ToList();
