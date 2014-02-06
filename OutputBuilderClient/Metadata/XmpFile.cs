@@ -100,7 +100,7 @@ namespace OutputBuilderClient.Metadata
                 string existingRawKeywords = keywordLoader.Read(doc, nsmgr);
                 IEnumerable<string> existingKeywords = from record in existingRawKeywords.Split(';')
                                                        select record.ToUpperInvariant();
-                string[] newKeywords = value.Split(';');
+                string[] newKeywords = value.Replace(';', ',').Split(',');
 
                 IEnumerable<string> keywordsToAdd = from record in newKeywords
                                                     where !existingKeywords.Contains(record.ToUpperInvariant())

@@ -109,7 +109,7 @@ namespace BuildSiteIndex
                     {
                         foreach (
                             string keyword in
-                                keywordMetadata.Value.Split(',')
+                                keywordMetadata.Value.Replace(';', ',').Split(',')
                                                .Where(candidate => !string.IsNullOrWhiteSpace(candidate)))
                         {
                             KeywordEntry entry;
@@ -577,7 +577,7 @@ namespace BuildSiteIndex
                 item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Keywords));
             if (kwd != null)
             {
-                return kwd.Value.Split(',').Where(IsValidKeywordName).ToList();
+                return kwd.Value.Replace(';', ',').Split(',').Where(IsValidKeywordName).ToList();
             }
 
             return new List<string>();

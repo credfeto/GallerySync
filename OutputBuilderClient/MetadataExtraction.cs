@@ -240,7 +240,20 @@ namespace OutputBuilderClient
             string keywords = String.Join(",", tag.Keywords);
             if (!String.IsNullOrWhiteSpace(keywords))
             {
-                AppendMetadata(metadata, MetadataNames.Keywords, keywords);
+                var existing = metadata.FirstOrDefault(candidate => candidate.Name != MetadataNames.Keywords);
+                if (existing == null)
+                {
+                    AppendMetadata(metadata, MetadataNames.Keywords, keywords);    
+                }
+                else
+                {
+                    var allKeywords = existing.Value.Replace(';', ',').Split(',').Concat(tag.Keywords).Distinct().OrderBy(x=>x);
+                    keywords = String.Join(",", allKeywords);
+                    metadata.Remove(existing);
+                }
+
+
+                AppendMetadata(metadata, MetadataNames.Keywords, keywords);    
             }
 
             AppendMetadata(metadata, MetadataNames.Rating, tag.Rating.GetValueOrDefault(1));
