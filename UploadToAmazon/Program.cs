@@ -73,6 +73,7 @@ namespace UploadToAmazon
                         string key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(fileToUpload.FileName));
 
                         inputSession.Store(fileToUpload, key);
+                        inputSession.SaveChanges();
                     }
                 }
             }
