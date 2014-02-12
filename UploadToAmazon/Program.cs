@@ -72,8 +72,17 @@ namespace UploadToAmazon
                     {
                         string key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(fileToUpload.FileName));
 
-                        inputSession.Store(fileToUpload, key);
-                        inputSession.SaveChanges();
+                        using (IDocumentSession outputSession = documentStoreInput.OpenSession())
+                        {
+                            var changed = outputSession.Load<FileToUpload>(key);
+                            if (changed != null)
+                            {
+                                changed.Completed = true;
+                                outputSession.Store(changed, key);
+                                outputSession.SaveChanges();
+                            }
+
+                        }
                     }
                 }
             }
