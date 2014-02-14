@@ -57,6 +57,7 @@ namespace BuildSiteIndex
             var contents = new Dictionary<string, GalleryEntry>();
 
             string dbInputFolder = Settings.Default.DatabaseInputFolder;
+            bool restore = !Directory.Exists(dbInputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
 
             var documentStoreInput = new EmbeddableDocumentStore
                 {
@@ -64,6 +65,11 @@ namespace BuildSiteIndex
                 };
 
             documentStoreInput.Initialize();
+
+            if (restore)
+            {
+                documentStoreInput.Restore(Settings.Default.DatabaseBackupFolder);
+            }
 
 
             AppendRootEntry(contents);
@@ -143,6 +149,8 @@ namespace BuildSiteIndex
             }
 
             ProduceJsonFile(contents);
+
+            documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
         }
 
         private static string EnsureTerminatedPath(string path)

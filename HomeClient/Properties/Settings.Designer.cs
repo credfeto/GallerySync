@@ -40,5 +40,14 @@ namespace HomeClient.Properties {
                 return ((string)(this["DatabaseOutputFolder"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("I:\\Database\\Backup\\Latest")]
+        public string DatabaseBackupFolder {
+            get {
+                return ((string)(this["DatabaseBackupFolder"]));
+            }
+        }
     }
 }

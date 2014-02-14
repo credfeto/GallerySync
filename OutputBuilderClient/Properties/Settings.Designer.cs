@@ -112,5 +112,14 @@ namespace OutputBuilderClient.Properties {
                 return ((string)(this["WatermarkImage"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("I:\\Database\\Backup\\Current")]
+        public string DatabaseBackupFolder {
+            get {
+                return ((string)(this["DatabaseBackupFolder"]));
+            }
+        }
     }
 }

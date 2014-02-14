@@ -11,5 +11,8 @@
     <Setting Name="WebServerBaseAddress" Type="System.String" Scope="Application">
       <Value Profile="(Default)">http://localhost:8080/</Value>
     </Setting>
+    <Setting Name="DatabaseBackupFolder" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">I:\Database\Backup\Current</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

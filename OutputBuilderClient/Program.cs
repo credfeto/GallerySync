@@ -57,8 +57,8 @@ namespace OutputBuilderClient
 
             documentStoreInput.Initialize();
 
-
             string dbOutputFolder = Settings.Default.DatabaseOutputFolder;
+            bool restore = !Directory.Exists(dbOutputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
             if (!Directory.Exists(dbOutputFolder))
             {
                 Directory.CreateDirectory(dbOutputFolder);
@@ -71,9 +71,16 @@ namespace OutputBuilderClient
 
             documentStoreOutput.Initialize();
 
+            if (restore)
+            {
+                documentStoreOutput.Restore(Settings.Default.DatabaseBackupFolder);
+            }
+
             HashSet<string> liveItems = Process(documentStoreInput, documentStoreOutput);
 
             KillDeadItems(documentStoreOutput, liveItems);
+
+            documentStoreOutput.Backup(Settings.Default.DatabaseBackupFolder);
         }
 
         private static void KillDeadItems(EmbeddableDocumentStore documentStoreOutput, HashSet<string> liveItems)

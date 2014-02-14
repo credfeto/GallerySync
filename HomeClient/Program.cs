@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using HomeClient.Properties;
 using Raven.Client.Embedded;
+using StorageHelpers;
 using Twaddle.Directory.Scanner;
 
 namespace HomeClient
@@ -80,6 +81,8 @@ namespace HomeClient
             long filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
 
             Console.WriteLine("Files Found: {0}", filesFound);
+
+            documentStore.Backup(Settings.Default.DatabaseBackupFolder);
         }
     }
 }

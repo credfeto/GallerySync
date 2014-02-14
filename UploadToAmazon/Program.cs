@@ -3,8 +3,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using FileNaming;
+using Raven.Abstractions.Smuggler;
 using Raven.Client;
 using Raven.Client.Embedded;
+using Raven.Database;
+using Raven.Database.Smuggler;
 using StorageHelpers;
 using Twaddle.Gallery.ObjectModel;
 using UploadToAmazon.Properties;
@@ -19,7 +22,7 @@ namespace UploadToAmazon
 
             try
             {
-                ProcessGallery();
+                ProcessGallery();                
 
                 return 0;
             }
@@ -36,6 +39,7 @@ namespace UploadToAmazon
             string outputFolder = Settings.Default.OutputFolder;
 
             string dbInputFolder = Settings.Default.DatabaseInputFolder;
+            bool restore = !Directory.Exists(dbInputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
 
             var documentStoreInput = new EmbeddableDocumentStore
                 {
@@ -43,6 +47,11 @@ namespace UploadToAmazon
                 };
 
             documentStoreInput.Initialize();
+
+            if (restore)
+            {
+                documentStoreInput.Restore(Settings.Default.DatabaseBackupFolder);
+            }
 
             using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
@@ -86,6 +95,8 @@ namespace UploadToAmazon
                     }
                 }
             }
+
+            documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
         }
 
 
