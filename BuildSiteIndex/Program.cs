@@ -322,7 +322,7 @@ namespace BuildSiteIndex
         private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
         {
             return data.items.OrderBy(StrictTypeOrdering)
-                       .OrderByDescending(candidate => candidate.Path);
+                       .OrderBy(candidate => candidate.Path);
         }
 
         private static int StrictTypeOrdering(GalleryItem candidate)
