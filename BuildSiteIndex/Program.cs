@@ -13,7 +13,6 @@ using FileNaming;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using Raven.Abstractions.Data;
 using Raven.Client;
 using Raven.Client.Embedded;
 using StorageHelpers;
@@ -134,23 +133,62 @@ namespace BuildSiteIndex
             Console.WriteLine("Found {0} items total", contents.Count);
             Console.WriteLine("Found {0} keyword items total", keywords.Count);
 
-            foreach (var keyword in keywords.Values)
+            foreach (KeywordEntry keyword in keywords.Values)
             {
-                foreach (var sourcePhoto in keyword.Photos)
+                foreach (Photo sourcePhoto in keyword.Photos)
                 {
-                    string path = EnsureTerminatedPath("/" + keywordsRoot + "/" + keyword.Keyword.ToLowerInvariant() + "/" + sourcePhoto.UrlSafePath);
-                    string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + keywordsTitle + "\\" + keyword.Keyword +"\\" + sourcePhoto.BasePath);
+                    string path =
+                        EnsureTerminatedPath("/" + keywordsRoot + "/" + keyword.Keyword.ToLowerInvariant() + "/" +
+                                             sourcePhoto.UrlSafePath);
+                    string breadcrumbs =
+                        EnsureTerminatedBreadcrumbs("\\" + keywordsTitle + "\\" + keyword.Keyword + "\\" +
+                                                    sourcePhoto.BasePath);
                     Console.WriteLine("Item: {0}", path);
 
                     string[] pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
                     string[] breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
                 }
-
             }
 
+            AddCoordinatesFromChildren(contents);
             ProduceJsonFile(contents);
 
             documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
+        }
+
+        private static void AddCoordinatesFromChildren(Dictionary<string, GalleryEntry> contents)
+        {
+            foreach (GalleryEntry entry in contents.Values.Where(candidate => candidate.Location == null))
+            {
+                if (entry.Children != null && entry.Children.Any())
+                {
+                    var locations = new List<Location>();
+
+                    AppendChildLocations(entry, locations);
+
+                    Location location = LocationHelpers.GetCenterFromDegrees(locations);
+                    if (location != null)
+                    {
+                        entry.Location = location;
+                    }
+                }
+            }
+        }
+
+        private static void AppendChildLocations(GalleryEntry entry, List<Location> locations)
+        {
+            foreach (GalleryEntry child in entry.Children)
+            {
+                if (child.Location != null)
+                {
+                    locations.Add(child.Location);
+                }
+
+                if (child.Children != null && child.Children.Any())
+                {
+                    AppendChildLocations(child, locations);
+                }
+            }
         }
 
         private static string EnsureTerminatedPath(string path)
@@ -215,7 +253,7 @@ namespace BuildSiteIndex
                                  }).ToList(),
                     deletedItems = new List<string>()
                 };
-            
+
             string outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
 
             string json = JsonConvert.SerializeObject(data);
@@ -242,8 +280,8 @@ namespace BuildSiteIndex
 
                     if (oldData != null)
                     {
-                        var deletedItems = FindDeletedItems(oldData, data);
-                        data.deletedItems.AddRange(deletedItems.OrderBy( x => x));
+                        List<string> deletedItems = FindDeletedItems(oldData, data);
+                        data.deletedItems.AddRange(deletedItems.OrderBy(x => x));
 
                         UploadChanges(data, oldData);
 
@@ -268,7 +306,7 @@ namespace BuildSiteIndex
         {
             const int batchSize = 100;
             List<string> batch = null;
-            foreach (var deletedItem in deletedItems)
+            foreach (string deletedItem in deletedItems)
             {
                 if (batch == null)
                 {
@@ -292,14 +330,14 @@ namespace BuildSiteIndex
 
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
         {
-            var oldItems = oldData.items.Select(r => r.Path).ToList();
-            var newItems = data.items.Select(r => r.Path).ToList();
+            List<string> oldItems = oldData.items.Select(r => r.Path).ToList();
+            List<string> newItems = data.items.Select(r => r.Path).ToList();
 
-            var deletedItems = oldItems.Where(oldItem => !newItems.Contains(oldItem)).ToList();
+            List<string> deletedItems = oldItems.Where(oldItem => !newItems.Contains(oldItem)).ToList();
 
             if (oldData.deletedItems != null)
             {
-                foreach (var oldDeletedItem in oldData.deletedItems)
+                foreach (string oldDeletedItem in oldData.deletedItems)
                 {
                     if (!newItems.Contains(oldDeletedItem) && !deletedItems.Contains(oldDeletedItem))
                     {
@@ -348,7 +386,7 @@ namespace BuildSiteIndex
         {
             GallerySiteIndex itemToPost = CreateItemToPost(data, item);
 
-            var progressText = item.Path;
+            string progressText = item.Path;
 
             UploadItem(itemToPost, progressText);
         }
@@ -408,11 +446,11 @@ namespace BuildSiteIndex
         private static GallerySiteIndex CreateItemToPost(GallerySiteIndex data, List<string> itemsToDelete)
         {
             var itemToPost = new GallerySiteIndex
-            {
-                version = data.version,
-                items = new List<GalleryItem>(),
-                deletedItems = new List<string>(itemsToDelete)
-            };
+                {
+                    version = data.version,
+                    items = new List<GalleryItem>(),
+                    deletedItems = new List<string>(itemsToDelete)
+                };
             return itemToPost;
         }
 
@@ -420,7 +458,8 @@ namespace BuildSiteIndex
         {
             GallerySiteIndex itemToPost = CreateItemToPost(data, batch);
 
-            var progressText = string.Format("Deletion batch of size {0} starting with {1}", batch.Count, batch.FirstOrDefault());
+            string progressText = string.Format("Deletion batch of size {0} starting with {1}", batch.Count,
+                                                batch.FirstOrDefault());
 
             UploadItem(itemToPost, progressText);
         }
@@ -723,6 +762,7 @@ namespace BuildSiteIndex
                             Path = level,
                             Title = breadcrumbFragments[folderLevel - 1],
                             Description = string.Empty,
+                            Location = null,
                             Children = new List<GalleryEntry>(),
                             DateCreated = DateTime.MaxValue,
                             DateUpdated = DateTime.MinValue
@@ -754,6 +794,7 @@ namespace BuildSiteIndex
                     Path = "/",
                     Title = "Mark's Photos",
                     Description = "Photos taken by Mark Ridgwell.",
+                    Location = null,
                     Children = new List<GalleryEntry>(),
                     DateCreated = DateTime.MaxValue,
                     DateUpdated = DateTime.MinValue
