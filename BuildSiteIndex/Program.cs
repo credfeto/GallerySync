@@ -611,7 +611,7 @@ namespace BuildSiteIndex
                     Location = location,
                     ImageSizes = sourcePhoto.ImageSizes,
                     Rating = rating,
-                    Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata).ToList(),
+                    Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata).OrderBy( item => item.Name.ToLowerInvariant() ).ToList(),
                     Keywords = keywords,
                     DateCreated = dateCreated,
                     DateUpdated = dateUpdated
