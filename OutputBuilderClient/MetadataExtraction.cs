@@ -137,8 +137,18 @@ namespace OutputBuilderClient
 
                     if (latParts.Length == 3 && lngParts.Length == 3)
                     {
-                        double lat = ExtractGpsMetadata(latParts, 'N', 'S');
-                        double lng = ExtractGpsMetadata(lngParts, 'E', 'W');
+                        // Degrees Minutes Seconds
+                        double lat = ExtractGpsMetadataDegreesMinutesSeconds(latParts, 'N', 'S');
+                        double lng = ExtractGpsMetadataDegreesMinutesSeconds(lngParts, 'E', 'W');
+
+                        AppendMetadata(metadata, MetadataNames.Latitude, lat);
+                        AppendMetadata(metadata, MetadataNames.Longitude, lng);
+                    }
+                    else if (latParts.Length == 2 && lngParts.Length == 2)
+                    {
+                        // Degrees Decimal Minutes
+                        double lat = ExtractGpsMetadataDegreesMinutes(latParts, 'N', 'S');
+                        double lng = ExtractGpsMetadataDegreesMinutes(lngParts, 'E', 'W');
 
                         AppendMetadata(metadata, MetadataNames.Latitude, lat);
                         AppendMetadata(metadata, MetadataNames.Longitude, lng);
@@ -159,7 +169,23 @@ namespace OutputBuilderClient
             }
         }
 
-        private static double ExtractGpsMetadata(string[] parts, char positive, char negative)
+        private static double ExtractGpsMetadataDegreesMinutes(string[] parts, char positive, char negative)
+        {
+            double part1 = Convert.ToDouble(parts[0]);
+            double part2 =
+                Convert.ToDouble(parts[1].TrimEnd(positive, negative, char.ToLowerInvariant(positive),
+                                                  char.ToLowerInvariant(negative)));
+
+            double baseValue = part1 + part2/60.0d;
+            if (parts[1].EndsWith(negative.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                baseValue = -baseValue;
+            }
+
+            return baseValue;
+        }
+
+        private static double ExtractGpsMetadataDegreesMinutesSeconds(string[] parts, char positive, char negative)
         {
             double part1 = Convert.ToDouble(parts[0]);
             double part2 = Convert.ToDouble(parts[1]);
@@ -167,7 +193,7 @@ namespace OutputBuilderClient
                 Convert.ToDouble(parts[2].TrimEnd(positive, negative, char.ToLowerInvariant(positive),
                                                   char.ToLowerInvariant(negative)));
 
-            double baseValue = part1 + part2/60 + part3/3600;
+            double baseValue = part1 + part2/60d + part3/3600d;
             if (parts[2].EndsWith(negative.ToString(), StringComparison.OrdinalIgnoreCase))
             {
                 baseValue = -baseValue;
@@ -240,20 +266,21 @@ namespace OutputBuilderClient
             string keywords = String.Join(",", tag.Keywords);
             if (!String.IsNullOrWhiteSpace(keywords))
             {
-                var existing = metadata.FirstOrDefault(candidate => candidate.Name != MetadataNames.Keywords);
+                PhotoMetadata existing = metadata.FirstOrDefault(candidate => candidate.Name != MetadataNames.Keywords);
                 if (existing == null)
                 {
-                    AppendMetadata(metadata, MetadataNames.Keywords, keywords);    
+                    AppendMetadata(metadata, MetadataNames.Keywords, keywords);
                 }
                 else
                 {
-                    var allKeywords = existing.Value.Replace(';', ',').Split(',').Concat(tag.Keywords).Distinct().OrderBy(x=>x);
+                    IOrderedEnumerable<string> allKeywords =
+                        existing.Value.Replace(';', ',').Split(',').Concat(tag.Keywords).Distinct().OrderBy(x => x);
                     keywords = String.Join(",", allKeywords);
                     metadata.Remove(existing);
                 }
 
 
-                AppendMetadata(metadata, MetadataNames.Keywords, keywords);    
+                AppendMetadata(metadata, MetadataNames.Keywords, keywords);
             }
 
             AppendMetadata(metadata, MetadataNames.Rating, tag.Rating.GetValueOrDefault(1));
@@ -391,7 +418,7 @@ namespace OutputBuilderClient
         private static void ExtractXmpIsoSpeed(List<PhotoMetadata> metadata, ExifReader reader)
         {
             UInt16 isoSpeed;
-            if (reader.GetTagValue(ExifTags.ISOSpeedRatings, out isoSpeed) )
+            if (reader.GetTagValue(ExifTags.ISOSpeedRatings, out isoSpeed))
             {
                 AppendMetadata(metadata, MetadataNames.ISOSpeed, isoSpeed);
             }
@@ -470,7 +497,7 @@ namespace OutputBuilderClient
             if (reader.GetTagValue(ExifTags.FNumber, out fNumber))
             {
                 AppendMetadata(metadata, MetadataNames.FNumber,
-                               String.Format("F/{0}", fNumber[0]/(double)fNumber[1]));
+                               String.Format("F/{0}", fNumber[0]/(double) fNumber[1]));
             }
         }
 
@@ -480,7 +507,7 @@ namespace OutputBuilderClient
             if (reader.GetTagValue(ExifTags.ApertureValue, out aperture))
             {
                 AppendMetadata(metadata, MetadataNames.Aperture,
-                               String.Format("{0}/{1}", aperture[0],aperture[1]));
+                               String.Format("{0}/{1}", aperture[0], aperture[1]));
             }
         }
 
