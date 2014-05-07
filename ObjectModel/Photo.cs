@@ -8,6 +8,8 @@ namespace Twaddle.Gallery.ObjectModel
     [DebuggerDisplay("BasePath: {BasePath}, Image:{ImageExtension} Hash:{PathHash}")]
     public class Photo
     {
+        public int Version { get; set; }
+
         public string UrlSafePath { get; set; }
 
         public string BasePath { get; set; }

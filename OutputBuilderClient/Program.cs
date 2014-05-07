@@ -144,10 +144,12 @@ namespace OutputBuilderClient
                     var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
                     bool build = targetPhoto == null;
                     bool rebuild = targetPhoto != null && HaveFilesChanged(sourcePhoto, targetPhoto);
+                    bool rebuildMetadata = targetPhoto != null &&
+                                           targetPhoto.Version <= Constants.CurrentMetadataVersion;
 
-                    if (build || rebuild)
+                    if (build || rebuild || rebuildMetadata)
                     {
-                        ProcessOneFile(outputSession, sourcePhoto, targetPhoto, rebuild);
+                        ProcessOneFile(outputSession, sourcePhoto, targetPhoto, rebuild, rebuildMetadata);
                     }
                     else
                     {
@@ -167,8 +169,7 @@ namespace OutputBuilderClient
             }
         }
 
-        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto,
-                                           bool rebuild)
+        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata)
         {
             OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
@@ -176,19 +177,29 @@ namespace OutputBuilderClient
 
             sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
 
-            var filesCreated = new List<string>();
-            sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated);
+            var buildImages = targetPhoto == null || rebuild;
 
-            if (targetPhoto != null)
+            var filesCreated = new List<string>();            
+            if (buildImages)
             {
+                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated);
+            }
+
+            sourcePhoto.Version = Constants.CurrentMetadataVersion;
+            if (targetPhoto != null)
+            {                
                 UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
 
-                AddUploadFiles(filesCreated, outputSession);
+                if (buildImages)
+                {
+                    AddUploadFiles(filesCreated, outputSession);
+                }
 
                 outputSession.Store(targetPhoto, targetPhoto.PathHash);
             }
             else
             {
+                
                 AddUploadFiles(filesCreated, outputSession);
                 outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
             }
@@ -266,6 +277,7 @@ namespace OutputBuilderClient
 
         private static void UpdateTargetWithSourceProperties(Photo targetPhoto, Photo sourcePhoto)
         {
+            targetPhoto.Version = sourcePhoto.Version;
             targetPhoto.UrlSafePath = sourcePhoto.UrlSafePath;
             targetPhoto.BasePath = sourcePhoto.BasePath;
             targetPhoto.PathHash = sourcePhoto.PathHash;
