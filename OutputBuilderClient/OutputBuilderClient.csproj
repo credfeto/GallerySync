@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="IImageConverter.cs" />
     <Compile Include="ImageConverters\GDIPlusImageConverter.cs" />
     <Compile Include="ImageConverters\ImageMagickImageConverter.cs" />

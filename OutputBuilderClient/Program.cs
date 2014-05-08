@@ -175,7 +175,7 @@ namespace OutputBuilderClient
 
             UpdateFileHashes(targetPhoto, sourcePhoto);
 
-            var buildMetadata = targetPhoto == null || rebuild || rebuildMetadata;
+            var buildMetadata = targetPhoto == null || rebuild || rebuildMetadata || (targetPhoto != null && targetPhoto.Metadata == null );
 
             if (buildMetadata)
             {
@@ -186,7 +186,7 @@ namespace OutputBuilderClient
                 sourcePhoto.Metadata = targetPhoto.Metadata;
             }
 
-            var buildImages = targetPhoto == null || rebuild;
+            var buildImages = targetPhoto == null || rebuild || ( targetPhoto != null && !targetPhoto.ImageSizes.HasAny() );
 
             var filesCreated = new List<string>();            
             if (buildImages)
@@ -219,6 +219,7 @@ namespace OutputBuilderClient
 
             outputSession.SaveChanges();
         }
+
 
         private static void AddUploadFiles(List<string> filesCreated, IDocumentSession outputSession)
         {
