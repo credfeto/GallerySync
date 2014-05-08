@@ -175,7 +175,16 @@ namespace OutputBuilderClient
 
             UpdateFileHashes(targetPhoto, sourcePhoto);
 
-            sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
+            var buildMetadata = targetPhoto == null || rebuild || rebuildMetadata;
+
+            if (buildMetadata)
+            {
+                sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
+            }
+            else
+            {
+                sourcePhoto.Metadata = targetPhoto.Metadata;
+            }
 
             var buildImages = targetPhoto == null || rebuild;
 
@@ -183,6 +192,10 @@ namespace OutputBuilderClient
             if (buildImages)
             {
                 sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated);
+            }
+            else
+            {
+                sourcePhoto.ImageSizes = targetPhoto.ImageSizes;                
             }
 
             sourcePhoto.Version = Constants.CurrentMetadataVersion;
