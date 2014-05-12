@@ -39,9 +39,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DateFormat.cs" />
     <Compile Include="Hasher.cs" />
     <Compile Include="HashNaming.cs" />
     <Compile Include="MetadataNames.cs" />
+    <Compile Include="StringExtensions.cs" />
     <Compile Include="UrlNaming.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

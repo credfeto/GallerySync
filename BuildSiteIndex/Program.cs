@@ -248,7 +248,7 @@ namespace BuildSiteIndex
                                      Next = nextItem,
                                      Last = lastItem,
                                      Children = (from childRecord in parentRecord.Children
-                                                 where !IsHiddenItem( childRecord )
+                                                 where !IsHiddenItem(childRecord)
                                                  orderby childRecord.Path
                                                  select CreateGalleryChildItem(childRecord)).ToList(),
                                  }).ToList(),
@@ -305,7 +305,7 @@ namespace BuildSiteIndex
 
         private static bool IsHiddenItem(GalleryChildItem item)
         {
-            return IsHiddenItem(item.Path);            
+            return IsHiddenItem(item.Path);
         }
 
         private static bool IsHiddenItem(GalleryEntry item)
@@ -485,7 +485,8 @@ namespace BuildSiteIndex
         {
             GalleryChildItem candidate = siblings.SkipWhile(x => x != parentRecord)
                                                  .Skip(1)
-                                                 .Select(CreateGalleryChildItem).FirstOrDefault( item => !IsHiddenItem(item));
+                                                 .Select(CreateGalleryChildItem)
+                                                 .FirstOrDefault(item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, lastItem);
         }
@@ -537,7 +538,7 @@ namespace BuildSiteIndex
         private static GalleryChildItem GetLastItem(List<GalleryEntry> siblings, GalleryEntry parentRecord)
         {
             GalleryChildItem candidate = siblings
-                .Select(CreateGalleryChildItem).LastOrDefault( item => !IsHiddenItem(item) );
+                .Select(CreateGalleryChildItem).LastOrDefault(item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, parentRecord);
         }
@@ -546,7 +547,8 @@ namespace BuildSiteIndex
                                                         GalleryChildItem firstItem)
         {
             GalleryChildItem candidate = siblings.TakeWhile(x => x != parentRecord)
-                                                 .Select(CreateGalleryChildItem).LastOrDefault(item => !IsHiddenItem(item));
+                                                 .Select(CreateGalleryChildItem)
+                                                 .LastOrDefault(item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, firstItem);
         }
@@ -627,7 +629,10 @@ namespace BuildSiteIndex
                     Location = location,
                     ImageSizes = sourcePhoto.ImageSizes,
                     Rating = rating,
-                    Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata).OrderBy( item => item.Name.ToLowerInvariant() ).ToList(),
+                    Metadata =
+                        sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                                   .OrderBy(item => item.Name.ToLowerInvariant())
+                                   .ToList(),
                     Keywords = keywords,
                     DateCreated = dateCreated,
                     DateUpdated = dateUpdated
@@ -776,7 +781,7 @@ namespace BuildSiteIndex
                     AppendEntry(contents, parentLevel, level, new GalleryEntry
                         {
                             Path = level,
-                            Title = breadcrumbFragments[folderLevel - 1],
+                            Title = breadcrumbFragments[folderLevel - 1].ReformatTitle(DateFormat.LongDate),
                             Description = string.Empty,
                             Location = null,
                             Children = new List<GalleryEntry>(),
