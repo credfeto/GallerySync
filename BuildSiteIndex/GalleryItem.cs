@@ -27,6 +27,8 @@ namespace BuildSiteIndex
 
         public List<string> Keywords { get; set; }
 
+        public List<GalleryChildItem> Breadcrumbs { get; set; }
+
         public List<GalleryChildItem> Children { get; set; }
 
         public GalleryChildItem First { get; set; }
@@ -51,7 +53,9 @@ namespace BuildSiteIndex
                    ItemUpdateHelpers.CollectionEquals(ImageSizes, other.ImageSizes) &&
                    ItemUpdateHelpers.CollectionEquals(Metadata, other.Metadata) &&
                    ItemUpdateHelpers.CollectionEquals(Keywords, other.Keywords) &&
-                   ItemUpdateHelpers.CollectionEquals(Children, other.Children) && First == other.First;
+                   ItemUpdateHelpers.CollectionEquals(Children, other.Children) && 
+                   ItemUpdateHelpers.CollectionEquals(Breadcrumbs, other.Breadcrumbs) &&
+                   First == other.First;
         }
 
         public override bool Equals(object obj)
@@ -77,6 +81,7 @@ namespace BuildSiteIndex
                 hashCode = (hashCode*397) ^ (Metadata != null ? Metadata.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Keywords != null ? Keywords.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Children != null ? Children.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (Breadcrumbs != null ? Breadcrumbs.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (First != null ? First.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Previous != null ? Previous.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Next != null ? Next.GetHashCode() : 0);

@@ -251,6 +251,7 @@ namespace BuildSiteIndex
                                                  where !IsHiddenItem(childRecord)
                                                  orderby childRecord.Path
                                                  select CreateGalleryChildItem(childRecord)).ToList(),
+                                    Breadcrumbs = ExtractItemPreadcrumbs( contents, parentRecord )
                                  }).ToList(),
                     deletedItems = new List<string>()
                 };
@@ -301,6 +302,29 @@ namespace BuildSiteIndex
 
             byte[] encoded = Encoding.UTF8.GetBytes(json);
             File.WriteAllBytes(outputFilename, encoded);
+        }
+
+        private static List<GalleryChildItem> ExtractItemPreadcrumbs(Dictionary<string, GalleryEntry> contents, GalleryEntry parentRecord)
+        {
+            List<GalleryChildItem> items = new List<GalleryChildItem>();
+
+            string[] breadcrumbFragments = parentRecord.Path.Split('/').Where(IsNotEmpty).ToArray();
+
+            for (int folderLevel = 1; folderLevel < breadcrumbFragments.Length; ++folderLevel)
+            {
+                string level = EnsureTerminatedPath("/" + string.Join("/", breadcrumbFragments.Take(folderLevel)));
+
+                GalleryEntry item;
+                if (!contents.TryGetValue(level, out item) || item == null )
+                {
+                    // can't find the full path: give up
+                    return new List<GalleryChildItem>();
+                }
+
+                items.Add( CreateGalleryChildItem(item ));
+            }
+
+            return items;
         }
 
         private static bool IsHiddenItem(GalleryChildItem item)
