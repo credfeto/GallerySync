@@ -9,6 +9,7 @@ using OutputBuilderClient.Properties;
 using Raven.Client;
 using Raven.Client.Embedded;
 using StorageHelpers;
+using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
@@ -17,8 +18,23 @@ namespace OutputBuilderClient
     {
         private static readonly object _lock = new object();
 
-        private static int Main()
+        private static int Main(string[] args)
         {
+            if (args.Length == 1)
+            {
+                try
+                {
+                    ReadMetadata(args[0]);
+
+                    return 0;
+                }
+                catch (Exception exception)
+                {
+                    OutputText("Error: {0}", exception.Message);
+                    return 1;
+                }
+            }
+
             BoostPriority();
 
             try
@@ -31,6 +47,56 @@ namespace OutputBuilderClient
             {
                 OutputText("Error: {0}", exception.Message);
                 return 1;
+            }
+        }
+
+        private static void ReadMetadata(string filename)
+        {
+            string folder = Path.GetDirectoryName(filename);
+            string file = Path.GetFileName(filename);
+            string extension = Path.GetExtension(filename);
+
+            var fileGroup = new List<string>();
+            if (File.Exists(filename.Replace(extension, ".xmp")))
+            {
+                fileGroup.Add(file.Replace(extension, ".xmp"));
+            }
+
+
+            var entry = new FileEntry
+                {
+                    Folder = folder,
+                    RelativeFolder = folder.Substring(Settings.Default.RootFolder.Length + 1),
+                    LocalFileName = file,
+                    AlternateFileNames = fileGroup
+                };
+
+
+            string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
+
+            string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
+
+            var photo = new Photo
+                {
+                    BasePath = basePath,
+                    UrlSafePath = urlSafePath,
+                    PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
+                    ImageExtension = Path.GetExtension(entry.LocalFileName),
+                    Files = fileGroup.Select(x =>
+                                             new ComponentFile
+                                                 {
+                                                     Extension = Path.GetExtension(x).TrimStart('.'),
+                                                     Hash = string.Empty,
+                                                     LastModified = new DateTime(2014, 1, 1),
+                                                     FileSize = 1000
+                                                 }
+                        ).ToList()
+                };
+
+            List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo);
+            foreach (PhotoMetadata item in metadata)
+            {
+                Console.WriteLine("{0} = {1}", item.Name, item.Value);
             }
         }
 

@@ -129,6 +129,10 @@
       <Project>{7a5f8ccb-3d18-4fb0-aee7-3037b8000ebc}</Project>
       <Name>ObjectModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Scanner\Scanner.csproj">
+      <Project>{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}</Project>
+      <Name>Scanner</Name>
+    </ProjectReference>
     <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj">
       <Project>{08172b08-5233-4626-be5b-d4fbcccaa14b}</Project>
       <Name>StorageHelpers</Name>

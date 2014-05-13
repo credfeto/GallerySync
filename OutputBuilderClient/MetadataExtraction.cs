@@ -266,7 +266,7 @@ namespace OutputBuilderClient
             string keywords = String.Join(",", tag.Keywords);
             if (!String.IsNullOrWhiteSpace(keywords))
             {
-                PhotoMetadata existing = metadata.FirstOrDefault(candidate => candidate.Name != MetadataNames.Keywords);
+                PhotoMetadata existing = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.Keywords);
                 if (existing == null)
                 {
                     AppendMetadata(metadata, MetadataNames.Keywords, keywords);
