@@ -142,7 +142,7 @@ namespace OutputBuilderClient
                 string.Format("{0}-{1}x{2}",
                               Path.GetFileName(
                                   sourcePhoto.BasePath),
-                              resized.Width, resized.Height)).TrimEnd('/');
+                              resized.Width, resized.Height)).TrimEnd('/').TrimStart('-');
 
             return basePath + ".jpg";
         }
