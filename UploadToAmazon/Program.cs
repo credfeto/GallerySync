@@ -29,6 +29,7 @@ namespace UploadToAmazon
             catch (Exception exception)
             {
                 Console.WriteLine("Error: {0}", exception.Message);
+                Console.WriteLine("Stack Trace: {0}", exception.StackTrace);
                 return 1;
             }
         }
@@ -75,6 +76,7 @@ namespace UploadToAmazon
                     catch (Exception exception)
                     {
                         Console.WriteLine("ERROR: Failed to copy file - {0}", exception.Message);
+                        Console.WriteLine("Stack Trace: {0}", exception.StackTrace);
                     }
 
                     if (fileToUpload.Completed)

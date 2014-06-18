@@ -24,6 +24,8 @@ namespace HomeClient
             catch (Exception exception)
             {
                 Console.WriteLine("Error: {0}", exception.Message);
+                Console.WriteLine("Stack Trace: {0}", exception.StackTrace);
+
                 return 1;
             }
         }

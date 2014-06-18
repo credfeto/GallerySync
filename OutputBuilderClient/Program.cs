@@ -31,6 +31,7 @@ namespace OutputBuilderClient
                 catch (Exception exception)
                 {
                     OutputText("Error: {0}", exception.Message);
+                    OutputText("Stack Trace: {0}", exception.StackTrace);
                     return 1;
                 }
             }
@@ -46,6 +47,7 @@ namespace OutputBuilderClient
             catch (Exception exception)
             {
                 OutputText("Error: {0}", exception.Message);
+                OutputText("Stack Trace: {0}", exception.StackTrace);
                 return 1;
             }
         }
@@ -232,6 +234,7 @@ namespace OutputBuilderClient
             {
                 OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
                            exception.Message);
+                OutputText("Stack Trace: {0}", exception.StackTrace);
             }
         }
 

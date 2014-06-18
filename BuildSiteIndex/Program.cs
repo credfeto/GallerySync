@@ -35,6 +35,7 @@ namespace BuildSiteIndex
             catch (Exception exception)
             {
                 Console.WriteLine("Error: {0}", exception.Message);
+                Console.WriteLine("Stack Trace: {0}", exception.StackTrace);
                 return 1;
             }
         }
@@ -179,14 +180,14 @@ namespace BuildSiteIndex
         {
             foreach (GalleryEntry child in entry.Children)
             {
-                if (child.Location != null)
-                {
-                    locations.Add(child.Location);
-                }
-
                 if (child.Children != null && child.Children.Any())
                 {
                     AppendChildLocations(child, locations);
+                }
+                else
+                {
+                    // only add locations for photos
+                    locations.Add(child.Location);
                 }
             }
         }
@@ -251,7 +252,7 @@ namespace BuildSiteIndex
                                                  where !IsHiddenItem(childRecord)
                                                  orderby childRecord.Path
                                                  select CreateGalleryChildItem(childRecord)).ToList(),
-                                    Breadcrumbs = ExtractItemPreadcrumbs( contents, parentRecord )
+                                     Breadcrumbs = ExtractItemPreadcrumbs(contents, parentRecord)
                                  }).ToList(),
                     deletedItems = new List<string>()
                 };
@@ -300,13 +301,16 @@ namespace BuildSiteIndex
                 UploadAllItems(data);
             }
 
+            ExtensionMethods.RotateLastGenerations(outputFilename);
+
             byte[] encoded = Encoding.UTF8.GetBytes(json);
             File.WriteAllBytes(outputFilename, encoded);
         }
 
-        private static List<GalleryChildItem> ExtractItemPreadcrumbs(Dictionary<string, GalleryEntry> contents, GalleryEntry parentRecord)
+        private static List<GalleryChildItem> ExtractItemPreadcrumbs(Dictionary<string, GalleryEntry> contents,
+                                                                     GalleryEntry parentRecord)
         {
-            List<GalleryChildItem> items = new List<GalleryChildItem>();
+            var items = new List<GalleryChildItem>();
 
             string[] breadcrumbFragments = parentRecord.Path.Split('/').Where(IsNotEmpty).ToArray();
 
@@ -315,13 +319,13 @@ namespace BuildSiteIndex
                 string level = EnsureTerminatedPath("/" + string.Join("/", breadcrumbFragments.Take(folderLevel)));
 
                 GalleryEntry item;
-                if (!contents.TryGetValue(level, out item) || item == null )
+                if (!contents.TryGetValue(level, out item) || item == null)
                 {
                     // can't find the full path: give up
                     return new List<GalleryChildItem>();
                 }
 
-                items.Add( CreateGalleryChildItem(item ));
+                items.Add(CreateGalleryChildItem(item));
             }
 
             return items;
@@ -390,10 +394,20 @@ namespace BuildSiteIndex
 
         private static void UploadAllItems(GallerySiteIndex data)
         {
+            var itemsToRemove = new List<GalleryItem>();
+
             foreach (
                 GalleryItem item in UploadOrdering(data))
             {
-                UploadOneItem(data, item);
+                if (!UploadOneItem(data, item))
+                {
+                    itemsToRemove.Add(item);
+                }
+            }
+
+            foreach (GalleryItem item in itemsToRemove)
+            {
+                data.items.Remove(item);
             }
         }
 
@@ -422,16 +436,24 @@ namespace BuildSiteIndex
             }
         }
 
-        private static void UploadOneItem(GallerySiteIndex data, GalleryItem item)
+        private static bool UploadOneItem(GallerySiteIndex data, GalleryItem item)
         {
             GallerySiteIndex itemToPost = CreateItemToPost(data, item);
 
             string progressText = item.Path;
 
-            UploadItem(itemToPost, progressText);
+            const int maxRetries = 5;
+            bool uploaded = false;
+            int retry = 0;
+            do
+            {
+                uploaded = UploadItem(itemToPost, progressText);
+                ++retry;
+            } while (!uploaded && retry < maxRetries);
+            return uploaded;
         }
 
-        private static void UploadItem(GallerySiteIndex itemToPost, string progressText)
+        private static bool UploadItem(GallerySiteIndex itemToPost, string progressText)
         {
             //var handler = new HttpClientHandler
             //{
@@ -464,7 +486,9 @@ namespace BuildSiteIndex
                 if (response.IsSuccessStatusCode)
                 {
                     Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+                    return true;
                 }
+                return false;
             }
         }
 

@@ -35,16 +35,7 @@ namespace StorageHelpers
             Directory.CreateDirectory(path);
 
             string file = Path.Combine(path, "ravendb.backup");            
-            Rotate(file + ".8", file + ".9");
-            Rotate(file + ".7", file + ".8");
-            Rotate(file + ".6", file + ".7");
-            Rotate(file + ".5", file + ".6");
-            Rotate(file + ".4", file + ".5");
-            Rotate(file + ".3", file + ".4");
-            Rotate(file + ".2", file + ".3");
-            Rotate(file + ".1", file + ".2");
-            Rotate(file + ".0", file + ".1");
-            Rotate(file, file + ".1");            
+            RotateLastGenerations(file);
 
             var options = new SmugglerOptions
                 {
@@ -54,6 +45,20 @@ namespace StorageHelpers
             var dumper = new DataDumper(documentStore.DocumentDatabase, options);
 
             dumper.ExportData(null, options, false);
+        }
+
+        public static void RotateLastGenerations(string file)
+        {
+            Rotate(file + ".8", file + ".9");
+            Rotate(file + ".7", file + ".8");
+            Rotate(file + ".6", file + ".7");
+            Rotate(file + ".5", file + ".6");
+            Rotate(file + ".4", file + ".5");
+            Rotate(file + ".3", file + ".4");
+            Rotate(file + ".2", file + ".3");
+            Rotate(file + ".1", file + ".2");
+            Rotate(file + ".0", file + ".1");
+            Rotate(file, file + ".1");
         }
 
         private static void Rotate(string current, string previous)
