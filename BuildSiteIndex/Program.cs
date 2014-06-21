@@ -184,7 +184,7 @@ namespace BuildSiteIndex
                 {
                     AppendChildLocations(child, locations);
                 }
-                else
+                else if (child.Location != null )
                 {
                     // only add locations for photos
                     locations.Add(child.Location);
