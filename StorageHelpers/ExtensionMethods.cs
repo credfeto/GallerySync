@@ -34,7 +34,7 @@ namespace StorageHelpers
         {
             Directory.CreateDirectory(path);
 
-            string file = Path.Combine(path, "ravendb.backup");            
+            string file = Path.Combine(path, "ravendb.backup");
             RotateLastGenerations(file);
 
             var options = new SmugglerOptions
@@ -49,31 +49,75 @@ namespace StorageHelpers
 
         public static void RotateLastGenerations(string file)
         {
-            Rotate(file + ".8", file + ".9");
-            Rotate(file + ".7", file + ".8");
-            Rotate(file + ".6", file + ".7");
-            Rotate(file + ".5", file + ".6");
-            Rotate(file + ".4", file + ".5");
-            Rotate(file + ".3", file + ".4");
-            Rotate(file + ".2", file + ".3");
-            Rotate(file + ".1", file + ".2");
-            Rotate(file + ".0", file + ".1");
-            Rotate(file, file + ".1");
+            Remove(file + ".9");
+            RotateWithRetry(file + ".8", file + ".9");
+            RotateWithRetry(file + ".7", file + ".8");
+            RotateWithRetry(file + ".6", file + ".7");
+            RotateWithRetry(file + ".5", file + ".6");
+            RotateWithRetry(file + ".4", file + ".5");
+            RotateWithRetry(file + ".3", file + ".4");
+            RotateWithRetry(file + ".2", file + ".3");
+            RotateWithRetry(file + ".1", file + ".2");
+            RotateWithRetry(file + ".0", file + ".1");
+            RotateWithRetry(file, file + ".1");
         }
 
-        private static void Rotate(string current, string previous)
+        private static void Remove(string filename)
         {
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
+        }
+
+        private static void RotateWithRetry(string current, string previous)
+        {
+            const int maxRetries = 5;
+
+            for (int retry = 0; retry < maxRetries; ++retry)
+            {
+                if (Rotate(current, previous))
+                {
+                    return;
+                }
+            }
+        }
+
+        private static bool Rotate(string current, string previous)
+        {
+            Console.WriteLine("Moving {0} to {1}", current, previous);
             if (!File.Exists(current))
             {
-                return;                
+                return true;
             }
 
-            if (File.Exists(previous))
+            Remove(previous);
+
+            try
             {
-                File.Delete(previous);
+                File.Move(current, previous);
+                return true;
             }
+            catch (Exception exception)
+            {
+                Console.WriteLine("ERROR: Failed to move file (FAST): {0}", exception.Message);
+                return SlowMove(current, previous);
+            }
+        }
 
-            File.Move(current, previous);
+        private static bool SlowMove(string current, string previous)
+        {
+            try
+            {
+                File.Copy(current, previous);
+                File.Delete(current);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("ERROR: Failed to move file (SLOW): {0}", exception.Message);
+                return false;
+            }
         }
 
         public static void Restore(this EmbeddableDocumentStore documentStore, string path)
