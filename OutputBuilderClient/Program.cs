@@ -279,9 +279,11 @@ namespace OutputBuilderClient
             }
 
             sourcePhoto.Version = Constants.CurrentMetadataVersion;
+            
             if (targetPhoto != null)
             {                
                 UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
+                targetPhoto.Version = Constants.CurrentMetadataVersion;
 
                 if (buildImages)
                 {
