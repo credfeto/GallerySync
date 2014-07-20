@@ -213,7 +213,7 @@ namespace OutputBuilderClient
                     bool build = targetPhoto == null;
                     bool rebuild = targetPhoto != null && HaveFilesChanged(sourcePhoto, targetPhoto);
                     bool rebuildMetadata = targetPhoto != null &&
-                                           targetPhoto.Version <= Constants.CurrentMetadataVersion;
+                                           MetadataVerionOutOfDate(targetPhoto);
 
                     if (build || rebuild || rebuildMetadata)
                     {
@@ -236,6 +236,17 @@ namespace OutputBuilderClient
                            exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
             }
+        }
+
+        private static bool MetadataVerionOutOfDate(Photo targetPhoto)
+        {
+            if (targetPhoto.Version <= Constants.CurrentMetadataVersion)
+            {
+                OutputText(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion +")");
+                return true;
+            }
+
+            return false;
         }
 
         private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata)
@@ -374,6 +385,7 @@ namespace OutputBuilderClient
         {
             if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
             {
+                OutputText(" +++ Metadata update: File count changed");
                 return true;
             }
 
@@ -388,6 +400,7 @@ namespace OutputBuilderClient
                 {
                     if (componentFile.FileSize != found.FileSize)
                     {
+                        OutputText(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
                         return true;
                     }
 
@@ -407,11 +420,13 @@ namespace OutputBuilderClient
 
                     if (componentFile.Hash != found.Hash)
                     {
+                        OutputText(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
                         return true;
                     }
                 }
                 else
                 {
+                    OutputText(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
                     return true;
                 }
             }
