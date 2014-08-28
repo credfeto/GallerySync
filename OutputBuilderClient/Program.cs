@@ -20,6 +20,10 @@ namespace OutputBuilderClient
 
         private static int Main(string[] args)
         {
+            Console.WriteLine("OutputBuilderClient");
+
+            BoostPriority();
+
             if (args.Length == 1)
             {
                 try
@@ -35,8 +39,6 @@ namespace OutputBuilderClient
                     return 1;
                 }
             }
-
-            BoostPriority();
 
             try
             {

@@ -15,6 +15,8 @@ namespace HomeClient
         {
             BoostPriority();
 
+            Console.WriteLine("HomeClient");
+
             try
             {
                 ProcessGallery();

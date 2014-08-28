@@ -24,6 +24,8 @@ namespace BuildSiteIndex
     {
         private static int Main()
         {
+            Console.WriteLine("BuildSiteIndex");
+
             BoostPriority();
 
             try

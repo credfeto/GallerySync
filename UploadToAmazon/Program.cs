@@ -20,6 +20,8 @@ namespace UploadToAmazon
         {
             BoostPriority();
 
+            Console.WriteLine("UploadToAmazon");
+
             try
             {
                 ProcessGallery();                
