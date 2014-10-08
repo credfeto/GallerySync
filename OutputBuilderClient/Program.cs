@@ -242,7 +242,7 @@ namespace OutputBuilderClient
 
         private static bool MetadataVerionOutOfDate(Photo targetPhoto)
         {
-            if (targetPhoto.Version <= Constants.CurrentMetadataVersion)
+            if (targetPhoto.Version < Constants.CurrentMetadataVersion)
             {
                 OutputText(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion +")");
                 return true;
