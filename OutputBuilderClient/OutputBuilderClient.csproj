@@ -95,6 +95,7 @@
     <Compile Include="ImageConverters\ImageMagickImageConverter.cs" />
     <Compile Include="ImageConverters\RAWImageConverter.cs" />
     <Compile Include="ImageExtraction.cs" />
+    <Compile Include="ImageHelpers.cs" />
     <Compile Include="MetadataExtraction.cs" />
     <Compile Include="Metadata\AttributeItemLoader.cs" />
     <Compile Include="Metadata\ElementItemListLoader.cs" />

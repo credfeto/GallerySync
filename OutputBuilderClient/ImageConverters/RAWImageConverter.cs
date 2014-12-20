@@ -87,6 +87,19 @@ namespace OutputBuilderClient.ImageConverters
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
 
+            var image = LoadImageInternal(fileName);
+            if (image != null)
+            {
+                const int rotationDegrees = 0;
+
+                ImageHelpers.RotateImageIfNecessary(image, rotationDegrees);
+            }
+
+            return image;
+        }
+
+        private static Bitmap LoadImageInternal(string fileName)
+        {
             byte[] bytes = ConvertToTiffArray(fileName);
             if (bytes == null)
             {
