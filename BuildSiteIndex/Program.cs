@@ -464,32 +464,41 @@ namespace BuildSiteIndex
             //    UseProxy = true
             //};
 
-            using (var client = new HttpClient
-                {
-                    BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)
-                })
+            try
             {
-                Console.WriteLine("Uploading: {0}", progressText);
 
-                client.DefaultRequestHeaders.Accept.Add(
-                    new MediaTypeWithQualityHeaderValue("application/json"));
-
-
-                var formatter = new JsonMediaTypeFormatter
+                using (var client = new HttpClient
                     {
-                        SerializerSettings = {ContractResolver = new DefaultContractResolver()}
-                    };
-
-                var content = new ObjectContent<GallerySiteIndex>(itemToPost, formatter);
-
-                HttpResponseMessage response = client.PostAsync("tasks/sync", content).Result;
-                Console.WriteLine("Status: {0}", response.StatusCode);
-
-                if (response.IsSuccessStatusCode)
+                        BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)
+                    })
                 {
-                    Console.WriteLine(response.Content.ReadAsStringAsync().Result);
-                    return true;
+                    Console.WriteLine("Uploading: {0}", progressText);
+
+                    client.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("application/json"));
+
+
+                    var formatter = new JsonMediaTypeFormatter
+                        {
+                            SerializerSettings = {ContractResolver = new DefaultContractResolver()}
+                        };
+
+                    var content = new ObjectContent<GallerySiteIndex>(itemToPost, formatter);
+
+                    HttpResponseMessage response = client.PostAsync("tasks/sync", content).Result;
+                    Console.WriteLine("Status: {0}", response.StatusCode);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+                        return true;
+                    }
+                    return false;
                 }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Error: {0}", exception.Message);
                 return false;
             }
         }
