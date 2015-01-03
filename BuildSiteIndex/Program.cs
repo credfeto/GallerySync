@@ -469,7 +469,8 @@ namespace BuildSiteIndex
 
                 using (var client = new HttpClient
                     {
-                        BaseAddress = new Uri(Settings.Default.WebServerBaseAddress)
+                        BaseAddress = new Uri(Settings.Default.WebServerBaseAddress),
+                        Timeout = TimeSpan.FromSeconds(200)
                     })
                 {
                     Console.WriteLine("Uploading: {0}", progressText);
@@ -480,7 +481,8 @@ namespace BuildSiteIndex
 
                     var formatter = new JsonMediaTypeFormatter
                         {
-                            SerializerSettings = {ContractResolver = new DefaultContractResolver()}
+                            SerializerSettings = {ContractResolver = new DefaultContractResolver()},
+                            Indent = false
                         };
 
                     var content = new ObjectContent<GallerySiteIndex>(itemToPost, formatter);
