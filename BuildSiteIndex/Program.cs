@@ -194,11 +194,13 @@ namespace BuildSiteIndex
                         keywordMetadata.Value.Replace(';', ',').Split(',')
                                        .Where(candidate => !string.IsNullOrWhiteSpace(candidate)))
                 {
+                    var safe = UrlNaming.BuildUrlSafePath(keyword.ToLowerInvariant());
+
                     KeywordEntry entry;
-                    if (!keywords.TryGetValue(keyword.ToLowerInvariant(), out entry))
+                    if (!keywords.TryGetValue(safe, out entry))
                     {
                         entry = new KeywordEntry(keyword);
-                        keywords.Add(keyword.ToLowerInvariant(), entry);
+                        keywords.Add(safe, entry);
                     }
 
                     entry.Photos.Add(sourcePhoto);
