@@ -968,6 +968,13 @@ namespace BuildSiteIndex
                     throw new ApplicationException("Could not find: " + parentPath);
                 }
 
+                GalleryEntry current;
+                if (contents.TryGetValue(itemPath, out current))
+                {
+                    // This shouldn't ever happen, but wth, it does!
+                    return;
+                }
+
                 Console.WriteLine(" * Path: {0}", itemPath);
                 Console.WriteLine("   + Title: {0}", entry.Title);
                 parent.Children.Add(entry);
