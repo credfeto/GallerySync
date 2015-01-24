@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FileNaming;
 using Twaddle.Gallery.ObjectModel;
 
 namespace BuildSiteIndex
@@ -23,6 +24,8 @@ namespace BuildSiteIndex
 
         public string Path { get; set; }
 
+        public string OriginalAlbumPath { get; set; }
+
         public bool Equals(GalleryChildItem other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -32,6 +35,7 @@ namespace BuildSiteIndex
                    Location == other.Location && DateUpdated == other.DateUpdated &&
                    DateCreated == other.DateCreated && Description == other.Description &&
                    Title == other.Title && Path == other.Path &&
+                   OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() &&
                    ItemUpdateHelpers.CollectionEquals(ImageSizes, other.ImageSizes);
         }
 
@@ -55,6 +59,7 @@ namespace BuildSiteIndex
                 hashCode = (hashCode*397) ^ (Description != null ? Description.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Title != null ? Title.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Path != null ? Path.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (OriginalAlbumPath != null ? OriginalAlbumPath.GetHashCode() : 0);
                 return hashCode;
             }
         }

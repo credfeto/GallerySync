@@ -111,25 +111,7 @@ namespace BuildSiteIndex
                                      title,
                                      sourcePhoto);
 
-                    PhotoMetadata keywordMetadata =
-                        sourcePhoto.Metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.Keywords);
-                    if (keywordMetadata != null)
-                    {
-                        foreach (
-                            string keyword in
-                                keywordMetadata.Value.Replace(';', ',').Split(',')
-                                               .Where(candidate => !string.IsNullOrWhiteSpace(candidate)))
-                        {
-                            KeywordEntry entry;
-                            if (!keywords.TryGetValue(keyword.ToLowerInvariant(), out entry))
-                            {
-                                entry = new KeywordEntry(keyword);
-                                keywords.Add(keyword.ToLowerInvariant(), entry);
-                            }
-
-                            entry.Photos.Add(sourcePhoto);
-                        }
-                    }
+                    AppendKeywordsForLaterProcessing(sourcePhoto, keywords);
                 }
             }
 
@@ -140,16 +122,47 @@ namespace BuildSiteIndex
             {
                 foreach (Photo sourcePhoto in keyword.Photos)
                 {
+                    string sourcePhotoFullPath = EnsureTerminatedPath("/" + albumsRoot + "/" + sourcePhoto.UrlSafePath);
+                    string sourcePhotoBreadcrumbs =
+                        EnsureTerminatedBreadcrumbs("\\" + albumsTitle + "\\" + sourcePhoto.BasePath);
+                    string[] sourcePhotoPathFragments = sourcePhotoFullPath.Split('/').Where(IsNotEmpty).ToArray();
+                    string[] sourcePhotoBreadcrumbFragments =
+                        sourcePhotoBreadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+
+
+                    string keywordLower = UrlNaming.BuildUrlSafePath( keyword.Keyword.ToLowerInvariant() ).TrimEnd("/".ToArray());
+
                     string path =
-                        EnsureTerminatedPath("/" + keywordsRoot + "/" + keyword.Keyword.ToLowerInvariant() + "/" +
-                                             sourcePhoto.UrlSafePath);
+                        EnsureTerminatedPath("/" + keywordsRoot + "/" + keywordLower[0] + "/" + keywordLower + "/" +
+                                             sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] + "-" +
+                                             sourcePhotoPathFragments.Last());
+                    
+                    string title = sourcePhotoBreadcrumbFragments.Last();
+                    string parentTitle = sourcePhotoBreadcrumbFragments[sourcePhotoBreadcrumbFragments.Length - 2].ExtractDate(DateFormat.ShortDate);
+                    if (!string.IsNullOrWhiteSpace(parentTitle))
+                    {
+                        title += " (" + parentTitle + ")";
+                    }
+
                     string breadcrumbs =
-                        EnsureTerminatedBreadcrumbs("\\" + keywordsTitle + "\\" + keyword.Keyword + "\\" +
-                                                    sourcePhoto.BasePath);
-                    Console.WriteLine("Item: {0}", path);
+                        EnsureTerminatedBreadcrumbs("\\" + keywordsTitle + "\\" + keyword.Keyword[0] + "\\" +
+                                                    keyword.Keyword + "\\" +
+                                                    title);
+
 
                     string[] pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
                     string[] breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+
+                    EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
+
+                    string parentLevel =
+                        EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
+
+                    Console.WriteLine("Item: {0}", path);
+
+                    AppendVirtualEntry(contents, parentLevel, path, sourcePhotoFullPath,
+                                       title.ReformatTitle(DateFormat.ShortDate),
+                                       sourcePhoto);
                 }
             }
 
@@ -157,6 +170,44 @@ namespace BuildSiteIndex
             ProduceJsonFile(contents);
 
             documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
+        }
+
+        private static void AppendKeywordsForLaterProcessing(Photo sourcePhoto,
+                                                             Dictionary<string, KeywordEntry> keywords)
+        {
+            PhotoMetadata keywordMetadata =
+                sourcePhoto.Metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.Keywords);
+            if (keywordMetadata != null)
+            {
+                foreach (
+                    string keyword in
+                        keywordMetadata.Value.Replace(';', ',').Split(',')
+                                       .Where(candidate => !string.IsNullOrWhiteSpace(candidate)))
+                {
+                    KeywordEntry entry;
+                    if (!keywords.TryGetValue(keyword.ToLowerInvariant(), out entry))
+                    {
+                        entry = new KeywordEntry(keyword);
+                        keywords.Add(keyword.ToLowerInvariant(), entry);
+                    }
+
+                    entry.Photos.Add(sourcePhoto);
+                }
+            }
+        }
+
+        private static GalleryEntry FindParentAlbumPath(Dictionary<string, GalleryEntry> contents, Photo parentRecord)
+        {
+            string path = parentRecord.BasePath;
+
+            GalleryEntry item;
+            if (!contents.TryGetValue(path, out item) || item == null)
+            {
+                // can't find the full path: give up
+                return null;
+            }
+
+            return item;
         }
 
         private static void AddCoordinatesFromChildren(Dictionary<string, GalleryEntry> contents)
@@ -186,7 +237,7 @@ namespace BuildSiteIndex
                 {
                     AppendChildLocations(child, locations);
                 }
-                else if (child.Location != null )
+                else if (child.Location != null)
                 {
                     // only add locations for photos
                     locations.Add(child.Location);
@@ -237,6 +288,7 @@ namespace BuildSiteIndex
                              select new GalleryItem
                                  {
                                      Path = parentRecord.Path,
+                                     OriginalAlbumPath = parentRecord.OriginalAlbumPath,
                                      Title = parentRecord.Title,
                                      Description = parentRecord.Description,
                                      DateCreated = parentRecord.DateCreated,
@@ -466,7 +518,6 @@ namespace BuildSiteIndex
 
             try
             {
-
                 using (var client = new HttpClient
                     {
                         BaseAddress = new Uri(Settings.Default.WebServerBaseAddress),
@@ -586,6 +637,7 @@ namespace BuildSiteIndex
             return new GalleryChildItem
                 {
                     Path = firstRecord.Path,
+                    OriginalAlbumPath = firstRecord.OriginalAlbumPath,
                     Title = firstRecord.Title,
                     Description = firstRecord.Description,
                     DateCreated = firstRecord.DateCreated,
@@ -684,6 +736,43 @@ namespace BuildSiteIndex
             AppendEntry(contents, parentLevel, path, new GalleryEntry
                 {
                     Path = path,
+                    OriginalAlbumPath = null,
+                    Title = title,
+                    Description = description,
+                    Children = new List<GalleryEntry>(),
+                    Location = location,
+                    ImageSizes = sourcePhoto.ImageSizes,
+                    Rating = rating,
+                    Metadata =
+                        sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                                   .OrderBy(item => item.Name.ToLowerInvariant())
+                                   .ToList(),
+                    Keywords = keywords,
+                    DateCreated = dateCreated,
+                    DateUpdated = dateUpdated
+                });
+        }
+
+        private static void AppendVirtualEntry(Dictionary<string, GalleryEntry> contents, string parentLevel,
+                                               string path, string originalPath,
+                                               string title, Photo sourcePhoto)
+        {
+            DateTime dateCreated;
+            DateTime dateUpdated;
+            ExtractDates(sourcePhoto, out dateCreated, out dateUpdated);
+
+            string description = ExtractDescription(sourcePhoto);
+
+            Location location = ExtractLocation(sourcePhoto);
+
+            int rating = ExtractRating(sourcePhoto);
+
+            List<string> keywords = ExtractKeywords(sourcePhoto);
+
+            AppendEntry(contents, parentLevel, path, new GalleryEntry
+                {
+                    Path = path,
+                    OriginalAlbumPath = originalPath,
                     Title = title,
                     Description = description,
                     Children = new List<GalleryEntry>(),
@@ -842,6 +931,7 @@ namespace BuildSiteIndex
                     AppendEntry(contents, parentLevel, level, new GalleryEntry
                         {
                             Path = level,
+                            OriginalAlbumPath = null,
                             Title = breadcrumbFragments[folderLevel - 1].ReformatTitle(DateFormat.LongDate),
                             Description = string.Empty,
                             Location = null,
@@ -874,6 +964,7 @@ namespace BuildSiteIndex
             var entry = new GalleryEntry
                 {
                     Path = "/",
+                    OriginalAlbumPath = null,
                     Title = "Mark's Photos",
                     Description = "Photos taken by Mark Ridgwell.",
                     Location = null,

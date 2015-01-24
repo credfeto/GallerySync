@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FileNaming;
 using Twaddle.Gallery.ObjectModel;
 
 namespace BuildSiteIndex
@@ -8,6 +9,8 @@ namespace BuildSiteIndex
     public class GalleryEntry : IEquatable<GalleryEntry>
     {
         public string Path { get; set; }
+
+        public string OriginalAlbumPath { get; set; }
 
         public string Title { get; set; }
 
@@ -29,12 +32,15 @@ namespace BuildSiteIndex
 
         public List<string> Keywords { get; set; }
 
+
         public bool Equals(GalleryEntry other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            return Path == other.Path && Title == other.Title &&
+            return Path == other.Path &&
+                   OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() &&
+                   Title == other.Title &&
                    Description == other.Description &&
                    DateCreated == other.DateCreated && DateUpdated == other.DateUpdated &&
                    Location == other.Location && Rating == other.Rating &&
@@ -57,6 +63,7 @@ namespace BuildSiteIndex
             unchecked
             {
                 int hashCode = (Path != null ? Path.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (OriginalAlbumPath != null ? OriginalAlbumPath.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Title != null ? Title.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Children != null ? Children.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Description != null ? Description.GetHashCode() : 0);

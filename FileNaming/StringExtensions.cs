@@ -41,6 +41,38 @@ namespace FileNaming
             return name;
         }
 
+        public static string ExtractDate(this string name, DateFormat dateFormat)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return string.Empty;
+            }
+
+            Match match = Regex.Match(name, DateMatchRegex, RegexOptions.Singleline);
+            if (match.Success)
+            {
+                string datePart = match.Value.Trim();
+
+                DateTime date;
+                if (DateTime.TryParse(datePart, out date))
+                {
+                    return string.Format(CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), date);
+                }
+            }
+
+            return string.Empty;
+        }
+
+        public static string AsEmpty(this string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            return value;
+        }
+
         /// <summary>
         ///     Gets the date format string.
         /// </summary>

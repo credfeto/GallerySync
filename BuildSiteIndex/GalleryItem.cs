@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FileNaming;
 using Twaddle.Gallery.ObjectModel;
 
 namespace BuildSiteIndex
@@ -8,6 +9,8 @@ namespace BuildSiteIndex
     public class GalleryItem : IEquatable<GalleryItem>
     {
         public string Path { get; set; }
+
+        public string OriginalAlbumPath { get; set; }
 
         public string Title { get; set; }
 
@@ -39,12 +42,15 @@ namespace BuildSiteIndex
 
         public GalleryChildItem Last { get; set; }
 
+
         public bool Equals(GalleryItem other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            return Path == other.Path && Title == other.Title &&
+            return Path == other.Path &&
+                   OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty()
+                   && Title == other.Title &&
                    Description == other.Description && DateCreated == other.DateCreated &&
                    DateUpdated == other.DateUpdated && Location == other.Location &&
                    Type == other.Type &&
@@ -53,7 +59,7 @@ namespace BuildSiteIndex
                    ItemUpdateHelpers.CollectionEquals(ImageSizes, other.ImageSizes) &&
                    ItemUpdateHelpers.CollectionEquals(Metadata, other.Metadata) &&
                    ItemUpdateHelpers.CollectionEquals(Keywords, other.Keywords) &&
-                   ItemUpdateHelpers.CollectionEquals(Children, other.Children) && 
+                   ItemUpdateHelpers.CollectionEquals(Children, other.Children) &&
                    ItemUpdateHelpers.CollectionEquals(Breadcrumbs, other.Breadcrumbs) &&
                    First == other.First;
         }
@@ -71,6 +77,7 @@ namespace BuildSiteIndex
             unchecked
             {
                 int hashCode = (Path != null ? Path.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (OriginalAlbumPath != null ? OriginalAlbumPath.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Title != null ? Title.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Description != null ? Description.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ DateCreated.GetHashCode();
