@@ -972,6 +972,7 @@ namespace BuildSiteIndex
                 if (contents.TryGetValue(itemPath, out current))
                 {
                     // This shouldn't ever happen, but wth, it does!
+                    Console.WriteLine("ERROR: DUPLICATE PATH: {0}", itemPath);
                     return;
                 }
 
