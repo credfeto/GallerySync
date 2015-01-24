@@ -22,6 +22,12 @@ namespace BuildSiteIndex
 {
     internal class Program
     {
+        private const string AlbumsRoot = "albums";
+        private const string AlbumsTitle = "Albums";
+
+        private const string KeywordsRoot = "keywords";
+        private const string KeywordsTitle = "Keywords";
+
         private static int Main()
         {
             Console.WriteLine("BuildSiteIndex");
@@ -76,11 +82,6 @@ namespace BuildSiteIndex
 
             AppendRootEntry(contents);
 
-            const string albumsRoot = "albums";
-            const string albumsTitle = "Albums";
-
-            const string keywordsRoot = "keywords";
-            const string keywordsTitle = "Keywords";
 
             var keywords = new Dictionary<string, KeywordEntry>();
 
@@ -88,8 +89,8 @@ namespace BuildSiteIndex
             {
                 foreach (Photo sourcePhoto in inputSession.GetAll<Photo>())
                 {
-                    string path = EnsureTerminatedPath("/" + albumsRoot + "/" + sourcePhoto.UrlSafePath);
-                    string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + albumsTitle + "\\" + sourcePhoto.BasePath);
+                    string path = EnsureTerminatedPath("/" + AlbumsRoot + "/" + sourcePhoto.UrlSafePath);
+                    string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + AlbumsTitle + "\\" + sourcePhoto.BasePath);
                     Console.WriteLine("Item: {0}", path);
 
                     string[] pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
@@ -118,34 +119,48 @@ namespace BuildSiteIndex
             Console.WriteLine("Found {0} items total", contents.Count);
             Console.WriteLine("Found {0} keyword items total", keywords.Count);
 
+            BuildGalleryItemsForKeywords(keywords, contents);
+
+            AddCoordinatesFromChildren(contents);
+            ProduceJsonFile(contents);
+
+            documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
+        }
+
+        private static void BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
+                                                         Dictionary<string, GalleryEntry> contents)
+        {
             foreach (KeywordEntry keyword in keywords.Values)
             {
                 foreach (Photo sourcePhoto in keyword.Photos)
                 {
-                    string sourcePhotoFullPath = EnsureTerminatedPath("/" + albumsRoot + "/" + sourcePhoto.UrlSafePath);
+                    string sourcePhotoFullPath = EnsureTerminatedPath("/" + AlbumsRoot + "/" + sourcePhoto.UrlSafePath);
                     string sourcePhotoBreadcrumbs =
-                        EnsureTerminatedBreadcrumbs("\\" + albumsTitle + "\\" + sourcePhoto.BasePath);
+                        EnsureTerminatedBreadcrumbs("\\" + AlbumsTitle + "\\" + sourcePhoto.BasePath);
                     string[] sourcePhotoPathFragments = sourcePhotoFullPath.Split('/').Where(IsNotEmpty).ToArray();
                     string[] sourcePhotoBreadcrumbFragments =
                         sourcePhotoBreadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
 
 
-                    string keywordLower = UrlNaming.BuildUrlSafePath( keyword.Keyword.ToLowerInvariant() ).TrimEnd("/".ToArray());
+                    string keywordLower =
+                        UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant()).TrimEnd("/".ToArray());
 
                     string path =
-                        EnsureTerminatedPath("/" + keywordsRoot + "/" + keywordLower[0] + "/" + keywordLower + "/" +
+                        EnsureTerminatedPath("/" + KeywordsRoot + "/" + keywordLower[0] + "/" + keywordLower + "/" +
                                              sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] + "-" +
                                              sourcePhotoPathFragments.Last());
-                    
+
                     string title = sourcePhotoBreadcrumbFragments.Last();
-                    string parentTitle = sourcePhotoBreadcrumbFragments[sourcePhotoBreadcrumbFragments.Length - 2].ExtractDate(DateFormat.ShortDate);
+                    string parentTitle =
+                        sourcePhotoBreadcrumbFragments[sourcePhotoBreadcrumbFragments.Length - 2].ExtractDate(
+                            DateFormat.LongDate);
                     if (!string.IsNullOrWhiteSpace(parentTitle))
                     {
                         title += " (" + parentTitle + ")";
                     }
 
                     string breadcrumbs =
-                        EnsureTerminatedBreadcrumbs("\\" + keywordsTitle + "\\" + keyword.Keyword[0] + "\\" +
+                        EnsureTerminatedBreadcrumbs("\\" + KeywordsTitle + "\\" + keyword.Keyword[0] + "\\" +
                                                     keyword.Keyword + "\\" +
                                                     title);
 
@@ -161,15 +176,10 @@ namespace BuildSiteIndex
                     Console.WriteLine("Item: {0}", path);
 
                     AppendVirtualEntry(contents, parentLevel, path, sourcePhotoFullPath,
-                                       title.ReformatTitle(DateFormat.ShortDate),
+                                       title,
                                        sourcePhoto);
                 }
             }
-
-            AddCoordinatesFromChildren(contents);
-            ProduceJsonFile(contents);
-
-            documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
         }
 
         private static void AppendKeywordsForLaterProcessing(Photo sourcePhoto,
