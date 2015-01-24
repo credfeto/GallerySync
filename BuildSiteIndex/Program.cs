@@ -28,6 +28,8 @@ namespace BuildSiteIndex
         private const string KeywordsRoot = "keywords";
         private const string KeywordsTitle = "Keywords";
 
+        private static readonly object EntryLock = new object();
+
         private static int Main()
         {
             Console.WriteLine("BuildSiteIndex");
@@ -958,34 +960,40 @@ namespace BuildSiteIndex
         private static void AppendEntry(Dictionary<string, GalleryEntry> contents, string parentPath, string itemPath,
                                         GalleryEntry entry)
         {
-            GalleryEntry parent;
-            if (!contents.TryGetValue(parentPath, out parent))
+            lock (EntryLock)
             {
-                throw new ApplicationException("Could not find: " + parentPath);
+                GalleryEntry parent;
+                if (!contents.TryGetValue(parentPath, out parent))
+                {
+                    throw new ApplicationException("Could not find: " + parentPath);
+                }
+
+                Console.WriteLine(" * Path: {0}", itemPath);
+                Console.WriteLine("   + Title: {0}", entry.Title);
+                parent.Children.Add(entry);
+
+                contents.Add(itemPath, entry);
             }
-
-            Console.WriteLine(" * Path: {0}", itemPath);
-            Console.WriteLine("   + Title: {0}", entry.Title);
-            parent.Children.Add(entry);
-
-            contents.Add(itemPath, entry);
         }
 
         private static void AppendRootEntry(Dictionary<string, GalleryEntry> contents)
         {
-            var entry = new GalleryEntry
-                {
-                    Path = "/",
-                    OriginalAlbumPath = null,
-                    Title = "Mark's Photos",
-                    Description = "Photos taken by Mark Ridgwell.",
-                    Location = null,
-                    Children = new List<GalleryEntry>(),
-                    DateCreated = DateTime.MaxValue,
-                    DateUpdated = DateTime.MinValue
-                };
+            lock (EntryLock)
+            {
+                var entry = new GalleryEntry
+                    {
+                        Path = "/",
+                        OriginalAlbumPath = null,
+                        Title = "Mark's Photos",
+                        Description = "Photos taken by Mark Ridgwell.",
+                        Location = null,
+                        Children = new List<GalleryEntry>(),
+                        DateCreated = DateTime.MaxValue,
+                        DateUpdated = DateTime.MinValue
+                    };
 
-            contents.Add("/", entry);
+                contents.Add("/", entry);
+            }
         }
 
         public class ConverterContractResolver : DefaultContractResolver
