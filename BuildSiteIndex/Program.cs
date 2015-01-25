@@ -147,8 +147,10 @@ namespace BuildSiteIndex
                     string keywordLower =
                         UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant()).TrimEnd("/".ToArray());
 
+                    var firstKeywordChar = keywordLower.Substring(0, 1).ToUpperInvariant();
+
                     string path =
-                        EnsureTerminatedPath("/" + KeywordsRoot + "/" + keywordLower[0] + "/" + keywordLower + "/" +
+                        EnsureTerminatedPath("/" + KeywordsRoot + "/" + firstKeywordChar + "/" + keywordLower + "/" +
                                              sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] + "-" +
                                              sourcePhotoPathFragments.Last());
 
@@ -162,7 +164,7 @@ namespace BuildSiteIndex
                     }
 
                     string breadcrumbs =
-                        EnsureTerminatedBreadcrumbs("\\" + KeywordsTitle + "\\" + keyword.Keyword[0] + "\\" +
+                        EnsureTerminatedBreadcrumbs("\\" + KeywordsTitle + "\\" + firstKeywordChar + "\\" +
                                                     keyword.Keyword + "\\" +
                                                     title);
 
