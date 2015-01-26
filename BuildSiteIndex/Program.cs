@@ -145,7 +145,7 @@ namespace BuildSiteIndex
 
 
                     string keywordLower =
-                        UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant()).TrimEnd("/".ToArray());
+                        UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant()).TrimEnd("/".ToArray()).TrimStart("-".ToArray()).TrimEnd("-".ToArray());
 
                     var firstKeywordChar = keywordLower.Substring(0, 1).ToUpperInvariant();
 
