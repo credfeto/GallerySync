@@ -16,7 +16,7 @@ namespace OutputBuilderClient
 {
     internal class Program
     {
-        private static readonly object _lock = new object();
+        private static readonly object Lock = new object();
 
         private static int Main(string[] args)
         {
@@ -213,9 +213,11 @@ namespace OutputBuilderClient
                 {
                     var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
                     bool build = targetPhoto == null;
-                    bool rebuild = targetPhoto != null && HaveFilesChanged(sourcePhoto, targetPhoto);
+                    bool rebuild = targetPhoto != null &&
+                                   (MetadataVersionRequiresRebuild(targetPhoto) ||
+                                    HaveFilesChanged(sourcePhoto, targetPhoto));                   
                     bool rebuildMetadata = targetPhoto != null &&
-                                           MetadataVerionOutOfDate(targetPhoto);
+                                           MetadataVersionOutOfDate(targetPhoto);
 
                     if (build || rebuild || rebuildMetadata)
                     {
@@ -227,7 +229,7 @@ namespace OutputBuilderClient
                     }
                 }
 
-                lock (_lock)
+                lock (Lock)
                 {
                     items.Add(sourcePhoto.PathHash);
                 }
@@ -240,14 +242,24 @@ namespace OutputBuilderClient
             }
         }
 
-        private static bool MetadataVerionOutOfDate(Photo targetPhoto)
+        private static bool MetadataVersionOutOfDate(Photo targetPhoto)
         {
-            if (targetPhoto.Version < Constants.CurrentMetadataVersion)
+            if ( MetadataVersionHelpers.IsOutOfDate( targetPhoto.Version) )
             {
                 OutputText(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion +")");
                 return true;
             }
 
+            return false;
+        }
+
+        public static bool MetadataVersionRequiresRebuild(Photo targetPhoto)
+        {
+            if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
+            {
+                OutputText(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                return true;
+            }
             return false;
         }
 
@@ -273,7 +285,8 @@ namespace OutputBuilderClient
             var filesCreated = new List<string>();            
             if (buildImages)
             {
-                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated);
+                DateTime creationDate = ExtractCreationDate(sourcePhoto.Metadata);
+                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated, creationDate);
             }
             else
             {
@@ -302,6 +315,23 @@ namespace OutputBuilderClient
             }
 
             outputSession.SaveChanges();
+        }
+
+        private static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
+        {
+            var dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
+            if (dateTaken == null)
+            {
+                return DateTime.MinValue;
+            }
+
+            DateTime value;
+            if (DateTime.TryParse(dateTaken.Value, out value))
+            {
+                return value;
+            }
+
+            return DateTime.MinValue;
         }
 
 
@@ -337,7 +367,7 @@ namespace OutputBuilderClient
         {
             string text = string.Format(formatString, parameters);
 
-            lock (_lock)
+            lock (Lock)
             {
                 Console.WriteLine(text);
             }

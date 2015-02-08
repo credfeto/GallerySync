@@ -6,7 +6,6 @@ using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -58,14 +57,12 @@ namespace OutputBuilderClient
             {
                 Contract.Ensures(!string.IsNullOrEmpty(Contract.Result<string>()));
 
-                return string.Format(
-                    CultureInfo.InvariantCulture,
-                    "Copyright (c) 1998 - {0} Mark Ridgwell (http://www.markridgwell.co.uk/about)\0",
-                    DateTime.UtcNow.Year);
+
+                return "Copyright (c) Mark Ridgwell (https://www.markridgwell.co.uk/about) All Rights Reserved\0";
             }
         }
 
-        public static List<ImageSize> BuildImages(Photo sourcePhoto, List<string> filesCreated )
+        public static List<ImageSize> BuildImages(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate)
         {
             var sizes = new List<ImageSize>();
 
@@ -99,9 +96,10 @@ namespace OutputBuilderClient
                                                                   HashNaming.PathifyHash(sourcePhoto.PathHash),
                                                                   IndividualResizeFileName(sourcePhoto, resized));
 
-                            WriteImage(resizedFileName, resizedBytes);
+                            WriteImage(resizedFileName, resizedBytes, creationDate);
+
                             filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
-                                                   IndividualResizeFileName(sourcePhoto, resized));
+                                             IndividualResizeFileName(sourcePhoto, resized));
 
                             sizes.Add(new ImageSize
                                 {
@@ -434,14 +432,14 @@ namespace OutputBuilderClient
             AddOrSetPropertyItem(image, ExifCopyrightId, CopyrightDeclaration);
 
             AddOrSetPropertyItem(
-                image, ExifUserCommentId, "For licensing information see http://www.markridgwell.co.uk/about");
+                image, ExifUserCommentId, "For licensing information see https://www.markridgwell.co.uk/about");
 
             AddOrSetPropertyItem(
                 image,
                 ExifAuthorsId,
                 "Camera owner, Mark Ridgwell; Photographer, Mark Ridgwell; Image creator, Mark Ridgwell");
 
-            AddOrSetPropertyItem(image, ExifProgramNameId, "http://www.markridgwell.co.uk/");
+            AddOrSetPropertyItem(image, ExifProgramNameId, "https://www.markridgwell.co.uk/");
         }
 
         /// <summary>
@@ -561,32 +559,6 @@ namespace OutputBuilderClient
         }
 
         /// <summary>
-        ///     Determines whether the data block is valid JPEG image.
-        /// </summary>
-        /// <param name="data">
-        ///     The data in the file.
-        /// </param>
-        /// <returns>
-        ///     <c>true</c>
-        ///     if it is valid JPEG image; otherwise,
-        ///     <c>false</c>
-        ///     .
-        /// </returns>
-        private static bool IsValidJpegImage(byte[] data)
-        {
-            Contract.Requires(data != null);
-
-            if (data.Length < 2)
-            {
-                return false;
-            }
-
-            // check for the existence of the EOI segment header at the end of the file
-            // http://stackoverflow.com/questions/198438/efficiently-detect-corrupted-jpeg-file
-            return (data[data.Length - 2] == 0xff) && (data[data.Length - 1] == 0xd9);
-        }
-
-        /// <summary>
         ///     Writes the image.
         /// </summary>
         /// <param name="fileName">
@@ -595,31 +567,75 @@ namespace OutputBuilderClient
         /// <param name="data">
         ///     The data to write to the file.
         /// </param>
-        public static void WriteImage(string fileName, byte[] data)
+        /// <param name="creationDate"></param>
+        public static void WriteImage(string fileName, byte[] data, DateTime creationDate)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
             Contract.Requires(data != null);
 
-            if (!IsValidJpegImage(data))
-            {
-                Console.WriteLine("WriteImage: Invalid JPEG Image : {0}", fileName);
-                return;
-            }
+            EnsureFolderExistsForFile(fileName);
 
+            const int maxRetries = 5;
+
+            WriteWithRetries(fileName, data, maxRetries);
+
+            SetCreationDate(fileName, creationDate);
+        }
+
+        private static void WriteWithRetries(string fileName, byte[] data, int maxRetries)
+        {
+            int retries = 0;
+            while (retries < maxRetries)
+            {
+                RemoveExistingFile(fileName);
+
+                try
+                {
+                    File.WriteAllBytes(fileName, data);
+
+                    return;
+                }
+                catch (Exception)
+                {
+                    DeleteFile(fileName);
+                }
+
+                ++retries;
+            }
+        }
+
+        private static void EnsureFolderExistsForFile(string fileName)
+        {
             string folder = Path.GetDirectoryName(fileName);
 
             if (!Directory.Exists(folder))
             {
                 Directory.CreateDirectory(folder);
             }
+        }
 
-            try
+        private static void SetCreationDate(string fileName, DateTime creationDate)
+        {
+            if (creationDate != DateTime.MinValue && File.Exists(fileName))
             {
-                File.WriteAllBytes(fileName, data);
+                File.SetCreationTimeUtc(fileName, creationDate);
+                File.SetLastWriteTimeUtc(fileName, creationDate);
+                File.SetLastAccessTimeUtc(fileName, creationDate);
             }
-            catch (Exception)
+        }
+
+        private static void RemoveExistingFile(string fileName)
+        {
+            if (File.Exists(fileName))
             {
-                DeleteFile(fileName);
+                try
+                {
+                    DeleteFile(fileName);
+                }
+                catch
+                {
+                    // Don't care if it fails
+                }
             }
         }
 
