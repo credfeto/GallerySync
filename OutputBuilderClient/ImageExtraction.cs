@@ -134,7 +134,19 @@ namespace OutputBuilderClient
                            .ToArray();
         }
 
-        private static string IndividualResizeFileName(Photo sourcePhoto, Image resized)
+        public static string IndividualResizeFileName(Photo sourcePhoto, Image resized)
+        {
+            string basePath = UrlNaming.BuildUrlSafePath(
+                string.Format("{0}-{1}x{2}",
+                              Path.GetFileName(
+                                  sourcePhoto.BasePath),
+                              resized.Width, resized.Height)).TrimEnd('/').TrimStart('-');
+
+            return basePath + ".jpg";
+        }
+
+
+        public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized)
         {
             string basePath = UrlNaming.BuildUrlSafePath(
                 string.Format("{0}-{1}x{2}",
@@ -326,55 +338,7 @@ namespace OutputBuilderClient
             StripExifProperties(image);
             SetCopyrightExifProperties(image);
 
-            try
-            {
-                return SaveImageAsJpegBytesWithOptions(image, compressionQuality);
-            }
-            catch
-            {
-                // Something failed, retry using the standard
-                return SaveImageAsJpegBytesWithoutOptions(image);
-            }
-        }
-
-        /// <summary>
-        ///     Saves the image as a block of JPEG bytes in memory.
-        /// </summary>
-        /// <param name="image">
-        ///     The image.
-        /// </param>
-        /// <param name="compression">
-        ///     The compression quality.
-        /// </param>
-        /// <returns>
-        ///     Block of bytes representing the image.
-        /// </returns>
-        private static byte[] SaveImageAsJpegBytesWithOptions(Image image, long compression)
-        {
-            Contract.Requires(image != null);
-            Contract.Ensures(Contract.Result<byte[]>() != null);
-
-            ImageCodecInfo codecInfo = GetEncoderInfo("image/jpeg");
-            if (codecInfo == null)
-            {
-                return SaveImageAsJpegBytesWithoutOptions(image);
-            }
-
-            // Set the quality (n.b. must be a long)
-            var ratio = new EncoderParameter(Encoder.Quality, compression);
-
-            // Add the quality parameter to the list
-            var codecParams = new EncoderParameters(1);
-            codecParams.Param[0] = ratio;
-
-            using (var ms = new MemoryStream())
-            {
-                image.Save(ms, codecInfo, codecParams);
-
-                ms.Flush();
-
-                return ms.ToArray();
-            }
+            return SaveImageAsJpegBytesWithoutOptions(image);
         }
 
         /// <summary>
@@ -575,34 +539,14 @@ namespace OutputBuilderClient
 
             EnsureFolderExistsForFile(fileName);
 
-            const int maxRetries = 5;
+            
 
-            WriteWithRetries(fileName, data, maxRetries);
+            FileHelpers.WriteAllBytes(fileName, data);
 
             SetCreationDate(fileName, creationDate);
         }
 
-        private static void WriteWithRetries(string fileName, byte[] data, int maxRetries)
-        {
-            int retries = 0;
-            while (retries < maxRetries)
-            {
-                RemoveExistingFile(fileName);
-
-                try
-                {
-                    File.WriteAllBytes(fileName, data);
-
-                    return;
-                }
-                catch (Exception)
-                {
-                    DeleteFile(fileName);
-                }
-
-                ++retries;
-            }
-        }
+        
 
         private static void EnsureFolderExistsForFile(string fileName)
         {
@@ -624,30 +568,5 @@ namespace OutputBuilderClient
             }
         }
 
-        private static void RemoveExistingFile(string fileName)
-        {
-            if (File.Exists(fileName))
-            {
-                try
-                {
-                    DeleteFile(fileName);
-                }
-                catch
-                {
-                    // Don't care if it fails
-                }
-            }
-        }
-
-        private static void DeleteFile(string fileName)
-        {
-            try
-            {
-                File.Delete(fileName);
-            }
-            catch
-            {
-            }
-        }
     }
 }

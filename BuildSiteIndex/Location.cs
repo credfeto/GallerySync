@@ -12,7 +12,16 @@ namespace BuildSiteIndex
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Latitude.Equals(other.Latitude) && Longitude.Equals(other.Longitude);
+
+            return Normalize(Latitude) == Normalize(other.Latitude) &&
+                   Normalize(Longitude) == Normalize(other.Longitude);
+        }
+
+        private static long Normalize(double value)
+        {
+            double work = value*1000;
+
+            return Convert.ToInt64(work);
         }
 
         public override bool Equals(object obj)
@@ -27,7 +36,7 @@ namespace BuildSiteIndex
         {
             unchecked
             {
-                return (Latitude.GetHashCode()*397) ^ Longitude.GetHashCode();
+                return (Normalize(Latitude).GetHashCode()*397) ^ Normalize(Longitude).GetHashCode();
             }
         }
 

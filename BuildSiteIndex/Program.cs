@@ -30,9 +30,16 @@ namespace BuildSiteIndex
 
         private static readonly object EntryLock = new object();
 
-        private static int Main()
+        private static bool _ignoreExisting = false;
+
+        private static int Main(string[] args)
         {
             Console.WriteLine("BuildSiteIndex");
+
+            if( args!= null && args.Any( candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate,"IgnoreExisting")))
+            {
+                _ignoreExisting = true;
+            }
 
             BoostPriority();
 
@@ -114,7 +121,10 @@ namespace BuildSiteIndex
                                      title,
                                      sourcePhoto);
 
-                    AppendKeywordsForLaterProcessing(sourcePhoto, keywords);
+                    if (!IsUnderHiddenItem(path))
+                    {
+                        AppendKeywordsForLaterProcessing(sourcePhoto, keywords);
+                    }
                 }
             }
 
@@ -145,12 +155,16 @@ namespace BuildSiteIndex
 
 
                     string keywordLower =
-                        UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant()).TrimEnd("/".ToArray()).TrimStart("-".ToArray()).TrimEnd("-".ToArray());
+                        UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant())
+                                 .TrimEnd("/".ToArray())
+                                 .TrimStart("-".ToArray())
+                                 .TrimEnd("-".ToArray());
 
-                    var firstKeywordChar = keywordLower.Substring(0, 1).ToUpperInvariant();
+                    string firstKeywordCharLower = keywordLower.Substring(0, 1).ToLowerInvariant();
+                    string firstKeywordCharUpper = keywordLower.Substring(0, 1).ToUpperInvariant();
 
                     string path =
-                        EnsureTerminatedPath("/" + KeywordsRoot + "/" + firstKeywordChar + "/" + keywordLower + "/" +
+                        EnsureTerminatedPath("/" + KeywordsRoot + "/" + firstKeywordCharLower + "/" + keywordLower + "/" +
                                              sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] + "-" +
                                              sourcePhotoPathFragments.Last());
 
@@ -164,7 +178,7 @@ namespace BuildSiteIndex
                     }
 
                     string breadcrumbs =
-                        EnsureTerminatedBreadcrumbs("\\" + KeywordsTitle + "\\" + firstKeywordChar + "\\" +
+                        EnsureTerminatedBreadcrumbs("\\" + KeywordsTitle + "\\" + firstKeywordCharUpper + "\\" +
                                                     keyword.Keyword + "\\" +
                                                     title);
 
@@ -198,7 +212,10 @@ namespace BuildSiteIndex
                         keywordMetadata.Value.Replace(';', ',').Split(',')
                                        .Where(candidate => !string.IsNullOrWhiteSpace(candidate)))
                 {
-                    var safe = UrlNaming.BuildUrlSafePath(keyword.ToLowerInvariant()).TrimStart("-".ToArray()).TrimEnd("-".ToArray());
+                    string safe =
+                        UrlNaming.BuildUrlSafePath(keyword.ToLowerInvariant())
+                                 .TrimStart("-".ToArray())
+                                 .TrimEnd("-".ToArray());
 
                     KeywordEntry entry;
                     if (!keywords.TryGetValue(safe, out entry))
@@ -330,7 +347,7 @@ namespace BuildSiteIndex
             string outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
 
             string json = JsonConvert.SerializeObject(data);
-            if (File.Exists(outputFilename))
+            if (!_ignoreExisting || File.Exists(outputFilename))
             {
                 Console.WriteLine("Previous Json file exists");
                 byte[] originalBytes = File.ReadAllBytes(outputFilename);
@@ -416,6 +433,11 @@ namespace BuildSiteIndex
             return path == "/albums/private/";
         }
 
+        private static bool IsUnderHiddenItem(string path)
+        {
+            return path.StartsWith("/albums/private/", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static void UploadItemsToDelete(GallerySiteIndex data, List<string> deletedItems)
         {
             const int batchSize = 100;
@@ -469,7 +491,7 @@ namespace BuildSiteIndex
             foreach (
                 GalleryItem item in UploadOrdering(data))
             {
-                if (!UploadOneItem(data, item))
+                if (!UploadOneItem(data, item, UploadType.NewItem))
                 {
                     itemsToRemove.Add(item);
                 }
@@ -501,12 +523,12 @@ namespace BuildSiteIndex
                 GalleryItem oldItem = oldData.items.FirstOrDefault(candidate => candidate.Path == item.Path);
                 if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
                 {
-                    UploadOneItem(data, item);
+                    UploadOneItem(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem);
                 }
             }
         }
 
-        private static bool UploadOneItem(GallerySiteIndex data, GalleryItem item)
+        private static bool UploadOneItem(GallerySiteIndex data, GalleryItem item, UploadType uploadType)
         {
             GallerySiteIndex itemToPost = CreateItemToPost(data, item);
 
@@ -517,13 +539,13 @@ namespace BuildSiteIndex
             int retry = 0;
             do
             {
-                uploaded = UploadItem(itemToPost, progressText);
+                uploaded = UploadItem(itemToPost, progressText, uploadType);
                 ++retry;
             } while (!uploaded && retry < maxRetries);
             return uploaded;
         }
 
-        private static bool UploadItem(GallerySiteIndex itemToPost, string progressText)
+        private static bool UploadItem(GallerySiteIndex itemToPost, string progressText, UploadType uploadType)
         {
             //var handler = new HttpClientHandler
             //{
@@ -540,7 +562,7 @@ namespace BuildSiteIndex
                         Timeout = TimeSpan.FromSeconds(200)
                     })
                 {
-                    Console.WriteLine("Uploading: {0}", progressText);
+                    Console.WriteLine("Uploading ({0}): {1}", MakeUploadTypeText(uploadType), progressText);
 
                     client.DefaultRequestHeaders.Accept.Add(
                         new MediaTypeWithQualityHeaderValue("application/json"));
@@ -570,6 +592,22 @@ namespace BuildSiteIndex
                 Console.WriteLine("Error: {0}", exception.Message);
                 return false;
             }
+        }
+
+        private static string MakeUploadTypeText(UploadType uploadType)
+        {
+            switch (uploadType)
+            {
+                case UploadType.NewItem:
+                    return "New";
+
+                case UploadType.DeleteItem:
+                    return "Delete";
+
+                default:
+                    return "Existing";
+            }
+            ;
         }
 
 
@@ -605,7 +643,7 @@ namespace BuildSiteIndex
             string progressText = string.Format("Deletion batch of size {0} starting with {1}", batch.Count,
                                                 batch.FirstOrDefault());
 
-            UploadItem(itemToPost, progressText);
+            UploadItem(itemToPost, progressText, UploadType.DeleteItem);
         }
 
         private static GalleryChildItem GetNextItem(List<GalleryEntry> siblings, GalleryEntry parentRecord,
@@ -748,6 +786,11 @@ namespace BuildSiteIndex
             int rating = ExtractRating(sourcePhoto);
 
             List<string> keywords = ExtractKeywords(sourcePhoto);
+
+            if (IsUnderHiddenItem(path))
+            {
+                keywords = new List<string>();
+            }
 
             AppendEntry(contents, parentLevel, path, new GalleryEntry
                 {
@@ -1020,6 +1063,13 @@ namespace BuildSiteIndex
 
                 return contract;
             }
+        }
+
+        private enum UploadType
+        {
+            NewItem,
+            UpdateItem,
+            DeleteItem
         }
     }
 }

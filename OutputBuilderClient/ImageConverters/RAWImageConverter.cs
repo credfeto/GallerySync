@@ -244,7 +244,7 @@ namespace OutputBuilderClient.ImageConverters
 
             try
             {
-                File.WriteAllBytes(fileName, bytes);
+                FileHelpers.WriteAllBytes(fileName, bytes);
 
                 return TiffConverter.LoadImage(fileName);
             }

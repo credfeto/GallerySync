@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -214,8 +216,7 @@ namespace OutputBuilderClient
                     var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
                     bool build = targetPhoto == null;
                     bool rebuild = targetPhoto != null &&
-                                   (MetadataVersionRequiresRebuild(targetPhoto) ||
-                                    HaveFilesChanged(sourcePhoto, targetPhoto));                   
+                                   NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
                     bool rebuildMetadata = targetPhoto != null &&
                                            MetadataVersionOutOfDate(targetPhoto);
 
@@ -240,6 +241,48 @@ namespace OutputBuilderClient
                            exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
             }
+        }
+
+        private static bool NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
+        {
+            return MetadataVersionRequiresRebuild(targetPhoto) ||
+                    HaveFilesChanged(sourcePhoto, targetPhoto) ||
+                    HasMissingResizes(targetPhoto);
+        }
+
+        private static bool HasMissingResizes(Photo photoToProcess)
+        {
+
+            if (photoToProcess.ImageSizes == null)
+            {
+                Console.WriteLine(" +++ Force rebuild: No image sizes at all!");
+                return true;
+            }
+
+            foreach (var resize in photoToProcess.ImageSizes)
+            {
+                string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
+                                                                  HashNaming.PathifyHash(photoToProcess.PathHash),
+                                                                  ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
+                try
+                {
+                    using (var image = Bitmap.FromFile(resizedFileName))
+                    {
+                        if (image.RawFormat.Equals(ImageFormat.Jpeg) )
+                        {
+                            Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a jpg", resize.Width,resize.Height);
+                            return true;
+                        }
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt", resize.Width, resize.Height);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool MetadataVersionOutOfDate(Photo targetPhoto)

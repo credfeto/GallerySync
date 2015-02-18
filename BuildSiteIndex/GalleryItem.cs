@@ -54,7 +54,7 @@ namespace BuildSiteIndex
                    Description == other.Description && DateCreated == other.DateCreated &&
                    DateUpdated == other.DateUpdated && Location == other.Location &&
                    Type == other.Type &&
-                   Equals(Previous, other.Previous) &&
+                   Previous == other.Previous &&
                    Next == other.Next && Last == other.Last &&
                    ItemUpdateHelpers.CollectionEquals(ImageSizes, other.ImageSizes) &&
                    ItemUpdateHelpers.CollectionEquals(Metadata, other.Metadata) &&
