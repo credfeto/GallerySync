@@ -27,17 +27,21 @@ namespace BuildSiteIndex
 
         private const string KeywordsRoot = "keywords";
         private const string KeywordsTitle = "Keywords";
+        private const int GalleryJsonVersion = 1;
+        private const int MaxDailyUploads = 5000;
 
         private static readonly object EntryLock = new object();
 
-        private static bool _ignoreExisting = false;
+        private static bool _ignoreExisting;
 
         private static int Main(string[] args)
         {
             Console.WriteLine("BuildSiteIndex");
 
-            if( args!= null && args.Any( candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate,"IgnoreExisting")))
+            if (args != null &&
+                args.Any(candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, "IgnoreExisting")))
             {
+                Console.WriteLine("******* Ignoring existing items *******");
                 _ignoreExisting = true;
             }
 
@@ -134,9 +138,44 @@ namespace BuildSiteIndex
             BuildGalleryItemsForKeywords(keywords, contents);
 
             AddCoordinatesFromChildren(contents);
-            ProduceJsonFile(contents);
+            ProcessSiteIndex(contents, documentStoreInput);
+
+            UploadQueuedItems(documentStoreInput);
 
             documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
+        }
+
+        private static void UploadQueuedItems(EmbeddableDocumentStore documentStoreInput)
+        {
+            int itemsUploaded = 0;
+
+            using (IDocumentSession inputSession = documentStoreInput.OpenSession())
+            {
+                foreach (UploadQueueItem item in inputSession.GetAll<UploadQueueItem>())
+                {
+                    ++itemsUploaded;
+                    if (itemsUploaded > MaxDailyUploads)
+                    {
+                        Console.WriteLine("********** REACHED MAX DailyUploads **********");
+                        return;
+                    }
+
+                    string key = BuildUploadQueueHash(item.Item);
+
+                    using (IDocumentSession updateSession = documentStoreInput.OpenSession())
+                    {
+                        var updateItem = updateSession.Load<UploadQueueItem>(key);
+                        if (updateItem != null)
+                        {
+                            if (UploadOneItem(updateItem))
+                            {
+                                updateSession.Delete(updateItem);
+                                updateSession.SaveChanges();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private static void BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
@@ -302,11 +341,66 @@ namespace BuildSiteIndex
             return !string.IsNullOrWhiteSpace(arg);
         }
 
-        private static void ProduceJsonFile(Dictionary<string, GalleryEntry> contents)
+        private static void ProcessSiteIndex(Dictionary<string, GalleryEntry> contents,
+                                             EmbeddableDocumentStore documentStoreInput)
         {
-            var data = new GallerySiteIndex
+            GallerySiteIndex data = ProduceSiteIndex(contents);
+
+            string outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
+
+            string json = JsonConvert.SerializeObject(data);
+            if (!_ignoreExisting || File.Exists(outputFilename))
+            {
+                Console.WriteLine("Previous Json file exists");
+                byte[] originalBytes = File.ReadAllBytes(outputFilename);
+                string decoded = Encoding.UTF8.GetString(originalBytes);
+                if (decoded == json)
                 {
-                    version = 1,
+                    Console.WriteLine("No changes since last run");
+                    return;
+                }
+                else
+                {
+                    GallerySiteIndex oldData = null;
+                    try
+                    {
+                        oldData = JsonConvert.DeserializeObject<GallerySiteIndex>(decoded);
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+                    if (oldData != null)
+                    {
+                        List<string> deletedItems = FindDeletedItems(oldData, data);
+                        data.deletedItems.AddRange(deletedItems.OrderBy(x => x));
+
+                        QueueUploadChanges(data, oldData, documentStoreInput);
+
+                        QueueUploadItemsToDelete(data, deletedItems, documentStoreInput);
+                    }
+                    else
+                    {
+                        QueueUploadAllItems(data, documentStoreInput);
+                    }
+                }
+            }
+            else
+            {
+                QueueUploadAllItems(data, documentStoreInput);
+            }
+
+            ExtensionMethods.RotateLastGenerations(outputFilename);
+
+            byte[] encoded = Encoding.UTF8.GetBytes(json);
+            File.WriteAllBytes(outputFilename, encoded);
+        }
+
+        private static GallerySiteIndex ProduceSiteIndex(Dictionary<string, GalleryEntry> contents)
+        {
+            return new GallerySiteIndex
+                {
+                    version = GalleryJsonVersion,
                     items = (from parentRecord in contents.Values
                              orderby parentRecord.Path
                              let siblings = GetSiblings(contents, parentRecord)
@@ -343,55 +437,6 @@ namespace BuildSiteIndex
                                  }).ToList(),
                     deletedItems = new List<string>()
                 };
-
-            string outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
-
-            string json = JsonConvert.SerializeObject(data);
-            if (!_ignoreExisting || File.Exists(outputFilename))
-            {
-                Console.WriteLine("Previous Json file exists");
-                byte[] originalBytes = File.ReadAllBytes(outputFilename);
-                string decoded = Encoding.UTF8.GetString(originalBytes);
-                if (decoded == json)
-                {
-                    Console.WriteLine("No changes since last run");
-                    return;
-                }
-                else
-                {
-                    GallerySiteIndex oldData = null;
-                    try
-                    {
-                        oldData = JsonConvert.DeserializeObject<GallerySiteIndex>(decoded);
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                    if (oldData != null)
-                    {
-                        List<string> deletedItems = FindDeletedItems(oldData, data);
-                        data.deletedItems.AddRange(deletedItems.OrderBy(x => x));
-
-                        UploadChanges(data, oldData);
-
-                        UploadItemsToDelete(data, deletedItems);
-                    }
-                    else
-                    {
-                        UploadAllItems(data);
-                    }
-                }
-            }
-            else
-            {
-                UploadAllItems(data);
-            }
-
-            ExtensionMethods.RotateLastGenerations(outputFilename);
-
-            byte[] encoded = Encoding.UTF8.GetBytes(json);
-            File.WriteAllBytes(outputFilename, encoded);
         }
 
         private static List<GalleryChildItem> ExtractItemPreadcrumbs(Dictionary<string, GalleryEntry> contents,
@@ -438,29 +483,18 @@ namespace BuildSiteIndex
             return path.StartsWith("/albums/private/", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static void UploadItemsToDelete(GallerySiteIndex data, List<string> deletedItems)
+        private static void QueueUploadItemsToDelete(GallerySiteIndex data, List<string> deletedItems,
+                                                     EmbeddableDocumentStore documentStoreInput)
         {
-            const int batchSize = 100;
-            List<string> batch = null;
-            foreach (string deletedItem in deletedItems)
+            foreach (string path in deletedItems)
             {
-                if (batch == null)
-                {
-                    batch = new List<string>();
-                }
-
-                batch.Add(deletedItem);
-
-                if (batch.Count >= batchSize)
-                {
-                    UploadDeletionBatch(data, batch);
-                    batch = null;
-                }
-            }
-
-            if (batch != null && batch.Count != 0)
-            {
-                UploadDeletionBatch(data, batch);
+                QueueUploadOneItem(data, new GalleryItem
+                    {
+                        Path = path
+                    },
+                                   UploadType.DeleteItem,
+                                   documentStoreInput
+                    );
             }
         }
 
@@ -484,22 +518,12 @@ namespace BuildSiteIndex
             return deletedItems;
         }
 
-        private static void UploadAllItems(GallerySiteIndex data)
+        private static void QueueUploadAllItems(GallerySiteIndex data, EmbeddableDocumentStore documentStoreInput)
         {
-            var itemsToRemove = new List<GalleryItem>();
-
             foreach (
                 GalleryItem item in UploadOrdering(data))
             {
-                if (!UploadOneItem(data, item, UploadType.NewItem))
-                {
-                    itemsToRemove.Add(item);
-                }
-            }
-
-            foreach (GalleryItem item in itemsToRemove)
-            {
-                data.items.Remove(item);
+                QueueUploadOneItem(data, item, UploadType.NewItem, documentStoreInput);
             }
         }
 
@@ -515,7 +539,8 @@ namespace BuildSiteIndex
             return candidate.Type == "photo" ? 1 : 2;
         }
 
-        private static void UploadChanges(GallerySiteIndex data, GallerySiteIndex oldData)
+        private static void QueueUploadChanges(GallerySiteIndex data, GallerySiteIndex oldData,
+                                               EmbeddableDocumentStore documentStoreInput)
         {
             foreach (
                 GalleryItem item in UploadOrdering(data))
@@ -523,14 +548,50 @@ namespace BuildSiteIndex
                 GalleryItem oldItem = oldData.items.FirstOrDefault(candidate => candidate.Path == item.Path);
                 if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
                 {
-                    UploadOneItem(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem);
+                    QueueUploadOneItem(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem,
+                                       documentStoreInput);
                 }
             }
         }
 
-        private static bool UploadOneItem(GallerySiteIndex data, GalleryItem item, UploadType uploadType)
+        public static void QueueUploadOneItem(GallerySiteIndex data, GalleryItem item, UploadType uploadType,
+                                              EmbeddableDocumentStore documentStoreInput)
         {
-            GallerySiteIndex itemToPost = CreateItemToPost(data, item);
+            using (IDocumentSession session = documentStoreInput.OpenSession())
+            {
+                string key = BuildUploadQueueHash(item);
+
+                var existingItem = session.Load<UploadQueueItem>(key);
+                if (existingItem == null)
+                {
+                    existingItem = new UploadQueueItem
+                        {
+                            Version = data.version,
+                            Item = item,
+                            UploadType = uploadType
+                        };
+                    session.Store(existingItem, key);
+                }
+                else
+                {
+                    existingItem.Version = data.version;
+                    existingItem.Item = item;
+                    existingItem.UploadType = uploadType;
+                    session.Store(existingItem, key);
+                }
+
+                session.SaveChanges();
+            }
+        }
+
+        private static string BuildUploadQueueHash(GalleryItem item)
+        {
+            return "UploadQueue" + Hasher.HashBytes(Encoding.UTF8.GetBytes(item.Path));
+        }
+
+        private static bool UploadOneItem(UploadQueueItem item)
+        {
+            GallerySiteIndex itemToPost = CreateItemToPost(item);
 
             string progressText = item.Path;
 
@@ -539,7 +600,7 @@ namespace BuildSiteIndex
             int retry = 0;
             do
             {
-                uploaded = UploadItem(itemToPost, progressText, uploadType);
+                uploaded = UploadItem(itemToPost, progressText, item.UploadType);
                 ++retry;
             } while (!uploaded && retry < maxRetries);
             return uploaded;
@@ -607,43 +668,28 @@ namespace BuildSiteIndex
                 default:
                     return "Existing";
             }
-            ;
         }
 
 
-        private static GallerySiteIndex CreateItemToPost(GallerySiteIndex data, GalleryItem item)
+        private static GallerySiteIndex CreateItemToPost(UploadQueueItem item)
         {
             var itemToPost = new GallerySiteIndex
                 {
-                    version = data.version,
-                    items = new List<GalleryItem>
-                        {
-                            item
-                        },
+                    version = item.Version,
+                    items = new List<GalleryItem>(),
                     deletedItems = new List<string>()
                 };
+
+            if (item.UploadType == UploadType.DeleteItem)
+            {
+                itemToPost.deletedItems.Add(item.Item.Path);
+            }
+            else
+            {
+                itemToPost.items.Add(item.Item);
+            }
+
             return itemToPost;
-        }
-
-        private static GallerySiteIndex CreateItemToPost(GallerySiteIndex data, List<string> itemsToDelete)
-        {
-            var itemToPost = new GallerySiteIndex
-                {
-                    version = data.version,
-                    items = new List<GalleryItem>(),
-                    deletedItems = new List<string>(itemsToDelete)
-                };
-            return itemToPost;
-        }
-
-        private static void UploadDeletionBatch(GallerySiteIndex data, List<string> batch)
-        {
-            GallerySiteIndex itemToPost = CreateItemToPost(data, batch);
-
-            string progressText = string.Format("Deletion batch of size {0} starting with {1}", batch.Count,
-                                                batch.FirstOrDefault());
-
-            UploadItem(itemToPost, progressText, UploadType.DeleteItem);
         }
 
         private static GalleryChildItem GetNextItem(List<GalleryEntry> siblings, GalleryEntry parentRecord,
@@ -1063,13 +1109,6 @@ namespace BuildSiteIndex
 
                 return contract;
             }
-        }
-
-        private enum UploadType
-        {
-            NewItem,
-            UpdateItem,
-            DeleteItem
         }
     }
 }
