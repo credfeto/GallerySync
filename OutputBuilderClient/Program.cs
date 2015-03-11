@@ -268,7 +268,7 @@ namespace OutputBuilderClient
                 {
                     using (var image = Bitmap.FromFile(resizedFileName))
                     {
-                        if (image.RawFormat.Equals(ImageFormat.Jpeg) )
+                        if (!image.RawFormat.Equals(ImageFormat.Jpeg) )
                         {
                             Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a jpg", resize.Width,resize.Height);
                             return true;

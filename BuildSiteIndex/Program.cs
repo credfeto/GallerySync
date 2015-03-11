@@ -28,7 +28,7 @@ namespace BuildSiteIndex
         private const string KeywordsRoot = "keywords";
         private const string KeywordsTitle = "Keywords";
         private const int GalleryJsonVersion = 1;
-        private const int MaxDailyUploads = 5000;
+        private static int _maxDailyUploads = 5000;
 
         private static readonly object EntryLock = new object();
 
@@ -38,12 +38,21 @@ namespace BuildSiteIndex
         {
             Console.WriteLine("BuildSiteIndex");
 
-            if (args != null &&
-                args.Any(candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, "IgnoreExisting")))
+            if (args != null)
             {
-                Console.WriteLine("******* Ignoring existing items *******");
-                _ignoreExisting = true;
+                if(args.Any(candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, "IgnoreExisting")))
+                {
+                    Console.WriteLine("******* Ignoring existing items *******");
+                    _ignoreExisting = true;
+                }
+
+                if (args.Any(candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, "NoLimit")))
+                {
+                    Console.WriteLine("******* Ignoring Upload limit *******");
+                    _maxDailyUploads = int.MaxValue;
+                }
             }
+
 
             BoostPriority();
 
@@ -154,7 +163,7 @@ namespace BuildSiteIndex
                 foreach (UploadQueueItem item in inputSession.GetAll<UploadQueueItem>())
                 {
                     ++itemsUploaded;
-                    if (itemsUploaded > MaxDailyUploads)
+                    if (itemsUploaded > _maxDailyUploads)
                     {
                         Console.WriteLine("********** REACHED MAX DailyUploads **********");
                         return;
