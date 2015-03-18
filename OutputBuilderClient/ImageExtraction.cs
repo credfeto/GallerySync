@@ -13,6 +13,7 @@ using System.Text;
 using FileNaming;
 using OutputBuilderClient.Properties;
 using Twaddle.Gallery.ObjectModel;
+using nQuant;
 
 namespace OutputBuilderClient
 {
@@ -86,10 +87,12 @@ namespace OutputBuilderClient
                             imageSizes.Where(
                                 size => ResziedImageWillNotBeBigger(size, sourceImageWidth, sourceImageHeight)))
                     {
-                        using (Image resized = ResizeImage(sourceBitmap, dimension))
+                        using (Bitmap resized = ResizeImage(sourceBitmap, dimension))
                         {
                             ApplyWatermark(resized);
-                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, Settings.Default.JpegOutputQuality);
+                            var quality = 
+                                              Settings.Default.JpegOutputQuality;
+                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality);
 
                             if (!ImageHelpers.IsValidJpegImage(resizedBytes))
                             {
@@ -103,8 +106,19 @@ namespace OutputBuilderClient
                             WriteImage(resizedFileName, resizedBytes, creationDate);
 
                             filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
-                                             IndividualResizeFileName(sourcePhoto, resized));
+                                             IndividualResizeFileName(sourcePhoto, resized, ""));
 
+                            if (resized.Width == Settings.Default.ThumbnailSize)
+                            {
+                                resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
+                                                                  HashNaming.PathifyHash(sourcePhoto.PathHash),
+                                                                  IndividualResizeFileName(sourcePhoto, resized, "png"));
+                                resizedBytes = SaveImageAsPng(resized);
+                                WriteImage(resizedFileName, resizedBytes, creationDate);
+
+                                filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
+                                             IndividualResizeFileName(sourcePhoto, resized, "png"));
+                            }
                             sizes.Add(new ImageSize
                                 {
                                     Width = resized.Width,
@@ -120,6 +134,31 @@ namespace OutputBuilderClient
             }
 
             return sizes;
+        }
+
+        private static byte[] SaveImageAsPng(Bitmap image)
+        {
+            Contract.Requires(image != null);
+            Contract.Ensures(Contract.Result<byte[]>() != null);
+
+            StripExifProperties(image);
+            SetCopyrightExifProperties(image);
+
+            var quantizer = new WuQuantizer();
+
+            using (var ms = new MemoryStream())
+            {
+                //image.Save(ms, ImageFormat.Png);
+
+                using (var quantized = quantizer.QuantizeImage(image))
+                {
+                    quantized.Save(ms, ImageFormat.Png);
+                }
+
+                ms.Flush();
+
+                return ms.ToArray();
+            }
         }
 
         private static bool ResziedImageWillNotBeBigger(int size, int sourceImageWidth, int sourceImageHeight)
@@ -140,17 +179,10 @@ namespace OutputBuilderClient
 
         public static string IndividualResizeFileName(Photo sourcePhoto, Image resized)
         {
-            string basePath = UrlNaming.BuildUrlSafePath(
-                string.Format("{0}-{1}x{2}",
-                              Path.GetFileName(
-                                  sourcePhoto.BasePath),
-                              resized.Width, resized.Height)).TrimEnd('/').TrimStart('-');
-
-            return basePath + ".jpg";
+            return IndividualResizeFileName(sourcePhoto, resized, "jpg");
         }
 
-
-        public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized)
+        public static string IndividualResizeFileName(Photo sourcePhoto, Image resized, string extension)
         {
             string basePath = UrlNaming.BuildUrlSafePath(
                 string.Format("{0}-{1}x{2}",
@@ -158,7 +190,24 @@ namespace OutputBuilderClient
                                   sourcePhoto.BasePath),
                               resized.Width, resized.Height)).TrimEnd('/').TrimStart('-');
 
-            return basePath + ".jpg";
+            return basePath + "." + extension;
+        }
+
+
+        public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized)
+        {
+            return IndividualResizeFileName(sourcePhoto, resized, "jpg");
+        }
+
+        public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized, string extension)
+        {
+            string basePath = UrlNaming.BuildUrlSafePath(
+                string.Format("{0}-{1}x{2}",
+                              Path.GetFileName(
+                                  sourcePhoto.BasePath),
+                              resized.Width, resized.Height)).TrimEnd('/').TrimStart('-');
+
+            return basePath + "." + extension;
         }
 
         /// <summary>
@@ -173,7 +222,7 @@ namespace OutputBuilderClient
         /// <returns>
         ///     The resized image.
         /// </returns>
-        private static Image ResizeImage(Bitmap image, int maximumDimension)
+        private static Bitmap ResizeImage(Bitmap image, int maximumDimension)
         {
             Contract.Requires(image != null);
             Contract.Requires(image.Width > 0);
@@ -184,7 +233,7 @@ namespace OutputBuilderClient
 
             int yscale = CalculateScaledHeightFromWidth(maximumDimension, image.Width, image.Height);
 
-            return image.GetThumbnailImage(maximumDimension, yscale, () => false, IntPtr.Zero);
+            return (Bitmap)image.GetThumbnailImage(maximumDimension, yscale, () => false, IntPtr.Zero);
         }
 
 
@@ -342,7 +391,54 @@ namespace OutputBuilderClient
             StripExifProperties(image);
             SetCopyrightExifProperties(image);
 
-            return SaveImageAsJpegBytesWithoutOptions(image);
+            try
+            {
+                return SaveImageAsJpegBytesWithOptions(image, compressionQuality);
+            }
+            catch
+            {
+                // Something failed, retry using the standard
+                return SaveImageAsJpegBytesWithoutOptions(image);
+            }
+        }
+        /// <summary>
+        ///     Saves the image as a block of JPEG bytes in memory.
+        /// </summary>
+        /// <param name="image">
+        ///     The image.
+        /// </param>
+        /// <param name="compression">
+        ///     The compression quality.
+        /// </param>
+        /// <returns>
+        ///     Block of bytes representing the image.
+        /// </returns>
+        private static byte[] SaveImageAsJpegBytesWithOptions(Image image, long compression)
+        {
+            Contract.Requires(image != null);
+            Contract.Ensures(Contract.Result<byte[]>() != null);
+
+            ImageCodecInfo codecInfo = GetEncoderInfo("image/jpeg");
+            if (codecInfo == null)
+            {
+                return SaveImageAsJpegBytesWithoutOptions(image);
+            }
+
+            // Set the quality (n.b. must be a long)
+            var ratio = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, compression);
+
+            // Add the quality parameter to the list
+            var codecParams = new EncoderParameters(1);
+            codecParams.Param[0] = ratio;
+
+            using (var ms = new MemoryStream())
+            {
+                image.Save(ms, codecInfo, codecParams);
+
+                ms.Flush();
+
+                return ms.ToArray();
+            }
         }
 
         /// <summary>

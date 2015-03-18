@@ -266,7 +266,7 @@ namespace OutputBuilderClient
                                                                   ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
                 if (!File.Exists(resizedFileName))
                 {
-                    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a jpg", resize.Width,resize.Height);
+                    Console.WriteLine(" +++ Force rebuild: Missing image for size {0}x{1} (jpg)", resize.Width,resize.Height);
                     return true;
                 }
 
@@ -279,12 +279,23 @@ namespace OutputBuilderClient
                             Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,resize.Height);
                             return true;                    
                     }
-                
                 }
                 catch
                 {
                     Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt", resize.Width, resize.Height);
                     return true;
+                }
+
+                if (resize.Width == Settings.Default.ThumbnailSize)
+                {
+                    resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
+                                                                  HashNaming.PathifyHash(photoToProcess.PathHash),
+                                                                  ImageExtraction.IndividualResizeFileName(photoToProcess, resize, "png"));
+                    if (!File.Exists(resizedFileName))
+                    {
+                        Console.WriteLine(" +++ Force rebuild: Missing image for size {0}x{1} (png)", resize.Width, resize.Height);
+                        return true;
+                    }
                 }
             }
 

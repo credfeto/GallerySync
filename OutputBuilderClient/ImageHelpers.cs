@@ -51,7 +51,7 @@ namespace OutputBuilderClient
 
         public static bool IsValidJpegImage(byte[] bytes)
         {
-            return !ImageIsLoadable(bytes) && ImageIsAJpeg(bytes);
+            return ImageIsLoadable(bytes) && ImageIsAJpeg(bytes);
         }
 
         private static bool ImageIsLoadable(byte[] bytes)
