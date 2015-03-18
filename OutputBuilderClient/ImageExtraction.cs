@@ -13,7 +13,6 @@ using System.Text;
 using FileNaming;
 using OutputBuilderClient.Properties;
 using Twaddle.Gallery.ObjectModel;
-using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace OutputBuilderClient
 {
@@ -92,6 +91,11 @@ namespace OutputBuilderClient
                             ApplyWatermark(resized);
                             byte[] resizedBytes = SaveImageAsJpegBytes(resized, Settings.Default.JpegOutputQuality);
 
+                            if (!ImageHelpers.IsValidJpegImage(resizedBytes))
+                            {
+                                throw new Exception(string.Format("File {0} produced an invalid image", filename));
+                            }
+
                             string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
                                                                   HashNaming.PathifyHash(sourcePhoto.PathHash),
                                                                   IndividualResizeFileName(sourcePhoto, resized));
@@ -169,7 +173,7 @@ namespace OutputBuilderClient
         /// <returns>
         ///     The resized image.
         /// </returns>
-        private static Image ResizeImage(Image image, int maximumDimension)
+        private static Image ResizeImage(Bitmap image, int maximumDimension)
         {
             Contract.Requires(image != null);
             Contract.Requires(image.Width > 0);
@@ -180,7 +184,7 @@ namespace OutputBuilderClient
 
             int yscale = CalculateScaledHeightFromWidth(maximumDimension, image.Width, image.Height);
 
-            return new Bitmap(image, maximumDimension, yscale);
+            return image.GetThumbnailImage(maximumDimension, yscale, () => false, IntPtr.Zero);
         }
 
 
@@ -539,14 +543,11 @@ namespace OutputBuilderClient
 
             EnsureFolderExistsForFile(fileName);
 
-            
-
             FileHelpers.WriteAllBytes(fileName, data);
 
             SetCreationDate(fileName, creationDate);
         }
 
-        
 
         private static void EnsureFolderExistsForFile(string fileName)
         {
@@ -567,6 +568,5 @@ namespace OutputBuilderClient
                 File.SetLastAccessTimeUtc(fileName, creationDate);
             }
         }
-
     }
 }

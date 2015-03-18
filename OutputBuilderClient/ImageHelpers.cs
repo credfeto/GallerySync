@@ -1,26 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing.Imaging;
+using System.IO;
+using GraphicsMagick;
 
 namespace OutputBuilderClient
 {
-    static class ImageHelpers
+    internal static class ImageHelpers
     {
         /// <summary>
-        /// Rotates the image if necessary.
+        ///     Rotates the image if necessary.
         /// </summary>
         /// <param name="image">
-        /// The image.
+        ///     The image.
         /// </param>
         /// <param name="degrees">
-        /// The degrees to rotate.
+        ///     The degrees to rotate.
         /// </param>
         /// <remarks>
-        /// Only 0, 90, 180 and 270 degrees are supported.
+        ///     Only 0, 90, 180 and 270 degrees are supported.
         /// </remarks>
         public static void RotateImageIfNecessary(Image image, int degrees)
         {
@@ -50,5 +49,50 @@ namespace OutputBuilderClient
             }
         }
 
+        public static bool IsValidJpegImage(byte[] bytes)
+        {
+            return !ImageIsLoadable(bytes) && ImageIsAJpeg(bytes);
+        }
+
+        private static bool ImageIsLoadable(byte[] bytes)
+        {
+            try
+            {
+                using (var image = new MagickImage())
+                {
+                    image.Warning += (sender, e) =>
+                        {
+                            Console.WriteLine("Image Validate Error: {0}", e.Message);
+                            throw e.Exception;
+                        };
+
+                    image.Read(bytes);
+                }
+            }
+            catch (MagickException exception)
+            {
+                Console.WriteLine("Error: {0}", exception);
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool ImageIsAJpeg(byte[] resizedBytes)
+        {
+            using (var stream = new MemoryStream(resizedBytes, false))
+            {
+                using (Image image = Image.FromStream(stream, true, true))
+                {
+                    var bitmap = (Bitmap) image;
+                    if (!bitmap.RawFormat.Equals(ImageFormat.Jpeg))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
     }
 }

@@ -264,16 +264,22 @@ namespace OutputBuilderClient
                 string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
                                                                   HashNaming.PathifyHash(photoToProcess.PathHash),
                                                                   ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
+                if (!File.Exists(resizedFileName))
+                {
+                    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a jpg", resize.Width,resize.Height);
+                    return true;
+                }
+
                 try
                 {
-                    using (var image = Bitmap.FromFile(resizedFileName))
+                    var bytes = File.ReadAllBytes(resizedFileName);
+
+                    if (!ImageHelpers.IsValidJpegImage(bytes))
                     {
-                        if (!image.RawFormat.Equals(ImageFormat.Jpeg) )
-                        {
-                            Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a jpg", resize.Width,resize.Height);
-                            return true;
-                        }
+                            Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,resize.Height);
+                            return true;                    
                     }
+                
                 }
                 catch
                 {

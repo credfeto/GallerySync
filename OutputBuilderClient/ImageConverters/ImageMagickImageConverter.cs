@@ -17,6 +17,7 @@ using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using GraphicsMagick;
 using OutputBuilderClient.Properties;
 
 #endregion
@@ -49,6 +50,27 @@ namespace OutputBuilderClient.ImageConverters
 
         #region IImageConverter
 
+        public Bitmap LoadImage(string fileName)
+        {
+            var bytes = LoadImageAsBytest(fileName);
+            using (var stream = new MemoryStream(bytes, false))
+            {
+                return new Bitmap(stream);
+            }
+        }
+
+        private static byte[] LoadImageAsBytest(string fileName)
+        {
+            using (MagickImage image = new MagickImage(fileName))
+            {
+                // Sets the output format to jpeg
+                image.Format = MagickFormat.Jpeg;
+                image.Quality = 100;
+
+                return image.ToByteArray();
+            }
+        }
+
         /// <summary>
         ///     Loads the image.
         /// </summary>
@@ -60,7 +82,7 @@ namespace OutputBuilderClient.ImageConverters
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Handling failure of the create process")]
-        public Bitmap LoadImage(string fileName)
+        public Bitmap LoadImageOld(string fileName)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
 
@@ -70,7 +92,7 @@ namespace OutputBuilderClient.ImageConverters
                 return null;
             }
 
-            using (var tempCleaner = new TemporaryFilesCleaner("*magick*.*"))
+            using (new TemporaryFilesCleaner("*magick*.*"))
             {
                 using (Process process = CreateProcessHighQuality(imageMagick, fileName))
                 {
