@@ -56,9 +56,6 @@
     <Reference Include="Microsoft.WindowsAzure.Storage">
       <HintPath>..\packages\WindowsAzure.Storage.2.0.6.1\lib\net40\Microsoft.WindowsAzure.Storage.dll</HintPath>
     </Reference>
-    <Reference Include="nQuant.Core">
-      <HintPath>..\packages\nQuant.1.0.3\Lib\net40\nQuant.Core.dll</HintPath>
-    </Reference>
     <Reference Include="policy.2.0.taglib-sharp">
       <HintPath>..\packages\taglib.2.1.0.0\lib\policy.2.0.taglib-sharp.dll</HintPath>
     </Reference>
@@ -98,7 +95,6 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="FileHelpers.cs" />
     <Compile Include="IImageConverter.cs" />
-    <Compile Include="ImageConverters\GDIPlusImageConverter.cs" />
     <Compile Include="ImageConverters\ImageMagickImageConverter.cs" />
     <Compile Include="ImageConverters\RAWImageConverter.cs" />
     <Compile Include="ImageExtraction.cs" />

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -246,54 +244,58 @@ namespace OutputBuilderClient
         private static bool NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
         {
             return MetadataVersionRequiresRebuild(targetPhoto) ||
-                    HaveFilesChanged(sourcePhoto, targetPhoto) ||
-                    HasMissingResizes(targetPhoto);
+                   HaveFilesChanged(sourcePhoto, targetPhoto) ||
+                   HasMissingResizes(targetPhoto);
         }
 
         private static bool HasMissingResizes(Photo photoToProcess)
         {
-
             if (photoToProcess.ImageSizes == null)
             {
                 Console.WriteLine(" +++ Force rebuild: No image sizes at all!");
                 return true;
             }
 
-            foreach (var resize in photoToProcess.ImageSizes)
+            foreach (ImageSize resize in photoToProcess.ImageSizes)
             {
                 string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
-                                                                  HashNaming.PathifyHash(photoToProcess.PathHash),
-                                                                  ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
+                                                      HashNaming.PathifyHash(photoToProcess.PathHash),
+                                                      ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
                 if (!File.Exists(resizedFileName))
                 {
-                    Console.WriteLine(" +++ Force rebuild: Missing image for size {0}x{1} (jpg)", resize.Width,resize.Height);
+                    Console.WriteLine(" +++ Force rebuild: Missing image for size {0}x{1} (jpg)", resize.Width,
+                                      resize.Height);
                     return true;
                 }
 
                 try
                 {
-                    var bytes = File.ReadAllBytes(resizedFileName);
+                    byte[] bytes = File.ReadAllBytes(resizedFileName);
 
                     if (!ImageHelpers.IsValidJpegImage(bytes))
                     {
-                            Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,resize.Height);
-                            return true;                    
+                        Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,
+                                          resize.Height);
+                        return true;
                     }
                 }
                 catch
                 {
-                    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt", resize.Width, resize.Height);
+                    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt", resize.Width,
+                                      resize.Height);
                     return true;
                 }
 
                 if (resize.Width == Settings.Default.ThumbnailSize)
                 {
                     resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
-                                                                  HashNaming.PathifyHash(photoToProcess.PathHash),
-                                                                  ImageExtraction.IndividualResizeFileName(photoToProcess, resize, "png"));
+                                                   HashNaming.PathifyHash(photoToProcess.PathHash),
+                                                   ImageExtraction.IndividualResizeFileName(photoToProcess, resize,
+                                                                                            "png"));
                     if (!File.Exists(resizedFileName))
                     {
-                        Console.WriteLine(" +++ Force rebuild: Missing image for size {0}x{1} (png)", resize.Width, resize.Height);
+                        Console.WriteLine(" +++ Force rebuild: Missing image for size {0}x{1} (png)", resize.Width,
+                                          resize.Height);
                         return true;
                     }
                 }
@@ -304,9 +306,10 @@ namespace OutputBuilderClient
 
         private static bool MetadataVersionOutOfDate(Photo targetPhoto)
         {
-            if ( MetadataVersionHelpers.IsOutOfDate( targetPhoto.Version) )
+            if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                OutputText(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion +")");
+                OutputText(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version +
+                           " Expected: " + Constants.CurrentMetadataVersion + ")");
                 return true;
             }
 
@@ -317,19 +320,22 @@ namespace OutputBuilderClient
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                OutputText(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                OutputText(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version +
+                           " Expected: " + Constants.CurrentMetadataVersion + ")");
                 return true;
             }
             return false;
         }
 
-        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata)
+        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto,
+                                           bool rebuild, bool rebuildMetadata)
         {
             OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
             UpdateFileHashes(targetPhoto, sourcePhoto);
 
-            var buildMetadata = targetPhoto == null || rebuild || rebuildMetadata || (targetPhoto != null && targetPhoto.Metadata == null );
+            bool buildMetadata = targetPhoto == null || rebuild || rebuildMetadata ||
+                                 (targetPhoto != null && targetPhoto.Metadata == null);
 
             if (buildMetadata)
             {
@@ -340,9 +346,10 @@ namespace OutputBuilderClient
                 sourcePhoto.Metadata = targetPhoto.Metadata;
             }
 
-            var buildImages = targetPhoto == null || rebuild || ( targetPhoto != null && !targetPhoto.ImageSizes.HasAny() );
+            bool buildImages = targetPhoto == null || rebuild ||
+                               (targetPhoto != null && !targetPhoto.ImageSizes.HasAny());
 
-            var filesCreated = new List<string>();            
+            var filesCreated = new List<string>();
             if (buildImages)
             {
                 DateTime creationDate = ExtractCreationDate(sourcePhoto.Metadata);
@@ -350,13 +357,13 @@ namespace OutputBuilderClient
             }
             else
             {
-                sourcePhoto.ImageSizes = targetPhoto.ImageSizes;                
+                sourcePhoto.ImageSizes = targetPhoto.ImageSizes;
             }
 
             sourcePhoto.Version = Constants.CurrentMetadataVersion;
-            
+
             if (targetPhoto != null)
-            {                
+            {
                 UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
                 targetPhoto.Version = Constants.CurrentMetadataVersion;
 
@@ -369,7 +376,6 @@ namespace OutputBuilderClient
             }
             else
             {
-                
                 AddUploadFiles(filesCreated, outputSession);
                 outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
             }
@@ -379,7 +385,7 @@ namespace OutputBuilderClient
 
         private static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
         {
-            var dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
+            PhotoMetadata dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
             if (dateTaken == null)
             {
                 return DateTime.MinValue;

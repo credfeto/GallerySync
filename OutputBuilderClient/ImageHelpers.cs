@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
 using GraphicsMagick;
 
 namespace OutputBuilderClient
@@ -21,7 +18,7 @@ namespace OutputBuilderClient
         /// <remarks>
         ///     Only 0, 90, 180 and 270 degrees are supported.
         /// </remarks>
-        public static void RotateImageIfNecessary(Image image, int degrees)
+        public static void RotateImageIfNecessary(MagickImage image, int degrees)
         {
             Contract.Requires(image != null);
 
@@ -33,15 +30,15 @@ namespace OutputBuilderClient
                     return;
 
                 case 90: // Rotate 90 degrees clockwise
-                    image.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                    image.Rotate(90);
                     return;
 
                 case 180: // Rotate upside down
-                    image.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                    image.Rotate(180);
                     return;
 
                 case 270: // Rotate 90 degrees anti-clockwise
-                    image.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                    image.Rotate(270);
                     return;
 
                 default: // unknown - so can't rotate;
@@ -50,11 +47,6 @@ namespace OutputBuilderClient
         }
 
         public static bool IsValidJpegImage(byte[] bytes)
-        {
-            return ImageIsLoadable(bytes) && ImageIsAJpeg(bytes);
-        }
-
-        private static bool ImageIsLoadable(byte[] bytes)
         {
             try
             {
@@ -67,6 +59,8 @@ namespace OutputBuilderClient
                         };
 
                     image.Read(bytes);
+
+                    return image.Format == MagickFormat.Jpeg || image.Format == MagickFormat.Jpg;
                 }
             }
             catch (MagickException exception)
@@ -74,25 +68,6 @@ namespace OutputBuilderClient
                 Console.WriteLine("Error: {0}", exception);
                 return false;
             }
-
-            return true;
-        }
-
-        private static bool ImageIsAJpeg(byte[] resizedBytes)
-        {
-            using (var stream = new MemoryStream(resizedBytes, false))
-            {
-                using (Image image = Image.FromStream(stream, true, true))
-                {
-                    var bitmap = (Bitmap) image;
-                    if (!bitmap.RawFormat.Equals(ImageFormat.Jpeg))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
         }
     }
 }

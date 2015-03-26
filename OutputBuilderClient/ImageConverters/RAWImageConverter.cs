@@ -10,13 +10,12 @@
 #region Using Directives
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
+using GraphicsMagick;
 using OutputBuilderClient.Properties;
 
 #endregion
@@ -83,11 +82,11 @@ namespace OutputBuilderClient.ImageConverters
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Calling external process which may cause crashes")]
-        public Bitmap LoadImage(string fileName)
+        public MagickImage LoadImage(string fileName)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
 
-            var image = LoadImageInternal(fileName);
+            MagickImage image = LoadImageInternal(fileName);
             if (image != null)
             {
                 const int rotationDegrees = 0;
@@ -96,35 +95,6 @@ namespace OutputBuilderClient.ImageConverters
             }
 
             return image;
-        }
-
-        private static Bitmap LoadImageInternal(string fileName)
-        {
-            byte[] bytes = ConvertToTiffArray(fileName);
-            if (bytes == null)
-            {
-                return null;
-            }
-
-            if (bytes.Length == 0)
-            {
-                return null;
-            }
-
-            try
-            {
-                Bitmap img = ConvertUsingGdiPlus(bytes, fileName);
-                if (img != null)
-                {
-                    return img;
-                }
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("DCRaw: Convert image {0} to TIFF", fileName);
-            }
-
-            return ConvertUsingImageMagick(Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".tif"), bytes);
         }
 
         #endregion
@@ -142,7 +112,7 @@ namespace OutputBuilderClient.ImageConverters
         /// <returns>
         ///     The file as an array of bytes.
         /// </returns>
-        private static byte[] ConvertToTiffArray(string filename)
+        private static MagickImage LoadImageInternal(string filename)
         {
             Contract.Requires(!string.IsNullOrEmpty(filename));
 
@@ -167,66 +137,28 @@ namespace OutputBuilderClient.ImageConverters
 
                 using (Stream stream = process.StandardOutput.BaseStream)
                 {
-                    using (var memoryStream = new MemoryStream())
+                    MagickImage image = null;
+
+                    try
                     {
-                        stream.CopyTo(memoryStream);
+                        image = OpenBitmapFromStream(stream);
 
                         process.WaitForExit();
 
-                        return memoryStream.ToArray();
+                        return image;
+                    }
+                    catch (Exception)
+                    {
+                        if (image != null)
+                        {
+                            image.Dispose();
+                        }
+                        throw;
                     }
                 }
             }
         }
 
-        /// <summary>
-        ///     Converts the block of data to a Bitmap.
-        /// </summary>
-        /// <param name="data">
-        ///     The data to convert to a jpeg.
-        /// </param>
-        /// <param name="fileName">
-        ///     The file name.
-        /// </param>
-        /// <returns>
-        ///     The converted image.
-        /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Catching broken images.")]
-        private static Bitmap ConvertUsingGdiPlus(byte[] data, string fileName)
-        {
-            Contract.Requires(data != null);
-            Contract.Requires(data.Length > 0);
-            Contract.Requires(!string.IsNullOrEmpty(fileName));
-
-            using (var stream = new MemoryStream(data, false))
-            {
-                try
-                {
-                    Bitmap bmp = OpenBitmapFromStream(stream, fileName);
-                    try
-                    {
-                        return bmp;
-                    }
-                    catch (Win32Exception)
-                    {
-                        Console.WriteLine("DCRaw: Convert image {0} to TIFF", fileName);
-                    }
-                    catch (SystemException)
-                    {
-                        Console.WriteLine("DCRaw: Convert image {0} to TIFF", fileName);
-                    }
-
-                    bmp.Dispose();
-                }
-                catch (OutOfMemoryException)
-                {
-                    Console.WriteLine("DCRaw: Convert image {0} to TIFF", fileName);
-                }
-
-                return null;
-            }
-        }
 
         /// <summary>
         ///     Converts the bytes using image magick.
@@ -236,7 +168,7 @@ namespace OutputBuilderClient.ImageConverters
         /// <returns>
         ///     The converted bitmap.
         /// </returns>
-        private static Bitmap ConvertUsingImageMagick(string fileName, byte[] bytes)
+        private static MagickImage ConvertUsingImageMagick(string fileName, byte[] bytes)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
             Contract.Requires(bytes != null);
@@ -283,12 +215,14 @@ namespace OutputBuilderClient.ImageConverters
             Contract.Requires(!string.IsNullOrEmpty(dcraw));
             Contract.Requires(!string.IsNullOrEmpty(fileName));
 
+            //string.Format(CultureInfo.InvariantCulture, "-6 -w -q 3 -c -T \"{0}\"", fileName),
+
             return new Process
                 {
                     StartInfo =
                         {
                             FileName = dcraw,
-                            Arguments = string.Format(CultureInfo.InvariantCulture, "-w -q 3 -c -T \"{0}\"", fileName),
+                            Arguments = string.Format(CultureInfo.InvariantCulture, "-6 -w -q 3 -c -T \"{0}\"", fileName),
                             UseShellExecute = false,
                             CreateNoWindow = true,
                             RedirectStandardOutput = true,
@@ -303,26 +237,37 @@ namespace OutputBuilderClient.ImageConverters
         /// <param name="stream">
         ///     The stream.
         /// </param>
-        /// <param name="fileName">
-        ///     The filename.
-        /// </param>
         /// <returns>
         ///     The image that was contained in the stream.
         /// </returns>
         [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "fileName",
             Justification = "Used for logging")]
-        private static Bitmap OpenBitmapFromStream(Stream stream, string fileName)
+        private static MagickImage OpenBitmapFromStream(Stream stream)
         {
             Contract.Requires(stream != null);
-            Contract.Requires(!string.IsNullOrEmpty(fileName));
+
+            MagickImage image = null;
 
             try
             {
-                return new Bitmap(stream);
+                image = new MagickImage();
+
+                image.Warning += (sender, e) =>
+                    {
+                        Console.WriteLine("Image Load Error: {0}", e.Message);
+                        throw e.Exception;
+                    };
+
+                image.Read(stream);
+
+                return image;
             }
             catch
             {
-                Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, "Failed to open or convert {0}", fileName));
+                if (image != null)
+                {
+                    image.Dispose();
+                }
 
                 throw;
             }

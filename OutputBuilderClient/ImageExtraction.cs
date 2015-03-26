@@ -1,48 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using FileNaming;
+using GraphicsMagick;
 using OutputBuilderClient.Properties;
 using Twaddle.Gallery.ObjectModel;
-using nQuant;
 
 namespace OutputBuilderClient
 {
     internal static class ImageExtraction
     {
-        #region Constants and Fields
-
-        /// <summary>
-        ///     The Exif Authors Id.
-        /// </summary>
-        private const int ExifAuthorsId = 0x13B;
-
-        /// <summary>
-        ///     The Exif Copyright Id.
-        /// </summary>
-        private const int ExifCopyrightId = 0x8298;
-
-        /// <summary>
-        ///     The Exif Program Name Id.
-        /// </summary>
-        private const int ExifProgramNameId = 0x131;
-
-        /// <summary>
-        ///     The Exif User comment Id.
-        /// </summary>
-        private const int ExifUserCommentId = 0x9286;
-
-        #endregion
-
         private static readonly Dictionary<string, IImageConverter> RegisteredConverters = LocateConverters();
 
         /// <summary>
@@ -77,7 +51,7 @@ namespace OutputBuilderClient
                 string filename = Path.Combine(Settings.Default.RootFolder,
                                                sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
-                using (Bitmap sourceBitmap = converter.LoadImage(filename))
+                using (MagickImage sourceBitmap = converter.LoadImage(filename))
                 {
                     int sourceImageWidth = sourceBitmap.Width;
                     int sourceImageHeight = sourceBitmap.Height;
@@ -87,11 +61,11 @@ namespace OutputBuilderClient
                             imageSizes.Where(
                                 size => ResziedImageWillNotBeBigger(size, sourceImageWidth, sourceImageHeight)))
                     {
-                        using (Bitmap resized = ResizeImage(sourceBitmap, dimension))
+                        using (MagickImage resized = ResizeImage(sourceBitmap, dimension))
                         {
                             ApplyWatermark(resized);
-                            var quality = 
-                                              Settings.Default.JpegOutputQuality;
+                            int quality =
+                                Settings.Default.JpegOutputQuality;
                             byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality);
 
                             if (!ImageHelpers.IsValidJpegImage(resizedBytes))
@@ -106,18 +80,18 @@ namespace OutputBuilderClient
                             WriteImage(resizedFileName, resizedBytes, creationDate);
 
                             filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
-                                             IndividualResizeFileName(sourcePhoto, resized, ""));
+                                             IndividualResizeFileName(sourcePhoto, resized));
 
                             if (resized.Width == Settings.Default.ThumbnailSize)
                             {
                                 resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
-                                                                  HashNaming.PathifyHash(sourcePhoto.PathHash),
-                                                                  IndividualResizeFileName(sourcePhoto, resized, "png"));
+                                                               HashNaming.PathifyHash(sourcePhoto.PathHash),
+                                                               IndividualResizeFileName(sourcePhoto, resized, "png"));
                                 resizedBytes = SaveImageAsPng(resized);
                                 WriteImage(resizedFileName, resizedBytes, creationDate);
 
                                 filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
-                                             IndividualResizeFileName(sourcePhoto, resized, "png"));
+                                                 IndividualResizeFileName(sourcePhoto, resized, "png"));
                             }
                             sizes.Add(new ImageSize
                                 {
@@ -136,7 +110,7 @@ namespace OutputBuilderClient
             return sizes;
         }
 
-        private static byte[] SaveImageAsPng(Bitmap image)
+        private static byte[] SaveImageAsPng(MagickImage image)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
@@ -144,21 +118,10 @@ namespace OutputBuilderClient
             StripExifProperties(image);
             SetCopyrightExifProperties(image);
 
-            var quantizer = new WuQuantizer();
+            var qSettings = new QuantizeSettings { Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
+            image.Quantize(qSettings);
 
-            using (var ms = new MemoryStream())
-            {
-                //image.Save(ms, ImageFormat.Png);
-
-                using (var quantized = quantizer.QuantizeImage(image))
-                {
-                    quantized.Save(ms, ImageFormat.Png);
-                }
-
-                ms.Flush();
-
-                return ms.ToArray();
-            }
+            return image.ToByteArray(MagickFormat.Png8);
         }
 
         private static bool ResziedImageWillNotBeBigger(int size, int sourceImageWidth, int sourceImageHeight)
@@ -177,12 +140,12 @@ namespace OutputBuilderClient
                            .ToArray();
         }
 
-        public static string IndividualResizeFileName(Photo sourcePhoto, Image resized)
+        public static string IndividualResizeFileName(Photo sourcePhoto, MagickImage resized)
         {
             return IndividualResizeFileName(sourcePhoto, resized, "jpg");
         }
 
-        public static string IndividualResizeFileName(Photo sourcePhoto, Image resized, string extension)
+        public static string IndividualResizeFileName(Photo sourcePhoto, MagickImage resized, string extension)
         {
             string basePath = UrlNaming.BuildUrlSafePath(
                 string.Format("{0}-{1}x{2}",
@@ -222,18 +185,43 @@ namespace OutputBuilderClient
         /// <returns>
         ///     The resized image.
         /// </returns>
-        private static Bitmap ResizeImage(Bitmap image, int maximumDimension)
+        private static MagickImage ResizeImage(MagickImage image, int maximumDimension)
         {
             Contract.Requires(image != null);
             Contract.Requires(image.Width > 0);
             Contract.Requires(image.Height > 0);
             Contract.Requires(maximumDimension > 0);
             Contract.Requires((int) (((double) maximumDimension/(double) image.Width)*(double) image.Height) > 0);
-            Contract.Ensures(Contract.Result<Image>() != null);
+            Contract.Ensures(Contract.Result<MagickImage>() != null);
 
             int yscale = CalculateScaledHeightFromWidth(maximumDimension, image.Width, image.Height);
 
-            return (Bitmap)image.GetThumbnailImage(maximumDimension, yscale, () => false, IntPtr.Zero);
+            MagickImage resized = null;
+            try
+            {
+                resized = image.Clone();
+
+                var geometry = new MagickGeometry(maximumDimension, yscale)
+                    {
+                        IgnoreAspectRatio = true
+                    };
+
+                resized.Resize(geometry);
+
+                Debug.Assert(resized.Width == maximumDimension);
+                Debug.Assert(resized.Height == yscale);
+
+                return resized;
+            }
+            catch
+            {
+                if (resized != null)
+                {
+                    resized.Dispose();
+                }
+
+                throw;
+            }
         }
 
 
@@ -331,7 +319,7 @@ namespace OutputBuilderClient
         /// <param name="imageToAddWatermarkTo">
         ///     The image to add the watermark to.
         /// </param>
-        private static void ApplyWatermark(Image imageToAddWatermarkTo)
+        private static void ApplyWatermark(MagickImage imageToAddWatermarkTo)
         {
             Contract.Requires(imageToAddWatermarkTo != null);
 
@@ -346,25 +334,28 @@ namespace OutputBuilderClient
                 return;
             }
 
-            using (var image = new Bitmap(watermarkFilename))
+            using (var watermark = new MagickImage())
             {
-                if ((imageToAddWatermarkTo.Width <= image.Width) || (imageToAddWatermarkTo.Height <= image.Height))
+                //watermark.Warning += (sender, e) =>
+                //{
+                //    Console.WriteLine("Watermark Image Load Error: {0}", e.Message);
+                //    throw e.Exception;
+                //};
+
+                watermark.BackgroundColor = MagickColor.Transparent;
+                watermark.Read(watermarkFilename);
+
+                if ((imageToAddWatermarkTo.Width <= watermark.Width) || (imageToAddWatermarkTo.Height <= watermark.Height))
                 {
                     return;
                 }
 
-                using (Graphics g = Graphics.FromImage(imageToAddWatermarkTo))
-                {
-                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                int x = imageToAddWatermarkTo.Width - watermark.Width;
+                int y = imageToAddWatermarkTo.Height - watermark.Height;
 
-                    var pos = new Rectangle(
-                        imageToAddWatermarkTo.Width - image.Width,
-                        imageToAddWatermarkTo.Height - image.Height,
-                        image.Width,
-                        image.Height);
+                watermark.BackgroundColor = MagickColor.Transparent;
 
-                    g.DrawImage(image, pos);
-                }
+                imageToAddWatermarkTo.Composite(watermark, x, y, CompositeOperator.Over);
             }
         }
 
@@ -382,7 +373,7 @@ namespace OutputBuilderClient
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Is fallback position where it retries.")]
-        public static byte[] SaveImageAsJpegBytes(Image image, long compressionQuality)
+        public static byte[] SaveImageAsJpegBytes(MagickImage image, long compressionQuality)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
@@ -401,6 +392,7 @@ namespace OutputBuilderClient
                 return SaveImageAsJpegBytesWithoutOptions(image);
             }
         }
+
         /// <summary>
         ///     Saves the image as a block of JPEG bytes in memory.
         /// </summary>
@@ -413,51 +405,15 @@ namespace OutputBuilderClient
         /// <returns>
         ///     Block of bytes representing the image.
         /// </returns>
-        private static byte[] SaveImageAsJpegBytesWithOptions(Image image, long compression)
+        private static byte[] SaveImageAsJpegBytesWithOptions(MagickImage image, long compression)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            ImageCodecInfo codecInfo = GetEncoderInfo("image/jpeg");
-            if (codecInfo == null)
-            {
-                return SaveImageAsJpegBytesWithoutOptions(image);
-            }
-
-            // Set the quality (n.b. must be a long)
-            var ratio = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, compression);
-
-            // Add the quality parameter to the list
-            var codecParams = new EncoderParameters(1);
-            codecParams.Param[0] = ratio;
-
-            using (var ms = new MemoryStream())
-            {
-                image.Save(ms, codecInfo, codecParams);
-
-                ms.Flush();
-
-                return ms.ToArray();
-            }
+            image.Quality = (int) compression;
+            return image.ToByteArray(MagickFormat.Jpeg);
         }
 
-        /// <summary>
-        ///     Gets the encoder info.
-        /// </summary>
-        /// <param name="mimeType">
-        ///     The mime type.
-        /// </param>
-        /// <returns>
-        ///     The image CODEC.
-        /// </returns>
-        private static ImageCodecInfo GetEncoderInfo(string mimeType)
-        {
-            Contract.Requires(!string.IsNullOrEmpty(mimeType));
-
-            ImageCodecInfo[] encoders = ImageCodecInfo.GetImageEncoders();
-
-            return encoders.FirstOrDefault(encoder => encoder.MimeType == mimeType);
-        }
 
         /// <summary>
         ///     Saves the image as a block of JPEG bytes in memory.
@@ -468,19 +424,12 @@ namespace OutputBuilderClient
         /// <returns>
         ///     Block of bytes representing the image.
         /// </returns>
-        private static byte[] SaveImageAsJpegBytesWithoutOptions(Image image)
+        private static byte[] SaveImageAsJpegBytesWithoutOptions(MagickImage image)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            using (var ms = new MemoryStream())
-            {
-                image.Save(ms, ImageFormat.Jpeg);
-
-                ms.Flush();
-
-                return ms.ToArray();
-            }
+            return image.ToByteArray(MagickFormat.Jpeg);
         }
 
         /// <summary>
@@ -489,21 +438,59 @@ namespace OutputBuilderClient
         /// <param name="image">
         ///     The image to set the properties to it.
         /// </param>
-        private static void SetCopyrightExifProperties(Image image)
+        private static void SetCopyrightExifProperties(MagickImage image)
         {
             Contract.Requires(image != null);
 
-            AddOrSetPropertyItem(image, ExifCopyrightId, CopyrightDeclaration);
+            string copyright = CopyrightDeclaration;
+            const string credit = "Camera owner, Mark Ridgwell; Photographer, Mark Ridgwell; Image creator, Mark Ridgwell";
+            const string licensing = "For licensing information see https://www.markridgwell.co.uk/about";
+            const string program = "https://www.markridgwell.co.uk/";
 
-            AddOrSetPropertyItem(
-                image, ExifUserCommentId, "For licensing information see https://www.markridgwell.co.uk/about");
+            Action<ExifProfile> completeExifProfile = (p) => { };
+            Action<IptcProfile> completeIptcProfile = (p) => { };
 
-            AddOrSetPropertyItem(
-                image,
-                ExifAuthorsId,
-                "Camera owner, Mark Ridgwell; Photographer, Mark Ridgwell; Image creator, Mark Ridgwell");
+            ExifProfile exifProfile = image.GetExifProfile();
+            if (exifProfile == null)
+            {
+                exifProfile = new ExifProfile();
 
-            AddOrSetPropertyItem(image, ExifProgramNameId, "https://www.markridgwell.co.uk/");
+                completeExifProfile = image.AddProfile;                
+            }
+
+
+            exifProfile.SetValue(ExifTag.Copyright, copyright);
+
+            exifProfile.SetValue(ExifTag.UserComment,
+                                 Encoding.UTF8.GetBytes(
+                                     licensing));
+
+            exifProfile.SetValue(ExifTag.Artist,
+                                 credit);
+
+            exifProfile.SetValue(ExifTag.ImageDescription, program);
+
+
+            IptcProfile iptcProfile = image.GetIptcProfile();
+            if (iptcProfile == null)
+            {
+                iptcProfile = new IptcProfile();
+
+                completeIptcProfile = image.AddProfile;
+            }
+
+            iptcProfile.SetValue(IptcTag.CopyrightNotice, CopyrightDeclaration);
+
+            iptcProfile.SetValue(IptcTag.Caption,
+                                 licensing);
+
+            iptcProfile.SetValue(IptcTag.Credit,
+                                 credit);
+
+            iptcProfile.SetValue(IptcTag.OriginatingProgram, program);
+
+            completeExifProfile(exifProfile);
+            completeIptcProfile(iptcProfile);
         }
 
         /// <summary>
@@ -512,115 +499,29 @@ namespace OutputBuilderClient
         /// <param name="image">
         ///     The image.
         /// </param>
-        private static void StripExifProperties(Image image)
+        private static void StripExifProperties(MagickImage image)
         {
             Contract.Requires(image != null);
 
-            foreach (int propertyItemId in (from record in image.PropertyItems select record.Id).Distinct())
+            IptcProfile ipctProfile = image.GetIptcProfile();
+            if (ipctProfile != null)
             {
-                image.RemovePropertyItem(propertyItemId);
+                image.RemoveProfile(ipctProfile.Name);
+            }
+
+            ExifProfile exifProfile = image.GetExifProfile();
+            if (exifProfile != null)
+            {
+                image.RemoveProfile(exifProfile.Name);
+            }
+
+            XmpProfile xmpProfile = image.GetXmpProfile();
+            if (xmpProfile != null)
+            {
+                image.RemoveProfile(xmpProfile.Name);
             }
         }
 
-        /// <summary>
-        ///     Adds or sets an Exif property.
-        /// </summary>
-        /// <param name="image">
-        ///     The image.
-        /// </param>
-        /// <param name="item">
-        ///     The EXIF id.
-        /// </param>
-        /// <param name="value">
-        ///     The value.
-        /// </param>
-        private static void AddOrSetPropertyItem(Image image, int item, string value)
-        {
-            Contract.Requires(image != null);
-            Contract.Requires(!string.IsNullOrEmpty(value));
-
-            PropertyItem pi = CreateNewPropertyItemUsingWatermarkAsFallback(image, item);
-            if (pi == null)
-            {
-                return;
-            }
-
-            byte[] bytes = Encoding.ASCII.GetBytes(value + "\0");
-
-            pi.Id = item;
-            pi.Type = 2;
-            pi.Value = bytes;
-            pi.Len = bytes.Length;
-
-            image.SetPropertyItem(pi);
-        }
-
-        /// <summary>
-        ///     Creates the new property item by cloning an existing one.
-        /// </summary>
-        /// <param name="image">
-        ///     The image to create the property item in.
-        /// </param>
-        /// <param name="item">
-        ///     The item to create.
-        /// </param>
-        /// <returns>
-        ///     A Property item.
-        /// </returns>
-        private static PropertyItem CreateNewPropertyItem(Image image, int item)
-        {
-            Contract.Requires(image != null);
-
-            if (!image.PropertyItems.Any())
-            {
-                return null;
-            }
-
-            IEnumerable<PropertyItem> pi = from propertyItem in image.PropertyItems
-                                           where propertyItem.Id == item
-                                           select propertyItem;
-
-            PropertyItem piActual = pi.SingleOrDefault();
-
-            return piActual ?? image.PropertyItems.First();
-        }
-
-        /// <summary>
-        ///     Creates the new property item using watermark image as fallback for property item source.
-        /// </summary>
-        /// <param name="image">
-        ///     The image to create the property item for.
-        /// </param>
-        /// <param name="item">
-        ///     The item id to create.
-        /// </param>
-        /// <returns>
-        ///     A Property item if it can be created in any way.
-        /// </returns>
-        private static PropertyItem CreateNewPropertyItemUsingWatermarkAsFallback(Image image, int item)
-        {
-            Contract.Requires(image != null);
-
-            PropertyItem pi = CreateNewPropertyItem(image, item);
-            if (pi == null)
-            {
-                string fileName = Settings.Default.WatermarkImage;
-                if (string.IsNullOrEmpty(fileName))
-                {
-                    return pi;
-                }
-
-                if (File.Exists(fileName))
-                {
-                    using (Image srcImage = Image.FromFile(fileName))
-                    {
-                        pi = CreateNewPropertyItem(srcImage, item);
-                    }
-                }
-            }
-
-            return pi;
-        }
 
         /// <summary>
         ///     Writes the image.

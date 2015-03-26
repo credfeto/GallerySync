@@ -12,6 +12,7 @@
 #endregion
 
 using System.Drawing;
+using GraphicsMagick;
 
 namespace OutputBuilderClient
 {
@@ -31,7 +32,7 @@ namespace OutputBuilderClient
         /// <returns>
         ///     An image, if it could be loaded.
         /// </returns>
-        Bitmap LoadImage(string fileName);
+        MagickImage LoadImage(string fileName);
 
         #endregion
     }
