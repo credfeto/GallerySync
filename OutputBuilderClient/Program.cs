@@ -231,9 +231,13 @@ namespace OutputBuilderClient
                         rebuild = true;
                     }
 
-                    if (StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
+                    if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                     {
                         sourcePhoto.ShortUrl = shortUrl;
+                    }
+                    else
+                    {
+                        shortUrl = Constants.DefaultShortUrl;
                     }
 
                     

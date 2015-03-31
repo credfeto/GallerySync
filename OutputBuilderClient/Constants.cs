@@ -2,6 +2,8 @@
 {
     public static class Constants
     {
+        public const string DefaultShortUrl = "https://www.markridgwell.co.uk/";
+
         // V1 = Original
         // V2 = fix to GPS...  broke Image sizes
         // V3 = fix image sizes

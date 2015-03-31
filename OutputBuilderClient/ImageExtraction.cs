@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -41,7 +40,8 @@ namespace OutputBuilderClient
             }
         }
 
-        public static List<ImageSize> BuildImages(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl)
+        public static List<ImageSize> BuildImages(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate,
+                                                  string url, string shortUrl)
         {
             var sizes = new List<ImageSize>();
 
@@ -71,7 +71,8 @@ namespace OutputBuilderClient
                             ApplyWatermark(resized, shortUrl);
                             int quality =
                                 Settings.Default.JpegOutputQuality;
-                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality, url);
+                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality, url, shortUrl,
+                                                                       sourcePhoto.BasePath, sourcePhoto.Metadata, creationDate);
 
                             if (!ImageHelpers.IsValidJpegImage(resizedBytes))
                             {
@@ -92,7 +93,8 @@ namespace OutputBuilderClient
                                 resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
                                                                HashNaming.PathifyHash(sourcePhoto.PathHash),
                                                                IndividualResizeFileName(sourcePhoto, resized, "png"));
-                                resizedBytes = SaveImageAsPng(resized, url);
+                                resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.BasePath,
+                                                              sourcePhoto.Metadata, creationDate);
                                 WriteImage(resizedFileName, resizedBytes, creationDate);
 
                                 filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
@@ -115,15 +117,15 @@ namespace OutputBuilderClient
             return sizes;
         }
 
-        private static byte[] SaveImageAsPng(MagickImage image, string url)
+        private static byte[] SaveImageAsPng(MagickImage image, string url, string shortUrl, string filePath, List<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
             StripExifProperties(image);
-            SetCopyrightExifProperties(image, url);
+            SetCopyrightExifProperties(image, url, shortUrl, filePath, metadata, creationDate);
 
-            var qSettings = new QuantizeSettings { Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
+            var qSettings = new QuantizeSettings {Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
             image.Quantize(qSettings);
 
             return image.ToByteArray(MagickFormat.Png8);
@@ -342,8 +344,7 @@ namespace OutputBuilderClient
                 return;
             }
 
-            
-            
+
             using (var watermark = new MagickImage())
             {
                 //watermark.Warning += (sender, e) =>
@@ -357,20 +358,20 @@ namespace OutputBuilderClient
                 watermark.Read(watermarkFilename);
 
 
-                var width = watermark.Width;
-                var height = watermark.Height;
+                int width = watermark.Width;
+                int height = watermark.Height;
 
-                using (var qr = EncodeUrl(url, watermark.Height))
+                using (MagickImage qr = EncodeUrl(url, watermark.Height))
                 {
                     if (qr != null)
                     {
                         qr.BackgroundColor = MagickColor.Transparent;
 
-                        var qrWidth = qr.Width;
-                        var qrHeight = qr.Height;
+                        int qrWidth = qr.Width;
+                        int qrHeight = qr.Height;
 
-                        var qrXPos = imageToAddWatermarkTo.Width - ( qrWidth + spacer );
-                        var qrYpos = imageToAddWatermarkTo.Height - (Math.Max(watermark.Height, qrHeight + spacer));
+                        int qrXPos = imageToAddWatermarkTo.Width - (qrWidth + spacer);
+                        int qrYpos = imageToAddWatermarkTo.Height - (Math.Max(watermark.Height, qrHeight + spacer));
 
                         width = (watermark.Width + (qrWidth > 0 ? qrWidth + (2*spacer) : 0));
                         height = (Math.Max(watermark.Height, qrHeight + spacer));
@@ -390,12 +391,12 @@ namespace OutputBuilderClient
                 {
                     return;
                 }
-                
+
 
                 int x = imageToAddWatermarkTo.Width - width;
                 int y = imageToAddWatermarkTo.Height - height;
-                
-                
+
+
                 compositionOperator = CompositeOperator.Over;
                 imageToAddWatermarkTo.Composite(watermark, x, y, compositionOperator);
             }
@@ -409,15 +410,16 @@ namespace OutputBuilderClient
             QrCode qr;
             if (encoder.TryEncode(url, out qr))
             {
-                var moduleSize = CaclulateQrModuleSize(height);
+                int moduleSize = CaclulateQrModuleSize(height);
 
                 using (var stream = new MemoryStream())
                 {
                     Brush darkBrush = Brushes.Black;
                     Brush lightBrush = new SolidBrush(Color.FromArgb(128, 255, 255, 255));
-                        
-                    var renderer = new GraphicsRenderer(new FixedModuleSize(moduleSize, QuietZoneModules.Two), darkBrush, lightBrush);
-                    
+
+                    var renderer = new GraphicsRenderer(new FixedModuleSize(moduleSize, QuietZoneModules.Two), darkBrush,
+                                                        lightBrush);
+
                     renderer.WriteToStream(qr.Matrix, ImageFormat.Png, stream);
 
                     return new MagickImage(stream.ToArray());
@@ -449,19 +451,23 @@ namespace OutputBuilderClient
         ///     The compression quality.
         /// </param>
         /// <param name="url"></param>
+        /// <param name="shortUrl"></param>
+        /// <param name="filePath"></param>
+        /// <param name="metadata"></param>
+        /// <param name="creationDate"></param>
         /// <returns>
         ///     Block of bytes representing the image.
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Is fallback position where it retries.")]
-        public static byte[] SaveImageAsJpegBytes(MagickImage image, long compressionQuality, string url)
+        public static byte[] SaveImageAsJpegBytes(MagickImage image, long compressionQuality, string url, string shortUrl, string filePath, List<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
             StripExifProperties(image);
-            SetCopyrightExifProperties(image, url);
+            SetCopyrightExifProperties(image, url, shortUrl, filePath, metadata, creationDate);
 
             try
             {
@@ -520,15 +526,21 @@ namespace OutputBuilderClient
         ///     The image to set the properties to it.
         /// </param>
         /// <param name="url"></param>
-        private static void SetCopyrightExifProperties(MagickImage image, string url)
+        /// <param name="shortUrl"></param>
+        /// <param name="filePath"></param>
+        /// <param name="metadata"></param>
+        /// <param name="creationDate"></param>
+        private static void SetCopyrightExifProperties(MagickImage image, string url, string shortUrl, string filePath, List<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
 
             string copyright = CopyrightDeclaration;
-            const string credit = "Camera owner, Mark Ridgwell; Photographer, Mark Ridgwell; Image creator, Mark Ridgwell";
+            const string credit =
+                "Camera owner, Mark Ridgwell; Photographer, Mark Ridgwell; Image creator, Mark Ridgwell";
             const string licensing = "For licensing information see https://www.markridgwell.co.uk/about/";
             const string program = "https://www.markridgwell.co.uk/";
-            const string instructions = licensing + " For personal use only.  For commercial use contact me.";
+            string title = ExtractTitle(filePath, metadata);
+            string description = ExtractDescription(metadata, url, shortUrl, creationDate);
 
             Action<ExifProfile> completeExifProfile = (p) => { };
             Action<IptcProfile> completeIptcProfile = (p) => { };
@@ -538,9 +550,18 @@ namespace OutputBuilderClient
             {
                 exifProfile = new ExifProfile();
 
-                completeExifProfile = image.AddProfile;                
+                completeExifProfile = image.AddProfile;
             }
 
+            if (creationDate != DateTime.MinValue)
+            {
+                exifProfile.SetValue(ExifTag.DateTime, creationDate.Date.ToString("yyyy-MM-dd"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                exifProfile.SetValue(ExifTag.ImageDescription, description);
+            }
             exifProfile.SetValue(ExifTag.Copyright, copyright);
 
             exifProfile.SetValue(ExifTag.UserComment,
@@ -560,11 +581,21 @@ namespace OutputBuilderClient
 
                 completeIptcProfile = image.AddProfile;
             }
-            
-            iptcProfile.SetValue(IptcTag.CopyrightNotice, CopyrightDeclaration);
 
-            iptcProfile.SetValue(IptcTag.Caption,
-                                 licensing);
+            if (creationDate != DateTime.MinValue)
+            {
+                iptcProfile.SetValue(IptcTag.CreatedDate, creationDate.Date.ToString("yyyy-MM-dd"));
+            }
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                iptcProfile.SetValue(IptcTag.Title, title);
+            }
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                iptcProfile.SetValue(IptcTag.Caption, description);
+            }
+            iptcProfile.SetValue(IptcTag.CopyrightNotice, CopyrightDeclaration);
 
             iptcProfile.SetValue(IptcTag.Credit,
                                  credit);
@@ -573,11 +604,12 @@ namespace OutputBuilderClient
 
             iptcProfile.SetValue(IptcTag.OriginalTransmissionReference, url);
 
-            iptcProfile.SetValue(IptcTag.SpecialInstructions, instructions);
+            iptcProfile.SetValue(IptcTag.SpecialInstructions, licensing);
 
             completeExifProfile(exifProfile);
             completeIptcProfile(iptcProfile);
         }
+
 
         /// <summary>
         ///     Strips the EXIF properties from the image.
@@ -650,6 +682,68 @@ namespace OutputBuilderClient
                 File.SetLastWriteTimeUtc(fileName, creationDate);
                 File.SetLastAccessTimeUtc(fileName, creationDate);
             }
+        }
+
+        private static string ExtractTitle(string path, List<PhotoMetadata> metadata)
+        {
+            string title = string.Empty;
+            PhotoMetadata desc =
+                metadata.FirstOrDefault(
+                    item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Title));
+            if (desc != null)
+            {
+                title = desc.Value;
+            }
+
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                string[] fragments =
+                    path.Split('\\').Where(candidate => !string.IsNullOrWhiteSpace(candidate)).ToArray();
+
+                if (fragments.Length > 0)
+                {
+                    title = fragments[fragments.Length - 1];
+                }
+            }
+
+            return title;
+        }
+
+        private static string ExtractDescription(List<PhotoMetadata> metadata, string url, string shortUrl, DateTime creationDate)
+        {
+            string description = string.Empty;
+            PhotoMetadata desc =
+                metadata.FirstOrDefault(
+                    item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
+            if (desc != null)
+            {
+                description = desc.Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                description += ". ";
+            }
+
+            description += "Source : ";
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(Constants.DefaultShortUrl, shortUrl))
+            {
+                description += url;
+            }
+            else
+            {
+                description += shortUrl;
+            }
+
+            description += " Photo taken by Mark Ridgwell";
+            if (creationDate != DateTime.MinValue)
+            {
+                description += " ("+ creationDate.ToString("yyyy-MM-dd") + ")";
+            }
+            description += ".";
+
+            return description;
         }
     }
 }
