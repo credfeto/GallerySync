@@ -4,11 +4,16 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using FileNaming;
+using Gma.QrCodeNet.Encoding;
+using Gma.QrCodeNet.Encoding.Windows.Render;
 using GraphicsMagick;
 using OutputBuilderClient.Properties;
 using Twaddle.Gallery.ObjectModel;
@@ -36,7 +41,7 @@ namespace OutputBuilderClient
             }
         }
 
-        public static List<ImageSize> BuildImages(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate)
+        public static List<ImageSize> BuildImages(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl)
         {
             var sizes = new List<ImageSize>();
 
@@ -63,10 +68,10 @@ namespace OutputBuilderClient
                     {
                         using (MagickImage resized = ResizeImage(sourceBitmap, dimension))
                         {
-                            ApplyWatermark(resized);
+                            ApplyWatermark(resized, shortUrl);
                             int quality =
                                 Settings.Default.JpegOutputQuality;
-                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality);
+                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality, url);
 
                             if (!ImageHelpers.IsValidJpegImage(resizedBytes))
                             {
@@ -87,7 +92,7 @@ namespace OutputBuilderClient
                                 resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
                                                                HashNaming.PathifyHash(sourcePhoto.PathHash),
                                                                IndividualResizeFileName(sourcePhoto, resized, "png"));
-                                resizedBytes = SaveImageAsPng(resized);
+                                resizedBytes = SaveImageAsPng(resized, url);
                                 WriteImage(resizedFileName, resizedBytes, creationDate);
 
                                 filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
@@ -110,13 +115,13 @@ namespace OutputBuilderClient
             return sizes;
         }
 
-        private static byte[] SaveImageAsPng(MagickImage image)
+        private static byte[] SaveImageAsPng(MagickImage image, string url)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
             StripExifProperties(image);
-            SetCopyrightExifProperties(image);
+            SetCopyrightExifProperties(image, url);
 
             var qSettings = new QuantizeSettings { Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
             image.Quantize(qSettings);
@@ -319,9 +324,12 @@ namespace OutputBuilderClient
         /// <param name="imageToAddWatermarkTo">
         ///     The image to add the watermark to.
         /// </param>
-        private static void ApplyWatermark(MagickImage imageToAddWatermarkTo)
+        /// <param name="url"></param>
+        private static void ApplyWatermark(MagickImage imageToAddWatermarkTo, string url)
         {
             Contract.Requires(imageToAddWatermarkTo != null);
+
+            const int spacer = 5;
 
             string watermarkFilename = Settings.Default.WatermarkImage;
             if (string.IsNullOrEmpty(watermarkFilename))
@@ -334,6 +342,8 @@ namespace OutputBuilderClient
                 return;
             }
 
+            
+            
             using (var watermark = new MagickImage())
             {
                 //watermark.Warning += (sender, e) =>
@@ -342,21 +352,91 @@ namespace OutputBuilderClient
                 //    throw e.Exception;
                 //};
 
+                CompositeOperator compositionOperator;
                 watermark.BackgroundColor = MagickColor.Transparent;
                 watermark.Read(watermarkFilename);
 
-                if ((imageToAddWatermarkTo.Width <= watermark.Width) || (imageToAddWatermarkTo.Height <= watermark.Height))
+
+                var width = watermark.Width;
+                var height = watermark.Height;
+
+                using (var qr = EncodeUrl(url, watermark.Height))
+                {
+                    if (qr != null)
+                    {
+                        qr.BackgroundColor = MagickColor.Transparent;
+
+                        var qrWidth = qr.Width;
+                        var qrHeight = qr.Height;
+
+                        var qrXPos = imageToAddWatermarkTo.Width - ( qrWidth + spacer );
+                        var qrYpos = imageToAddWatermarkTo.Height - (Math.Max(watermark.Height, qrHeight + spacer));
+
+                        width = (watermark.Width + (qrWidth > 0 ? qrWidth + (2*spacer) : 0));
+                        height = (Math.Max(watermark.Height, qrHeight + spacer));
+
+                        if ((imageToAddWatermarkTo.Width <= width) || (imageToAddWatermarkTo.Height <= height))
+                        {
+                            return;
+                        }
+
+                        compositionOperator = CompositeOperator.Over;
+                        imageToAddWatermarkTo.Composite(qr, qrXPos, qrYpos, compositionOperator);
+                    }
+                }
+
+
+                if ((imageToAddWatermarkTo.Width <= width) || (imageToAddWatermarkTo.Height <= height))
                 {
                     return;
                 }
+                
 
-                int x = imageToAddWatermarkTo.Width - watermark.Width;
-                int y = imageToAddWatermarkTo.Height - watermark.Height;
-
-                watermark.BackgroundColor = MagickColor.Transparent;
-
-                imageToAddWatermarkTo.Composite(watermark, x, y, CompositeOperator.Over);
+                int x = imageToAddWatermarkTo.Width - width;
+                int y = imageToAddWatermarkTo.Height - height;
+                
+                
+                compositionOperator = CompositeOperator.Over;
+                imageToAddWatermarkTo.Composite(watermark, x, y, compositionOperator);
             }
+        }
+
+        private static MagickImage EncodeUrl(string url, int height)
+        {
+            //url = "https://www.markridgwell.co.uk/";
+
+            var encoder = new QrEncoder(ErrorCorrectionLevel.H);
+            QrCode qr;
+            if (encoder.TryEncode(url, out qr))
+            {
+                var moduleSize = CaclulateQrModuleSize(height);
+
+                using (var stream = new MemoryStream())
+                {
+                    Brush darkBrush = Brushes.Black;
+                    Brush lightBrush = new SolidBrush(Color.FromArgb(128, 255, 255, 255));
+                        
+                    var renderer = new GraphicsRenderer(new FixedModuleSize(moduleSize, QuietZoneModules.Two), darkBrush, lightBrush);
+                    
+                    renderer.WriteToStream(qr.Matrix, ImageFormat.Png, stream);
+
+                    return new MagickImage(stream.ToArray());
+                }
+            }
+
+            return null;
+        }
+
+        private static int CaclulateQrModuleSize(int height)
+        {
+            //var moduleSize = height/33;
+            //if (height%33 != 0)
+            //{
+            //    moduleSize += 1;
+            //}
+            //return moduleSize;
+
+            return 2;
         }
 
         /// <summary>
@@ -368,19 +448,20 @@ namespace OutputBuilderClient
         /// <param name="compressionQuality">
         ///     The compression quality.
         /// </param>
+        /// <param name="url"></param>
         /// <returns>
         ///     Block of bytes representing the image.
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Is fallback position where it retries.")]
-        public static byte[] SaveImageAsJpegBytes(MagickImage image, long compressionQuality)
+        public static byte[] SaveImageAsJpegBytes(MagickImage image, long compressionQuality, string url)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
             StripExifProperties(image);
-            SetCopyrightExifProperties(image);
+            SetCopyrightExifProperties(image, url);
 
             try
             {
@@ -438,14 +519,16 @@ namespace OutputBuilderClient
         /// <param name="image">
         ///     The image to set the properties to it.
         /// </param>
-        private static void SetCopyrightExifProperties(MagickImage image)
+        /// <param name="url"></param>
+        private static void SetCopyrightExifProperties(MagickImage image, string url)
         {
             Contract.Requires(image != null);
 
             string copyright = CopyrightDeclaration;
             const string credit = "Camera owner, Mark Ridgwell; Photographer, Mark Ridgwell; Image creator, Mark Ridgwell";
-            const string licensing = "For licensing information see https://www.markridgwell.co.uk/about";
+            const string licensing = "For licensing information see https://www.markridgwell.co.uk/about/";
             const string program = "https://www.markridgwell.co.uk/";
+            const string instructions = licensing + " For personal use only.  For commercial use contact me.";
 
             Action<ExifProfile> completeExifProfile = (p) => { };
             Action<IptcProfile> completeIptcProfile = (p) => { };
@@ -457,7 +540,6 @@ namespace OutputBuilderClient
 
                 completeExifProfile = image.AddProfile;                
             }
-
 
             exifProfile.SetValue(ExifTag.Copyright, copyright);
 
@@ -478,7 +560,7 @@ namespace OutputBuilderClient
 
                 completeIptcProfile = image.AddProfile;
             }
-
+            
             iptcProfile.SetValue(IptcTag.CopyrightNotice, CopyrightDeclaration);
 
             iptcProfile.SetValue(IptcTag.Caption,
@@ -488,6 +570,10 @@ namespace OutputBuilderClient
                                  credit);
 
             iptcProfile.SetValue(IptcTag.OriginatingProgram, program);
+
+            iptcProfile.SetValue(IptcTag.OriginalTransmissionReference, url);
+
+            iptcProfile.SetValue(IptcTag.SpecialInstructions, instructions);
 
             completeExifProfile(exifProfile);
             completeIptcProfile(iptcProfile);

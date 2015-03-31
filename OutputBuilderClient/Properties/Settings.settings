@@ -35,5 +35,11 @@
     <Setting Name="DatabaseBackupFolder" Type="System.String" Scope="Application">
       <Value Profile="(Default)">I:\Database\Backup\Current</Value>
     </Setting>
+    <Setting Name="BitlyApiKey" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">R_43a3ce10699b39c57da408f60cb794ce</Value>
+    </Setting>
+    <Setting Name="BitlyApiUser" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">credfeto</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

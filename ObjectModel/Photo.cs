@@ -23,5 +23,7 @@ namespace Twaddle.Gallery.ObjectModel
         public List<PhotoMetadata> Metadata { get; set; }
 
         public List<ImageSize> ImageSizes { get; set; }
+
+        public string ShortUrl { get; set; }
     }
 }

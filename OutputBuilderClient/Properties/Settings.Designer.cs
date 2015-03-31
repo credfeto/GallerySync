@@ -121,5 +121,23 @@ namespace OutputBuilderClient.Properties {
                 return ((string)(this["DatabaseBackupFolder"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("R_43a3ce10699b39c57da408f60cb794ce")]
+        public string BitlyApiKey {
+            get {
+                return ((string)(this["BitlyApiKey"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("credfeto")]
+        public string BitlyApiUser {
+            get {
+                return ((string)(this["BitlyApiUser"]));
+            }
+        }
     }
 }
