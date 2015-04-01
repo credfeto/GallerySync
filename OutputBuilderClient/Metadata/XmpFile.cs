@@ -212,9 +212,9 @@ namespace OutputBuilderClient.Metadata
                 new ElementItemLoader(MetadataNames.ExposureTime, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ExposureTime")
                 ;
             yield return
-                new AttributeItemLoader(MetadataNames.FNumber, "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FNumber");
+                new AttributeItemLoader(MetadataNames.Aperture, "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FNumber");
             yield return
-                new ElementItemLoader(MetadataNames.FNumber, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FNumber");
+                new ElementItemLoader(MetadataNames.Aperture, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FNumber");
             yield return
                 new AttributeItemLoader(MetadataNames.DateTaken,
                                         "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:DateTimeOriginal");

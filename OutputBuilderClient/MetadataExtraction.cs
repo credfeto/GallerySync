@@ -301,11 +301,11 @@ namespace OutputBuilderClient
             }
             if (tag.ExposureTime.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.ExposureTime, tag.ExposureTime.Value);
+                AppendMetadata(metadata, MetadataNames.ExposureTime, MetadataFormatting.FormatExposure(tag.ExposureTime.Value, false));
             }
             if (tag.FNumber.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.FNumber, String.Format("F/{0}", tag.FNumber.Value));
+                AppendMetadata(metadata, MetadataNames.Aperture, MetadataFormatting.FormatFNumber(tag.FNumber.Value));
             }
             if (tag.ISOSpeedRatings.HasValue)
             {
@@ -313,12 +313,9 @@ namespace OutputBuilderClient
             }
             if (tag.FocalLength.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.FocalLength, tag.FocalLength.Value);
-            }
-            else if (tag.FocalLengthIn35mmFilm.HasValue)
-            {
-                AppendMetadata(metadata, MetadataNames.FocalLength, tag.FocalLengthIn35mmFilm.Value);
-            }
+                
+                AppendMetadata(metadata, MetadataNames.FocalLength, MetadataFormatting.FormatFocalLength( tag.FocalLength.Value, (int)tag.FocalLengthIn35mmFilm.GetValueOrDefault(0) ) );
+            }            
             if (!String.IsNullOrWhiteSpace(tag.Make))
             {
                 AppendMetadata(metadata, MetadataNames.CameraManufacturer, tag.Make);
@@ -486,8 +483,9 @@ namespace OutputBuilderClient
             UInt32[] exposureTime;
             if (reader.GetTagValue(ExifTags.ExposureTime, out exposureTime))
             {
-                AppendMetadata(metadata, MetadataNames.ExposureTime,
-                               exposureTime[0]/(double) exposureTime[1]);
+                double d = MetadataNormalizationFunctions.ToReal(exposureTime[0], exposureTime[1]);
+
+                AppendMetadata(metadata, MetadataNames.ExposureTime, MetadataFormatting.FormatExposure(d));
             }
         }
 
@@ -496,8 +494,11 @@ namespace OutputBuilderClient
             UInt32[] fNumber;
             if (reader.GetTagValue(ExifTags.FNumber, out fNumber))
             {
-                AppendMetadata(metadata, MetadataNames.FNumber,
-                               String.Format("F/{0}", fNumber[0]/(double) fNumber[1]));
+                double d =
+                    MetadataNormalizationFunctions.ClosestFStop(MetadataNormalizationFunctions.ToReal(fNumber[0],
+                                                                                                      fNumber[1]));
+
+                AppendMetadata(metadata, MetadataNames.Aperture, MetadataFormatting.FormatFNumber(d));
             }
         }
 
@@ -506,8 +507,12 @@ namespace OutputBuilderClient
             UInt32[] aperture;
             if (reader.GetTagValue(ExifTags.ApertureValue, out aperture))
             {
+                double d =
+                    MetadataNormalizationFunctions.ToApexValue(MetadataNormalizationFunctions.ToReal(aperture[0],
+                                                                                                     aperture[1]));
+
                 AppendMetadata(metadata, MetadataNames.Aperture,
-                               String.Format("{0}/{1}", aperture[0], aperture[1]));
+                               MetadataFormatting.FormatAperture(d));
             }
         }
 
@@ -516,9 +521,12 @@ namespace OutputBuilderClient
             UInt32[] focalLength;
             if (reader.GetTagValue(ExifTags.FocalLength, out focalLength))
             {
-                AppendMetadata(metadata, MetadataNames.FocalLength, focalLength[0]/(double) focalLength[1]);
+                double d = MetadataNormalizationFunctions.ToReal(focalLength[0], focalLength[1]);
+
+                AppendMetadata(metadata, MetadataNames.FocalLength, MetadataFormatting.FormatFocalLength(d));
             }
         }
+
 
         private static void TryIgnore(Action action)
         {

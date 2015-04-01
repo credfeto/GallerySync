@@ -22,8 +22,6 @@
 
         public const string Aperture = "Aperture";
 
-        public const string FNumber = "FNumber";
-
         public const string ExposureTime = "Exposure Time";
 
         public const string Altitude = "Altitude";
