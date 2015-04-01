@@ -107,6 +107,7 @@
     <Compile Include="MetadataExtraction.cs" />
     <Compile Include="MetadataFormatting.cs" />
     <Compile Include="MetadataNormalizationFunctions.cs" />
+    <Compile Include="MetadataOutput.cs" />
     <Compile Include="Metadata\AttributeItemLoader.cs" />
     <Compile Include="Metadata\ElementItemListLoader.cs" />
     <Compile Include="Metadata\ElementItemLoader.cs" />

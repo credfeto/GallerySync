@@ -9,7 +9,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using FileNaming;
 using Gma.QrCodeNet.Encoding;
 using Gma.QrCodeNet.Encoding.Windows.Render;
@@ -72,7 +71,8 @@ namespace OutputBuilderClient
                             int quality =
                                 Settings.Default.JpegOutputQuality;
                             byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality, url, shortUrl,
-                                                                       sourcePhoto.BasePath, sourcePhoto.Metadata, creationDate);
+                                                                       sourcePhoto.BasePath, sourcePhoto.Metadata,
+                                                                       creationDate);
 
                             if (!ImageHelpers.IsValidJpegImage(resizedBytes))
                             {
@@ -117,13 +117,14 @@ namespace OutputBuilderClient
             return sizes;
         }
 
-        private static byte[] SaveImageAsPng(MagickImage image, string url, string shortUrl, string filePath, List<PhotoMetadata> metadata, DateTime creationDate)
+        private static byte[] SaveImageAsPng(MagickImage image, string url, string shortUrl, string filePath,
+                                             List<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
             StripExifProperties(image);
-            SetCopyrightExifProperties(image, url, shortUrl, filePath, metadata, creationDate);
+            SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate);
 
             var qSettings = new QuantizeSettings {Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
             image.Quantize(qSettings);
@@ -460,14 +461,16 @@ namespace OutputBuilderClient
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Is fallback position where it retries.")]
-        public static byte[] SaveImageAsJpegBytes(MagickImage image, long compressionQuality, string url, string shortUrl, string filePath, List<PhotoMetadata> metadata, DateTime creationDate)
+        public static byte[] SaveImageAsJpegBytes(MagickImage image, long compressionQuality, string url,
+                                                  string shortUrl, string filePath, List<PhotoMetadata> metadata,
+                                                  DateTime creationDate)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
             StripExifProperties(image);
-            SetCopyrightExifProperties(image, url, shortUrl, filePath, metadata, creationDate);
+            SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate);
 
             try
             {
@@ -530,7 +533,8 @@ namespace OutputBuilderClient
         /// <param name="filePath"></param>
         /// <param name="metadata"></param>
         /// <param name="creationDate"></param>
-        private static void SetCopyrightExifProperties(MagickImage image, string url, string shortUrl, string filePath, List<PhotoMetadata> metadata, DateTime creationDate)
+        private static void SetMetadataProperties(MagickImage image, string url, string shortUrl, string filePath,
+                                                       List<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
 
@@ -542,9 +546,17 @@ namespace OutputBuilderClient
             string title = ExtractTitle(filePath, metadata);
             string description = ExtractDescription(metadata, url, shortUrl, creationDate);
 
-            Action<ExifProfile> completeExifProfile = (p) => { };
-            Action<IptcProfile> completeIptcProfile = (p) => { };
+            
 
+            SetIptcMetadata(image, url, creationDate, title, description, credit, program, licensing);
+
+            SetExifMetadata(image, creationDate, description, copyright, licensing, credit, program);
+        }
+
+        private static void SetExifMetadata(MagickImage image, DateTime creationDate, string description, string copyright,
+                                            string licensing, string credit, string program)
+        {
+            Action<ExifProfile> completeExifProfile = (p) => { };
             ExifProfile exifProfile = image.GetExifProfile();
             if (exifProfile == null)
             {
@@ -553,60 +565,41 @@ namespace OutputBuilderClient
                 completeExifProfile = image.AddProfile;
             }
 
-            if (creationDate != DateTime.MinValue)
-            {
-                exifProfile.SetValue(ExifTag.DateTime, creationDate.Date.ToString("yyyy-MM-dd"));
-            }
 
-            if (!string.IsNullOrWhiteSpace(description))
-            {
-                exifProfile.SetValue(ExifTag.ImageDescription, description);
-            }
-            exifProfile.SetValue(ExifTag.Copyright, copyright);
+            MetadataOutput.SetCreationDate(creationDate, exifProfile);
 
-            exifProfile.SetValue(ExifTag.UserComment,
-                                 Encoding.UTF8.GetBytes(
-                                     licensing));
+            MetadataOutput.SetDescription(description, exifProfile);
+            MetadataOutput.SetCopyright(exifProfile, copyright);
 
-            exifProfile.SetValue(ExifTag.Artist,
-                                 credit);
+            MetadataOutput.SetLicensing(exifProfile, licensing);
 
-            exifProfile.SetValue(ExifTag.ImageDescription, program);
+            MetadataOutput.SetPhotographer(exifProfile, credit);
 
-
-            IptcProfile iptcProfile = image.GetIptcProfile();
-            if (iptcProfile == null)
-            {
-                iptcProfile = new IptcProfile();
-
-                completeIptcProfile = image.AddProfile;
-            }
-
-            if (creationDate != DateTime.MinValue)
-            {
-                iptcProfile.SetValue(IptcTag.CreatedDate, creationDate.Date.ToString("yyyy-MM-dd"));
-            }
-
-            if (!string.IsNullOrWhiteSpace(title))
-            {
-                iptcProfile.SetValue(IptcTag.Title, title);
-            }
-            if (!string.IsNullOrWhiteSpace(description))
-            {
-                iptcProfile.SetValue(IptcTag.Caption, description);
-            }
-            iptcProfile.SetValue(IptcTag.CopyrightNotice, CopyrightDeclaration);
-
-            iptcProfile.SetValue(IptcTag.Credit,
-                                 credit);
-
-            iptcProfile.SetValue(IptcTag.OriginatingProgram, program);
-
-            iptcProfile.SetValue(IptcTag.OriginalTransmissionReference, url);
-
-            iptcProfile.SetValue(IptcTag.SpecialInstructions, licensing);
+            MetadataOutput.SetProgram(exifProfile, program);
 
             completeExifProfile(exifProfile);
+        }
+
+        private static void SetIptcMetadata(MagickImage image, string url, DateTime creationDate, string title,
+                                            string description, string credit, string program, string licensing)
+        {
+            IptcProfile iptcProfile = new IptcProfile();
+            Action<IptcProfile> completeIptcProfile = image.AddProfile;
+
+            MetadataOutput.SetTitle(title, iptcProfile);
+            MetadataOutput.SetDescription(description, iptcProfile);
+            MetadataOutput.SetCopyright(iptcProfile, CopyrightDeclaration);
+
+            MetadataOutput.SetCredit(iptcProfile, credit);
+
+            MetadataOutput.SetProgram(iptcProfile, program);
+
+            MetadataOutput.SetTransmissionReference(url, iptcProfile);
+
+            MetadataOutput.SetLicensing(iptcProfile, licensing);
+
+            MetadataOutput.SetCreationDate(creationDate, iptcProfile);
+
             completeIptcProfile(iptcProfile);
         }
 
@@ -660,7 +653,7 @@ namespace OutputBuilderClient
 
             FileHelpers.WriteAllBytes(fileName, data);
 
-            SetCreationDate(fileName, creationDate);
+            MetadataOutput.SetCreationDate(fileName, creationDate);
         }
 
 
@@ -671,16 +664,6 @@ namespace OutputBuilderClient
             if (!Directory.Exists(folder))
             {
                 Directory.CreateDirectory(folder);
-            }
-        }
-
-        private static void SetCreationDate(string fileName, DateTime creationDate)
-        {
-            if (creationDate != DateTime.MinValue && File.Exists(fileName))
-            {
-                File.SetCreationTimeUtc(fileName, creationDate);
-                File.SetLastWriteTimeUtc(fileName, creationDate);
-                File.SetLastAccessTimeUtc(fileName, creationDate);
             }
         }
 
@@ -710,7 +693,8 @@ namespace OutputBuilderClient
             return title;
         }
 
-        private static string ExtractDescription(List<PhotoMetadata> metadata, string url, string shortUrl, DateTime creationDate)
+        private static string ExtractDescription(List<PhotoMetadata> metadata, string url, string shortUrl,
+                                                 DateTime creationDate)
         {
             string description = string.Empty;
             PhotoMetadata desc =
@@ -739,7 +723,7 @@ namespace OutputBuilderClient
             description += " Photo taken by Mark Ridgwell";
             if (creationDate != DateTime.MinValue)
             {
-                description += " ("+ creationDate.ToString("yyyy-MM-dd") + ")";
+                description += " (" + creationDate.ToString("yyyy-MM-dd") + ")";
             }
             description += ".";
 
