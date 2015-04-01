@@ -217,15 +217,17 @@ namespace OutputBuilderClient
                                    NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
                     bool rebuildMetadata = targetPhoto != null &&
                                            MetadataVersionOutOfDate(targetPhoto);
-                    
-                    var url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
+
+                    string url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
                     string shortUrl = string.Empty;
                     if (targetPhoto != null)
                     {
                         shortUrl = targetPhoto.ShortUrl;
                     }
 
-                    if( string.IsNullOrWhiteSpace(shortUrl))
+                    if (string.IsNullOrWhiteSpace(shortUrl) ||
+                        StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url) ||
+                        StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl))
                     {
                         shortUrl = BitlyUrlShortner.Shorten(new Uri(url)).ToString();
                         rebuild = true;
@@ -240,7 +242,7 @@ namespace OutputBuilderClient
                         shortUrl = Constants.DefaultShortUrl;
                     }
 
-                    
+
                     if (build || rebuild || rebuildMetadata)
                     {
                         ProcessOneFile(outputSession, sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
@@ -350,7 +352,8 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl)
+        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto,
+                                           bool rebuild, bool rebuildMetadata, string url, string shortUrl)
         {
             OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
@@ -375,7 +378,8 @@ namespace OutputBuilderClient
             if (buildImages)
             {
                 DateTime creationDate = ExtractCreationDate(sourcePhoto.Metadata);
-                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated, creationDate, url, shortUrl);
+                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated, creationDate, url,
+                                                                     shortUrl);
             }
             else
             {
