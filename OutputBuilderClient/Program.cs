@@ -231,6 +231,10 @@ namespace OutputBuilderClient
                     {
                         shortUrl = BitlyUrlShortner.Shorten(new Uri(url)).ToString();
                         rebuild = true;
+                        if (targetPhoto != null)
+                        {
+                            Console.WriteLine("-->> Rebuild Required - missing shortcut URL");
+                        }
                     }
 
                     if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))

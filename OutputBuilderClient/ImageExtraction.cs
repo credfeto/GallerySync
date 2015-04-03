@@ -372,12 +372,14 @@ namespace OutputBuilderClient
                         int qrHeight = qr.Height;
 
                         int qrXPos = imageToAddWatermarkTo.Width - (qrWidth + spacer);
-                        int qrYpos = imageToAddWatermarkTo.Height - (Math.Max(watermark.Height, qrHeight + spacer));
+                        int qrYpos = imageToAddWatermarkTo.Height - (qrHeight + spacer);
 
+                        
                         width = (watermark.Width + (qrWidth > 0 ? qrWidth + (2*spacer) : 0));
-                        height = (Math.Max(watermark.Height, qrHeight + spacer));
 
-                        if ((imageToAddWatermarkTo.Width <= width) || (imageToAddWatermarkTo.Height <= height))
+                        var maxHeight = (Math.Max(watermark.Height, qrHeight + spacer));
+
+                        if ((imageToAddWatermarkTo.Width <= width) || (imageToAddWatermarkTo.Height <= maxHeight))
                         {
                             return;
                         }

@@ -87,8 +87,9 @@ namespace OutputBuilderClient
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                Console.WriteLine("Error: Could not build Short Url: {0}", exception.Message);
                 // if Google's URL Shortner is down...
                 return url;
             }
