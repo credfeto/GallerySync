@@ -98,7 +98,7 @@ namespace OutputBuilderClient
                 else
                 {
                     //sprintf_s(sz, len, d < 1 ? "%.1fmm" : "%.0fmm", d);
-                    sz = string.Format(d < 1 ? "%{0}mm" : "%{0}fmm", d);
+                    sz = string.Format(d < 1 ? "{0}mm" : "{0}mm", d);
                 }
             }
             else
