@@ -548,7 +548,7 @@ namespace OutputBuilderClient
             string title = ExtractTitle(filePath, metadata);
             string description = ExtractDescription(metadata, url, shortUrl, creationDate);
 
-            
+            image.Format = MagickFormat.Jpeg;
 
             SetIptcMetadata(image, url, creationDate, title, description, credit, program, licensing);
 
@@ -567,7 +567,6 @@ namespace OutputBuilderClient
                 completeExifProfile = image.AddProfile;
             }
 
-
             MetadataOutput.SetCreationDate(creationDate, exifProfile);
 
             MetadataOutput.SetDescription(description, exifProfile);
@@ -585,8 +584,16 @@ namespace OutputBuilderClient
         private static void SetIptcMetadata(MagickImage image, string url, DateTime creationDate, string title,
                                             string description, string credit, string program, string licensing)
         {
-            IptcProfile iptcProfile = new IptcProfile();
-            Action<IptcProfile> completeIptcProfile = image.AddProfile;
+            Action<IptcProfile> completeIptcProfile = (p) => { };
+
+            IptcProfile iptcProfile = image.GetIptcProfile();
+            if (iptcProfile == null)
+            {
+                iptcProfile = new IptcProfile();
+
+                completeIptcProfile = image.AddProfile;
+            }
+            
 
             MetadataOutput.SetTitle(title, iptcProfile);
             MetadataOutput.SetDescription(description, iptcProfile);

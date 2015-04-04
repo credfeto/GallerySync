@@ -121,6 +121,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="ShortenerCount.cs" />
     <Compile Include="SupportedExtensionAttribute.cs" />
     <Compile Include="TemporaryFilesCleaner.cs" />
   </ItemGroup>

@@ -223,21 +223,20 @@ namespace OutputBuilderClient
                     if (targetPhoto != null)
                     {
                         shortUrl = targetPhoto.ShortUrl;
-                    }
 
-                    if (string.IsNullOrWhiteSpace(shortUrl) ||
-                        StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url) ||
-                        StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl))
-                    {
-                        shortUrl = BitlyUrlShortner.Shorten(new Uri(url)).ToString();
-                        rebuild = true;
-                        if (targetPhoto != null)
+                        if ( ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
                         {
-                            Console.WriteLine("-->> Rebuild Required - missing shortcut URL");
+                            shortUrl = TryGenerateShortUrl(documentStoreOutput, url);
+
+                            if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
+                            {
+                                rebuild = true;
+                                Console.WriteLine(" +++ Force rebuild: missing shortcut URL");                                
+                            }
                         }
                     }
 
-                    if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
+                    if (!string.IsNullOrWhiteSpace(shortUrl) && !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                     {
                         sourcePhoto.ShortUrl = shortUrl;
                     }
@@ -245,7 +244,6 @@ namespace OutputBuilderClient
                     {
                         shortUrl = Constants.DefaultShortUrl;
                     }
-
 
                     if (build || rebuild || rebuildMetadata)
                     {
@@ -267,6 +265,79 @@ namespace OutputBuilderClient
                 OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
                            exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
+            }
+        }
+
+        private static bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
+        {
+            // ONly want to generate a short URL, IF the photo has already been uploaded AND is public
+
+            if (sourcePhoto.UrlSafePath.StartsWith("private/", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return string.IsNullOrWhiteSpace(shortUrl) ||
+                   StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url) ||
+                   StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
+        }
+
+        private static string TryGenerateShortUrl(EmbeddableDocumentStore documentStoreOutput, string url)
+        {
+            using (IDocumentSession shortenerSession = documentStoreOutput.OpenSession())
+            {
+                const int maxImpressionsPerMonth = 3000;
+
+                const string tag = "BitlyShortenerStats";
+                DateTime now = DateTime.UtcNow;
+                var counter = shortenerSession.Load<ShortenerCount>(tag);
+                if (counter == null)
+                {
+                    counter = new ShortenerCount();
+
+                    counter.Year = now.Year;
+                    counter.Month = now.Month;
+                    counter.Impressions = 1;
+                    counter.TotalImpressionsEver = 1;
+
+                    if (counter.Year == 2015 && counter.Month == 4)
+                    {
+                        counter.Impressions = maxImpressionsPerMonth*10;
+                    }
+
+                    shortenerSession.Store(counter, tag);
+                    shortenerSession.SaveChanges();
+                }
+                else
+                {
+                    if (counter.Year != now.Year || counter.Month != now.Month)
+                    {
+                        counter.Impressions = 0;
+
+                        if (counter.Year == 2015 && counter.Month == 4)
+                        {
+                            counter.Impressions = maxImpressionsPerMonth*10;
+                        }
+                    }
+
+                    if (counter.Impressions < maxImpressionsPerMonth)
+                    {
+                        ++counter.Impressions;
+                        ++counter.TotalImpressionsEver;
+
+                        shortenerSession.Store(counter, tag);
+                        shortenerSession.SaveChanges();
+                    }
+                }
+
+                if (counter.Impressions < maxImpressionsPerMonth)
+                {
+                    return BitlyUrlShortner.Shorten(new Uri(url)).ToString();
+                }
+                else
+                {
+                    return url;
+                }
             }
         }
 
