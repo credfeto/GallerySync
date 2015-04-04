@@ -24,11 +24,13 @@ namespace OutputBuilderClient
                         }
                         else
                         {
-                            sz = string.Format("1/{0}s", d);
+                            // sprintf_s(sz, len, "1/%ds", ExpRound(1.0 / d));
+                            sz = string.Format("1/{0}s", n);
                         }
                     }
                     else
                     {
+                        //sprintf_s(sz, len, "%ds", ExpRound(d));
                         sz = string.Format("{0}s", ExpRound(d));
                     }
                 }
@@ -36,10 +38,12 @@ namespace OutputBuilderClient
                 {
                     if (d < 1.0)
                     {
+                        // sprintf_s(sz, len, "1/%ds", Core::Round(1.0 / d));
                         sz = string.Format("1/{0}s", Round(1.0/d));
                     }
                     else
                     {
+                        //sprintf_s(sz, len, "%ds", Core::Round(d));
                         sz = string.Format("{0}s", Round(d));
                     }
                 }
@@ -93,12 +97,12 @@ namespace OutputBuilderClient
                 if (filmEquivalent != 0)
                 {
                     // sprintf_s(sz, len, "%.1fmm (%dmm film eq)", d, filmEquivalent);
-                    sz = string.Format("{0}mm ({1}mm film eq)", d, filmEquivalent);
+                    sz = string.Format("{0:0.#}mm ({1}mm film eq)", d, filmEquivalent);
                 }
                 else
                 {
                     //sprintf_s(sz, len, d < 1 ? "%.1fmm" : "%.0fmm", d);
-                    sz = string.Format(d < 1 ? "{0}mm" : "{0}mm", d);
+                    sz = string.Format(d < 1 ? "{0:0.#}mm" : "{0:0}mm", d);
                 }
             }
             else
@@ -121,7 +125,7 @@ namespace OutputBuilderClient
                 if (!double.IsInfinity(dd) && dd > 0)
                 {
                     //sprintf_s(sz, len, "f/%.01f", dd);
-                    sz = string.Format("f/{0}", dd);
+                    sz = string.Format("f/{0:0.0#}", dd);
                 }
             }
             else
@@ -136,7 +140,7 @@ namespace OutputBuilderClient
         {
             // sprintf_s(sz, len, "f/%.01f", d)
 
-            return string.Format("f/{0}", d);
+            return string.Format("f/{0:0.#}", d);
         }
     }
 }

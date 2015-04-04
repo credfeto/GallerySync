@@ -372,16 +372,120 @@ namespace OutputBuilderClient.Metadata
             {
                 if (string.IsNullOrWhiteSpace(lastValue) && !string.IsNullOrWhiteSpace(value))
                 {
-                    properties[loader.Name] = value;
+                    properties[loader.Name] = NormalizeValue( loader.Name, value );
                 }
             }
             else
             {
                 if (value != null)
                 {
-                    properties.Add(loader.Name, value);
+                    properties.Add(loader.Name, NormalizeValue(loader.Name, value));
                 }
             }
+        }
+
+        private static string NormalizeValue(string name, string value)
+        {
+            if ( StringComparer.InvariantCultureIgnoreCase.Equals(name , MetadataNames.FocalLength))
+            {
+                uint v1;
+                uint v2;
+                if (SplitParts(value, out v1, out v2))
+                {
+                    var d = MetadataNormalizationFunctions.ToReal(v1, v2);
+
+                    return MetadataFormatting.FormatFocalLength(d);
+                }
+            }
+
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.Aperture))
+            {
+                uint v1;
+                uint v2;
+                if (SplitParts(value, out v1, out v2))
+                {
+                    var d = MetadataNormalizationFunctions.ToReal(v1, v2);
+
+
+                    return MetadataFormatting.FormatFNumber(d);
+                }
+            }
+
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.ExposureTime))
+            {
+                uint v1;
+                uint v2;
+                if (SplitParts(value, out v1, out v2))
+                {
+                    var d = MetadataNormalizationFunctions.ToReal(v1, v2);
+
+                    return MetadataFormatting.FormatExposure(d);
+                }
+            }
+
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.Orientation))
+            {
+                int orientation;
+                if (int.TryParse(value, out orientation))
+                {
+                    // http://sylvana.net/jpegcrop/exif_orientation.html
+                    //  1        2       3      4         5            6           7          8
+
+                    //888888  888888      88  88      8888888888  88                  88  8888888888
+                    //88          88      88  88      88  88      88  88          88  88      88  88
+                    //8888      8888    8888  8888    88          8888888888  8888888888          88
+                    //88          88      88  88
+                    //88          88  888888  888888
+
+                    switch (orientation)
+                    {
+                        case 1:
+                            return "TopLeft";
+                        case 2:
+                            return "TopRight";
+                        case 3:
+                            return "BottomLeft";
+                        case 4:
+                            return "BottomRight";
+
+                        case 5:
+                            return "LeftTop";
+                        case 6:
+                            return "RightTop";
+                        case 7:
+                            return "LeftBottom";
+                        case 8:
+                            return "RightBottom";
+                    }
+                }
+            }
+
+
+            return value;
+        }
+
+        private static bool SplitParts(string value, out uint v1, out uint v2)
+        {
+            var split = value.Split('/');
+            if (split.Length != 2)
+            {
+                v1 = 0;
+                v2 = 0;
+                return false;
+            }
+
+            if (!uint.TryParse(split[0], out v1))
+            {
+                v2 = 0;
+                return false;
+            }
+
+            if (!uint.TryParse(split[1], out v2))
+            {                
+                return false;
+            }
+
+            return true;
         }
 
         #endregion

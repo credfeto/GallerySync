@@ -549,7 +549,12 @@ namespace OutputBuilderClient
 
         public static void AppendMetadata(List<PhotoMetadata> metadata, string name, DateTime value)
         {
-            AppendMetadata(metadata, name, value.ToString(CultureInfo.InvariantCulture));
+            AppendMetadata(metadata, name, FormatDate(value));
+        }
+
+        private static string FormatDate(DateTime value)
+        {
+            return value.ToString("s");
         }
 
         public static void AppendMetadata(List<PhotoMetadata> metadata, string name, int value)
