@@ -593,8 +593,29 @@ namespace OutputBuilderClient
 
                 completeIptcProfile = image.AddProfile;
             }
-            
 
+            try
+            {
+                SetIptcMetadataInternal(iptcProfile, url, creationDate, title, description, credit, program, licensing);
+            }
+            catch
+            {
+                // Ok some images are crap and don't like the normal way of setting metadata
+                iptcProfile = new IptcProfile();
+                completeIptcProfile = p =>
+                    {
+                        image.RemoveProfile(p.Name);
+                        image.AddProfile(p);
+                    };
+
+                SetIptcMetadataInternal(iptcProfile, url, creationDate, title, description, credit, program, licensing);
+            }
+
+            completeIptcProfile(iptcProfile);
+        }
+
+        private static void SetIptcMetadataInternal(IptcProfile iptcProfile, string url, DateTime creationDate, string title, string description, string credit, string program, string licensing)
+        {
             MetadataOutput.SetTitle(title, iptcProfile);
             MetadataOutput.SetDescription(description, iptcProfile);
             MetadataOutput.SetCopyright(iptcProfile, CopyrightDeclaration);
@@ -608,8 +629,6 @@ namespace OutputBuilderClient
             MetadataOutput.SetLicensing(iptcProfile, licensing);
 
             MetadataOutput.SetCreationDate(creationDate, iptcProfile);
-
-            completeIptcProfile(iptcProfile);
         }
 
 
