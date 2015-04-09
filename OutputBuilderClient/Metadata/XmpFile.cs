@@ -444,18 +444,17 @@ namespace OutputBuilderClient.Metadata
                         case 2:
                             return "TopRight";
                         case 3:
-                            return "BottomLeft";
-                        case 4:
                             return "BottomRight";
-
+                        case 4:                            
+                            return "BottomLeft";
                         case 5:
                             return "LeftTop";
                         case 6:
                             return "RightTop";
                         case 7:
-                            return "LeftBottom";
-                        case 8:
                             return "RightBottom";
+                        case 8:
+                            return "LeftBottom";
                     }
                 }
             }
