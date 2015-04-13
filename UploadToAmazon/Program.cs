@@ -64,16 +64,26 @@ namespace UploadToAmazon
                     {
                         continue;
                     }
+                    
 
                     Console.WriteLine("Uploading: {0}", fileToUpload.FileName);
                     try
                     {
                         string source = Path.Combine(sourceFolder, fileToUpload.FileName);
-                        string target = Path.Combine(outputFolder, fileToUpload.FileName);
-                        string targetDir = Path.GetDirectoryName(target);
-                        Directory.CreateDirectory(targetDir);
-                        File.Copy(source, target, true);
-                        fileToUpload.Completed = true;
+                        if (File.Exists(source))
+                        {
+
+                            string target = Path.Combine(outputFolder, fileToUpload.FileName);
+                            string targetDir = Path.GetDirectoryName(target);
+                            Directory.CreateDirectory(targetDir);
+                            File.Copy(source, target, true);
+                            fileToUpload.Completed = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("+++ Source file does not exist");
+                            fileToUpload.Completed = true;
+                        }
                     }
                     catch (Exception exception)
                     {
