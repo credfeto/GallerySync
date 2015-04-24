@@ -41,6 +41,9 @@ namespace UploadToAmazon
             string sourceFolder = Settings.Default.SourceImagesFolder;
             string outputFolder = Settings.Default.OutputFolder;
 
+            Console.WriteLine("Source: {0}", sourceFolder);
+            Console.WriteLine("Output: {0}", outputFolder);
+
             string dbInputFolder = Settings.Default.DatabaseInputFolder;
             bool restore = !Directory.Exists(dbInputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
 
@@ -81,7 +84,7 @@ namespace UploadToAmazon
                         }
                         else
                         {
-                            Console.WriteLine("+++ Warning: Source file does not exist");
+                            Console.WriteLine("+++ Warning: Source file does not exist: {0}", source);
                             fileToUpload.Completed = true;
                         }
                     }

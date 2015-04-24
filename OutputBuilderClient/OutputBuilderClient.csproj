@@ -95,6 +95,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbortProcessingException.cs" />
     <Compile Include="BitlyUrlShortner.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Extensions.cs" />

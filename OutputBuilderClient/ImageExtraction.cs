@@ -68,6 +68,7 @@ namespace OutputBuilderClient
                         using (MagickImage resized = ResizeImage(sourceBitmap, dimension))
                         {
                             ApplyWatermark(resized, shortUrl);
+
                             int quality =
                                 Settings.Default.JpegOutputQuality;
                             byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality, url, shortUrl,
@@ -84,6 +85,13 @@ namespace OutputBuilderClient
                                                                   IndividualResizeFileName(sourcePhoto, resized));
 
                             WriteImage(resizedFileName, resizedBytes, creationDate);
+
+                            if (!ImageHelpers.IsValidJpegImage(File.ReadAllBytes(resizedFileName)))
+                            {
+                                Console.WriteLine("Error: File {0} produced an invalid image", resizedFileName);
+
+                                throw new AbortProcessingException(string.Format("File {0} produced an invalid image", filename));
+                            }
 
                             filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
                                              IndividualResizeFileName(sourcePhoto, resized));

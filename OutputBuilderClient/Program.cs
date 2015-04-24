@@ -224,19 +224,20 @@ namespace OutputBuilderClient
                     {
                         shortUrl = targetPhoto.ShortUrl;
 
-                        if ( ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
+                        if (ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
                         {
                             shortUrl = TryGenerateShortUrl(documentStoreOutput, url);
 
                             if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                             {
                                 rebuild = true;
-                                Console.WriteLine(" +++ Force rebuild: missing shortcut URL");                                
+                                Console.WriteLine(" +++ Force rebuild: missing shortcut URL");
                             }
                         }
                     }
 
-                    if (!string.IsNullOrWhiteSpace(shortUrl) && !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
+                    if (!string.IsNullOrWhiteSpace(shortUrl) &&
+                        !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                     {
                         sourcePhoto.ShortUrl = shortUrl;
                     }
@@ -259,6 +260,13 @@ namespace OutputBuilderClient
                 {
                     items.Add(sourcePhoto.PathHash);
                 }
+            }
+            catch (AbortProcessingException exception)
+            {
+                OutputText("ERROR: Aborting at image {0} due to exception {1}", sourcePhoto.UrlSafePath,
+                           exception.Message);
+                OutputText("Stack Trace: {0}", exception.StackTrace);
+                throw;
             }
             catch (Exception exception)
             {
@@ -379,10 +387,10 @@ namespace OutputBuilderClient
                         return true;
                     }
                 }
-                catch
+                catch( Exception exception)
                 {
-                    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt", resize.Width,
-                                      resize.Height);
+                    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt - Exception: {2}", resize.Width,
+                                      resize.Height, exception.Message);
                     return true;
                 }
 
