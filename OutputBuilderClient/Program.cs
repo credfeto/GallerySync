@@ -157,7 +157,7 @@ namespace OutputBuilderClient
         {
             using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
             {
-                foreach (Photo sourcePhoto in outputSession.GetAll<Photo>().AsParallel())
+                foreach (Photo sourcePhoto in outputSession.GetAll<Photo>())
                 {
                     if (liveItems.Contains(sourcePhoto.PathHash))
                     {
@@ -195,7 +195,7 @@ namespace OutputBuilderClient
             {
                 var items = new HashSet<string>();
 
-                foreach (Photo sourcePhoto in inputSession.GetAll<Photo>().AsParallel())
+                foreach (Photo sourcePhoto in inputSession.GetAll<Photo>())
                 {
                     ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
                 }
