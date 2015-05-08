@@ -67,6 +67,10 @@ namespace OutputBuilderClient
                     {
                         using (MagickImage resized = ResizeImage(sourceBitmap, dimension))
                         {
+                            string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
+                                                                  HashNaming.PathifyHash(sourcePhoto.PathHash),
+                                                                  IndividualResizeFileName(sourcePhoto, resized));
+
                             ApplyWatermark(resized, shortUrl);
 
                             int quality =
@@ -75,18 +79,16 @@ namespace OutputBuilderClient
                                                                        sourcePhoto.BasePath, sourcePhoto.Metadata,
                                                                        creationDate);
 
-                            if (!ImageHelpers.IsValidJpegImage(resizedBytes))
+                            if (!ImageHelpers.IsValidJpegImage(resizedBytes, "In memory image to be saved as: " + resizedFileName ))
                             {
                                 throw new Exception(string.Format("File {0} produced an invalid image", filename));
                             }
 
-                            string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
-                                                                  HashNaming.PathifyHash(sourcePhoto.PathHash),
-                                                                  IndividualResizeFileName(sourcePhoto, resized));
+                            
 
                             WriteImage(resizedFileName, resizedBytes, creationDate);
 
-                            if (!ImageHelpers.IsValidJpegImage(File.ReadAllBytes(resizedFileName)))
+                            if (!ImageHelpers.IsValidJpegImage(File.ReadAllBytes(resizedFileName), "Saved resize image: " + resizedFileName))
                             {
                                 Console.WriteLine("Error: File {0} produced an invalid image", resizedFileName);
 

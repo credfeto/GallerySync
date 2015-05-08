@@ -46,7 +46,7 @@ namespace OutputBuilderClient
             }
         }
 
-        public static bool IsValidJpegImage(byte[] bytes)
+        public static bool IsValidJpegImage(byte[] bytes, string context)
         {
             try
             {
@@ -54,6 +54,7 @@ namespace OutputBuilderClient
                 {
                     image.Warning += (sender, e) =>
                         {
+                            Console.WriteLine("Image Validate Error: {0}", context);
                             Console.WriteLine("Image Validate Error: {0}", e.Message);
                             throw e.Exception;
                         };
@@ -65,6 +66,7 @@ namespace OutputBuilderClient
             }
             catch (MagickException exception)
             {
+                Console.WriteLine("Error: {0}", context);
                 Console.WriteLine("Error: {0}", exception);
                 return false;
             }

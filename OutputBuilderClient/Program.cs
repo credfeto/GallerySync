@@ -207,6 +207,8 @@ namespace OutputBuilderClient
         private static void ProcessSinglePhoto(EmbeddableDocumentStore documentStoreOutput, Photo sourcePhoto,
                                                HashSet<string> items)
         {
+            ForceGarbageCollection();
+
             try
             {
                 using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
@@ -231,7 +233,7 @@ namespace OutputBuilderClient
                             if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                             {
                                 rebuild = true;
-                                Console.WriteLine(" +++ Force rebuild: missing shortcut URL");
+                                Console.WriteLine(" +++ Force rebuild: missing shortcut URL.  New short url: {0}", shortUrl);
                             }
                         }
                     }
@@ -274,6 +276,11 @@ namespace OutputBuilderClient
                            exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
             }
+        }
+
+        private static void ForceGarbageCollection()
+        {
+            GC.GetTotalMemory(true);
         }
 
         private static bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
@@ -380,7 +387,7 @@ namespace OutputBuilderClient
                 {
                     byte[] bytes = File.ReadAllBytes(resizedFileName);
 
-                    if (!ImageHelpers.IsValidJpegImage(bytes))
+                    if (!ImageHelpers.IsValidJpegImage(bytes, "Existing: " + resizedFileName))
                     {
                         Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,
                                           resize.Height);
