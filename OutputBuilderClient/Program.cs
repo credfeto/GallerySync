@@ -383,23 +383,24 @@ namespace OutputBuilderClient
                     return true;
                 }
 
-                try
-                {
-                    byte[] bytes = File.ReadAllBytes(resizedFileName);
+                // Moving this to a separate program
+                //try
+                //{
+                //    byte[] bytes = File.ReadAllBytes(resizedFileName);
 
-                    if (!ImageHelpers.IsValidJpegImage(bytes, "Existing: " + resizedFileName))
-                    {
-                        Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,
-                                          resize.Height);
-                        return true;
-                    }
-                }
-                catch( Exception exception)
-                {
-                    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt - Exception: {2}", resize.Width,
-                                      resize.Height, exception.Message);
-                    return true;
-                }
+                //    if (!ImageHelpers.IsValidJpegImage(bytes, "Existing: " + resizedFileName))
+                //    {
+                //        Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,
+                //                          resize.Height);
+                //        return true;
+                //    }
+                //}
+                //catch( Exception exception)
+                //{
+                //    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt - Exception: {2}", resize.Width,
+                //                      resize.Height, exception.Message);
+                //    return true;
+                //}
 
                 if (resize.Width == Settings.Default.ThumbnailSize)
                 {
