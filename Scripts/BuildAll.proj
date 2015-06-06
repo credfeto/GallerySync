@@ -12,7 +12,7 @@
 
 	<Target Name="PackageExecutables" DependsOnTargets="BuildSource">
     <PropertyGroup>
-      <ZipExecutable>$(MSBuildProjectDirectory)\..\BuildHelpers\zip.exe</ZipExecutable>
+      <ZipExecutable>zip.exe</ZipExecutable>
       <OutputZip>$(MSBuildProjectDirectory)\..\Gallery.zip</OutputZip>
       <SharedFolder>E:\Shared</SharedFolder>
     </PropertyGroup>

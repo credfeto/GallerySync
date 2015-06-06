@@ -1092,7 +1092,7 @@ namespace BuildSiteIndex
                     {
                         Path = "/",
                         OriginalAlbumPath = null,
-                        Title = "Mark's Photos",
+                        Title = "Mark Ridgwell Photography",
                         Description = "Photos taken by Mark Ridgwell.",
                         Location = null,
                         Children = new List<GalleryEntry>(),
