@@ -76,6 +76,14 @@ namespace BuildSiteIndex
                     
                     PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(greenwich-tall-ships-festival)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                     Description = ""
+                },
+
+            new EventDesc
+                {
+                    Name = "Rock School - Lets Rock The Park",
+                    
+                    PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(rock-school-lets-rock-the-park)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                    Description = ""
                 }
         };
 
