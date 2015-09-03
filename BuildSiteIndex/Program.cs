@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using BuildSiteIndex.Properties;
 using FileNaming;
 using Newtonsoft.Json;
@@ -28,8 +29,55 @@ namespace BuildSiteIndex
         private const string KeywordsRoot = "keywords";
         private const string KeywordsTitle = "Keywords";
 
+        private const string EventsRoot = "events";
+        private const string EventsTitle = "Events";
+
         private const int GalleryJsonVersion = 1;
         private static int _maxDailyUploads = 5000;
+
+        private class EventDesc
+        {
+            public string Name { get; set; }
+            // /albums/2004/2004-02-01-wadesmill
+            public Regex PathMatch { get; set; }
+            public string Description { get; set; }
+        }
+
+        private static EventDesc[] _events = new []
+        
+        {
+            new EventDesc
+                {
+                    Name = "Linkfest",
+                    
+                    PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(linkfest-harlow)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                    Description = "[Linkfest](http://www.linkfestharlow.co.uk/), a free music festival in Harlow Town Park at the bandstand."
+                },
+
+            new EventDesc
+                {
+                    Name = "Barleylands - Essex Country Show",
+                    
+                    PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(barleylands-essex-country-show)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                    Description = "[Essex Country show](http://www.barleylands.co.uk/essex-country-show) at Barleylands, Billericay."
+                },
+
+            new EventDesc
+                {
+                    Name = "Moreton Boxing Day Tug Of War",
+                    
+                    PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(moreton-boxing-day-tug-of-war)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                    Description = "The annual tug-of war over the Cripsey Brook at Moreton, Essex."
+                },
+
+            new EventDesc
+                {
+                    Name = "Greenwich Tall Ships Festival",
+                    
+                    PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(greenwich-tall-ships-festival)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                    Description = ""
+                }
+        };
 
         private static readonly object EntryLock = new object();
 
@@ -145,6 +193,8 @@ namespace BuildSiteIndex
             Console.WriteLine("Found {0} items total", contents.Count);
             Console.WriteLine("Found {0} keyword items total", keywords.Count);
 
+            BuildEvents(contents);
+
             BuildGalleryItemsForKeywords(keywords, contents);
 
             AddCoordinatesFromChildren(contents);
@@ -153,6 +203,89 @@ namespace BuildSiteIndex
             UploadQueuedItems(documentStoreInput);
 
             documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
+        }
+
+        private static void BuildEvents(Dictionary<string, GalleryEntry> contents)
+        {
+            foreach (var folder in contents.Values.Where( HasPhotoChildren ).ToList())
+            {
+                if (IsUnderHiddenItem(folder.Path))
+                {
+                    continue;
+                }
+
+                EventDesc found = null;
+                foreach (var eventEntry in _events)
+                {
+                    if (eventEntry.PathMatch.IsMatch(folder.Path))
+                    {
+                        found = eventEntry;
+                        break;
+                    }
+                }
+                
+                if (found != null)
+                {
+                    Console.WriteLine("Found {0} in {1}", found.Name, folder.Path);
+
+                    var pathMatch = found.PathMatch.Match(folder.Path);                    
+
+                    var year = pathMatch.Groups[2];
+                    var month = pathMatch.Groups[3];
+                    var day = pathMatch.Groups[4];
+                    var title = pathMatch.Groups[5];
+
+                    var pathStart = pathMatch.Groups[0];
+
+                    var pathRest = folder.Path.Substring(pathStart.Length).Trim().TrimEnd(new[] {'/'});
+
+                    foreach (var sourcePhoto in folder.Children.Where(IsImage))
+                    {
+                        string path =
+                            EnsureTerminatedPath(
+                            UrlNaming.BuildUrlSafePath(
+                            "/" + EventsRoot + "/" + found.Name + "/" +
+                                                 year + "/" +
+                                                 year + "-" + month +"-" + day+"-" + pathRest + "/" +
+                                                 sourcePhoto.Title));
+                        string breadcrumbs =
+                            EnsureTerminatedBreadcrumbs("\\" + EventsTitle + "\\" + found.Name + "\\" + year + "\\" +
+                                                        folder.Title +"\\" + sourcePhoto.Title);
+
+
+                        string[] pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
+                        string[] breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+
+                        EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
+
+                        string parentLevel =
+                            EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
+
+                        Console.WriteLine("Item: {0}", path);
+
+                        AppendVirtualEntryPhotoForGalleryEntry(contents, parentLevel, path, sourcePhoto.Path,
+                                           sourcePhoto.Title,
+                                           sourcePhoto);
+                    }
+
+                }
+            }
+        }
+
+        private static bool HasChildren(GalleryEntry item)
+        {
+            return item.Children != null && item.Children.Any();
+        }
+
+        private static bool HasPhotoChildren(GalleryEntry item)
+        {
+            return HasChildren(item) &&
+                   item.Children.Any(IsImage);
+        }
+
+        private static bool IsImage(GalleryEntry candiate)
+        {
+            return candiate.ImageSizes != null && candiate.ImageSizes.Any();
         }
 
         private static void UploadQueuedItems(EmbeddableDocumentStore documentStoreInput)
@@ -188,7 +321,7 @@ namespace BuildSiteIndex
             }
         }
 
-        [Conditional("DEBUG")]
+        [Conditional("SUPPORT_KEYWORDS")]
         private static void BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
                                                          Dictionary<string, GalleryEntry> contents)
         {
@@ -903,6 +1036,41 @@ namespace BuildSiteIndex
                     DateCreated = dateCreated,
                     DateUpdated = dateUpdated
                 });
+        }
+
+        private static void AppendVirtualEntryPhotoForGalleryEntry(Dictionary<string, GalleryEntry> contents, string parentLevel,
+                                               string path, string originalPath,
+                                               string title, GalleryEntry sourcePhoto)
+        {
+            DateTime dateCreated = sourcePhoto.DateCreated;
+            DateTime dateUpdated = sourcePhoto.DateUpdated;
+
+            string description = sourcePhoto.Description;
+
+            Location location = sourcePhoto.Location;
+
+            int rating = sourcePhoto.Rating;
+
+            List<string> keywords = sourcePhoto.Keywords;
+
+            AppendEntry(contents, parentLevel, path, new GalleryEntry
+            {
+                Path = path,
+                OriginalAlbumPath = originalPath,
+                Title = title,
+                Description = description,
+                Children = new List<GalleryEntry>(),
+                Location = location,
+                ImageSizes = sourcePhoto.ImageSizes,
+                Rating = rating,
+                Metadata =
+                    sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                               .OrderBy(item => item.Name.ToLowerInvariant())
+                               .ToList(),
+                Keywords = keywords,
+                DateCreated = dateCreated,
+                DateUpdated = dateUpdated
+            });
         }
 
         private static List<string> ExtractKeywords(Photo sourcePhoto)
