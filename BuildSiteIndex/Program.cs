@@ -27,6 +27,7 @@ namespace BuildSiteIndex
 
         private const string KeywordsRoot = "keywords";
         private const string KeywordsTitle = "Keywords";
+
         private const int GalleryJsonVersion = 1;
         private static int _maxDailyUploads = 5000;
 
@@ -187,6 +188,7 @@ namespace BuildSiteIndex
             }
         }
 
+        [Conditional("DEBUG")]
         private static void BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
                                                          Dictionary<string, GalleryEntry> contents)
         {
