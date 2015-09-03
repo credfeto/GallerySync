@@ -338,7 +338,7 @@ namespace BuildSiteIndex
             }
         }
 
-        [Conditional("SUPPORT_KEYWORDS")]
+        //[Conditional("SUPPORT_KEYWORDS")]
         private static void BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
                                                          Dictionary<string, GalleryEntry> contents)
         {
