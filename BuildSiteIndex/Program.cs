@@ -251,18 +251,24 @@ namespace BuildSiteIndex
                         pathRest = title.ToString().Trim();
                     }
 
+                    var date = year + "-" + month + "-" + day;
+                    var titleDate = (date + " MTR" ).ReformatTitle(DateFormat.LongDate).Replace(" - MTR", string.Empty);
+
+
                     foreach (var sourcePhoto in folder.Children.Where(IsImage))
                     {
                         string path =
                             EnsureTerminatedPath(
-                            UrlNaming.BuildUrlSafePath(
-                            "/" + EventsRoot + "/" + found.Name + "/" +
-                                                 year + "/" +
-                                                 year + "-" + month +"-" + day+"-" + pathRest + "/" +
-                                                 sourcePhoto.Title));
+                                UrlNaming.BuildUrlSafePath(
+                                    "/" + EventsRoot + "/" + found.Name + "/" +
+                                    year + "/" + date + "/" +
+                                    pathRest + "/" +
+                                    sourcePhoto.Title));
                         string breadcrumbs =
                             EnsureTerminatedBreadcrumbs("\\" + EventsTitle + "\\" + found.Name + "\\" + year + "\\" +
-                                                        folder.Title +"\\" + sourcePhoto.Title);
+                                                        titleDate + "\\" +
+                                                        folder.Title.Replace(titleDate + " - ", string.Empty) + "\\" +
+                                                        sourcePhoto.Title);
 
 
                         string[] pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
