@@ -215,7 +215,7 @@ namespace BuildSiteIndex
 
         private static void BuildEvents(Dictionary<string, GalleryEntry> contents)
         {
-            foreach (var folder in contents.Values.Where( HasPhotoChildren ).ToList())
+            foreach (var folder in contents.Values.Where( UnderAlbumsFolder ).Where( HasPhotoChildren ).ToList())
             {
                 if (IsUnderHiddenItem(folder.Path))
                 {
@@ -246,6 +246,10 @@ namespace BuildSiteIndex
                     var pathStart = pathMatch.Groups[0];
 
                     var pathRest = folder.Path.Substring(pathStart.Length).Trim().TrimEnd(new[] {'/'});
+                    if (string.IsNullOrWhiteSpace(pathRest))
+                    {
+                        pathRest = title.ToString().Trim();
+                    }
 
                     foreach (var sourcePhoto in folder.Children.Where(IsImage))
                     {
@@ -289,6 +293,11 @@ namespace BuildSiteIndex
         {
             return HasChildren(item) &&
                    item.Children.Any(IsImage);
+        }
+
+        private static bool UnderAlbumsFolder(GalleryEntry item)
+        {
+            return item.Path.StartsWith("/albums/", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsImage(GalleryEntry candiate)
