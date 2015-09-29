@@ -414,6 +414,7 @@ namespace BuildSiteIndex
         {
             foreach (var keywordEntry in keywords.Where(entry => entry.Value.Photos.Count > MaxPhotosPerKeyword).ToList())
             {
+                Console.WriteLine("Removing over-sized probably generic keyword '{0}'", keywordEntry.Value.Keyword);
                 keywords.Remove(keywordEntry.Key);
             }
         }
