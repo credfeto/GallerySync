@@ -35,6 +35,8 @@ namespace BuildSiteIndex
         private const int GalleryJsonVersion = 1;
         private static int _maxDailyUploads = 5000;
 
+        private const int MaxPhotosPerKeyword = 1000;
+
         private class EventDesc
         {
             public string Name { get; set; }
@@ -348,6 +350,8 @@ namespace BuildSiteIndex
         private static void BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
                                                          Dictionary<string, GalleryEntry> contents)
         {
+            RemoveObeseKeywordEntries(keywords);
+
             foreach (KeywordEntry keyword in keywords.Values)
             {
                 foreach (Photo sourcePhoto in keyword.Photos)
@@ -403,6 +407,14 @@ namespace BuildSiteIndex
                                        title,
                                        sourcePhoto);
                 }
+            }
+        }
+
+        private static void RemoveObeseKeywordEntries(Dictionary<string, KeywordEntry> keywords)
+        {
+            foreach (var keywordEntry in keywords.Where(entry => entry.Value.Photos.Count > MaxPhotosPerKeyword).ToList())
+            {
+                keywords.Remove(keywordEntry.Key);
             }
         }
 
