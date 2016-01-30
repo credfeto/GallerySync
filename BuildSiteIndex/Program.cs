@@ -33,7 +33,7 @@ namespace BuildSiteIndex
         private const string EventsTitle = "Events";
 
         private const int GalleryJsonVersion = 1;
-        private static int _maxDailyUploads = 5000;
+        private static int _maxDailyUploads = 8000;
 
         private const int MaxPhotosPerKeyword = 1000;
 
@@ -319,31 +319,54 @@ namespace BuildSiteIndex
 
             using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
-                foreach (UploadQueueItem item in inputSession.GetAll<UploadQueueItem>())
+                // Only upload creates and updates.
+                foreach (UploadQueueItem item in inputSession.GetAll<UploadQueueItem>().Where( item => item.UploadType != UploadType.DeleteItem))
                 {
-                    ++itemsUploaded;
-                    if (itemsUploaded > _maxDailyUploads)
+                    if (PerformUpload(documentStoreInput, item, ref itemsUploaded))
                     {
-                        Console.WriteLine("********** REACHED MAX DailyUploads **********");
                         return;
                     }
+                }
 
-                    string key = BuildUploadQueueHash(item.Item);
-
-                    using (IDocumentSession updateSession = documentStoreInput.OpenSession())
+                // ONly do deletes IF there are slots left for uploading
+                if (itemsUploaded < _maxDailyUploads)
+                {
+                    foreach (UploadQueueItem item in inputSession.GetAll<UploadQueueItem>().Where(item => item.UploadType == UploadType.DeleteItem))
                     {
-                        var updateItem = updateSession.Load<UploadQueueItem>(key);
-                        if (updateItem != null)
+                        if (PerformUpload(documentStoreInput, item, ref itemsUploaded))
                         {
-                            if (UploadOneItem(updateItem))
-                            {
-                                updateSession.Delete(updateItem);
-                                updateSession.SaveChanges();
-                            }
+                            return;
                         }
                     }
                 }
             }
+        }
+
+        private static bool PerformUpload(EmbeddableDocumentStore documentStoreInput, UploadQueueItem item,
+            ref int itemsUploaded)
+        {
+            ++itemsUploaded;
+            if (itemsUploaded > _maxDailyUploads)
+            {
+                Console.WriteLine("********** REACHED MAX DailyUploads **********");
+                return true;
+            }
+
+            string key = BuildUploadQueueHash(item.Item);
+
+            using (IDocumentSession updateSession = documentStoreInput.OpenSession())
+            {
+                var updateItem = updateSession.Load<UploadQueueItem>(key);
+                if (updateItem != null)
+                {
+                    if (UploadOneItem(updateItem))
+                    {
+                        updateSession.Delete(updateItem);
+                        updateSession.SaveChanges();
+                    }
+                }
+            }
+            return false;
         }
 
         //[Conditional("SUPPORT_KEYWORDS")]
@@ -806,12 +829,15 @@ namespace BuildSiteIndex
                     Console.WriteLine("Uploading ({0}): {1}", MakeUploadTypeText(uploadType), progressText);
 
                     client.DefaultRequestHeaders.Accept.Add(
-                        new MediaTypeWithQualityHeaderValue("application/json"));
-
+                        new MediaTypeWithQualityHeaderValue("application/json; charset=UTF-8"));
+                    client.DefaultRequestHeaders.TransferEncoding.Add(
+                        new TransferCodingWithQualityHeaderValue("application/json; charset=UTF-8"));
+                    
 
                     var formatter = new JsonMediaTypeFormatter
                         {
                             SerializerSettings = {ContractResolver = new DefaultContractResolver()},
+                            SupportedEncodings = {Encoding.UTF8},
                             Indent = false
                         };
 

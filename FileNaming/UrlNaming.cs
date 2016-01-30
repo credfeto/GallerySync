@@ -83,6 +83,10 @@ namespace FileNaming
                     return 'l';
                 case 'Ł':
                     return 'L';
+                case 'ß':
+                    return 'B';
+                case 'ø':
+                    return 'o';
                 default:
                     return c;
             }
