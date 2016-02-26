@@ -829,10 +829,9 @@ namespace BuildSiteIndex
                     Console.WriteLine("Uploading ({0}): {1}", MakeUploadTypeText(uploadType), progressText);
 
                     client.DefaultRequestHeaders.Accept.Add(
-                        new MediaTypeWithQualityHeaderValue("application/json; charset=UTF-8"));
+                        new MediaTypeWithQualityHeaderValue("application/json"));
                     client.DefaultRequestHeaders.TransferEncoding.Add(
-                        new TransferCodingWithQualityHeaderValue("application/json; charset=UTF-8"));
-                    
+                        new TransferCodingWithQualityHeaderValue("application/json"));
 
                     var formatter = new JsonMediaTypeFormatter
                         {
