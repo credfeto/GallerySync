@@ -840,9 +840,7 @@ namespace BuildSiteIndex
                             Indent = false
                         };
 
-                    var content = new ObjectContent<GallerySiteIndex>(itemToPost, formatter);
-
-                    HttpResponseMessage response = client.PostAsync("tasks/sync", content).Result;
+                    HttpResponseMessage response = client.PostAsync("tasks/sync", itemToPost, formatter).Result;
                     Console.WriteLine("Status: {0}", response.StatusCode);
 
                     if (response.IsSuccessStatusCode)
