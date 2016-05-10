@@ -232,6 +232,8 @@ namespace OutputBuilderClient
 
                             if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                             {
+                                LogShortUrl(url, shortUrl);
+
                                 rebuild = true;
                                 Console.WriteLine(" +++ Force rebuild: missing shortcut URL.  New short url: {0}", shortUrl);
                             }
@@ -278,6 +280,18 @@ namespace OutputBuilderClient
             }
         }
 
+        private static void LogShortUrl(string url, string shortUrl)
+        {
+            var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
+
+            var text = new[]
+            {
+                string.Format("{0}\t{1}", url, shortUrl)
+            };
+
+            File.AppendAllLines(logPath, text);
+        }
+
         private static void ForceGarbageCollection()
         {
             GC.GetTotalMemory(true);
@@ -301,7 +315,7 @@ namespace OutputBuilderClient
         {
             using (IDocumentSession shortenerSession = documentStoreOutput.OpenSession())
             {
-                const int maxImpressionsPerMonth = 3000;
+                const int maxImpressionsPerMonth = 1000;
 
                 const string tag = "BitlyShortenerStats";
                 DateTime now = DateTime.UtcNow;
@@ -314,11 +328,6 @@ namespace OutputBuilderClient
                     counter.Month = now.Month;
                     counter.Impressions = 1;
                     counter.TotalImpressionsEver = 1;
-
-                    if (counter.Year == 2015 && counter.Month == 4)
-                    {
-                        counter.Impressions = maxImpressionsPerMonth*10;
-                    }
 
                     shortenerSession.Store(counter, tag);
                     shortenerSession.SaveChanges();
