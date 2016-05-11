@@ -18,6 +18,9 @@ namespace OutputBuilderClient
     {
         private static readonly object Lock = new object();
 
+        private static readonly object ShortUrlLock = new object();
+        private static readonly Dictionary< string, string > ShorternedUrls = new Dictionary<string, string>();
+
         private static int Main(string[] args)
         {
             Console.WriteLine("OutputBuilderClient");
@@ -26,6 +29,8 @@ namespace OutputBuilderClient
 
             if (args.Length == 1)
             {
+                LoadShortUrls();
+
                 try
                 {
                     ReadMetadata(args[0]);
@@ -42,6 +47,9 @@ namespace OutputBuilderClient
 
             try
             {
+
+                LoadShortUrls();
+
                 ProcessGallery();
 
                 return 0;
@@ -52,6 +60,42 @@ namespace OutputBuilderClient
                 OutputText("Stack Trace: {0}", exception.StackTrace);
                 return 1;
             }
+        }
+
+        private static void LoadShortUrls()
+        {
+            var logPath = Path.Combine(Settings.Default.ImagesOutputPath, @"ShortUrls.csv");
+
+            if (File.Exists(logPath))
+            {
+                Console.WriteLine("Loading Existing Short Urls:");
+                var lines = File.ReadAllLines(logPath);
+
+                foreach (var line in lines)
+                {
+                    if (!line.StartsWith(@"http://", StringComparison.OrdinalIgnoreCase)
+                        && !line.StartsWith(@"https://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var process = line.Trim().Split('\t');
+                    if (process.Length != 2)
+                    {
+                        continue;
+                    }
+
+                    if (!ShorternedUrls.ContainsKey(process[0]))
+                    {
+                        ShorternedUrls.Add(process[0], process[1]);
+                        Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
+                    }
+                }
+
+                Console.WriteLine("Total Known Short Urls: {0}", ShorternedUrls.Count);
+                Console.WriteLine();
+            }
+
         }
 
         private static void ReadMetadata(string filename)
@@ -221,7 +265,8 @@ namespace OutputBuilderClient
                                            MetadataVersionOutOfDate(targetPhoto);
 
                     string url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
-                    string shortUrl = string.Empty;
+                    string shortUrl;
+
                     if (targetPhoto != null)
                     {
                         shortUrl = targetPhoto.ShortUrl;
@@ -237,6 +282,13 @@ namespace OutputBuilderClient
                                 rebuild = true;
                                 Console.WriteLine(" +++ Force rebuild: missing shortcut URL.  New short url: {0}", shortUrl);
                             }
+                        }
+                    }
+                    else
+                    {
+                        if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+                        {
+                            Console.WriteLine("* Reusing existing short url: {0}", shortUrl);
                         }
                     }
 
@@ -282,6 +334,15 @@ namespace OutputBuilderClient
 
         private static void LogShortUrl(string url, string shortUrl)
         {
+            if (ShorternedUrls.ContainsKey(url))
+            {
+                return;
+            }
+
+            lock (ShortUrlLock)
+            {
+                ShorternedUrls.Add(url, shortUrl);
+            }
             var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
 
             var text = new[]
@@ -313,6 +374,12 @@ namespace OutputBuilderClient
 
         private static string TryGenerateShortUrl(EmbeddableDocumentStore documentStoreOutput, string url)
         {
+            string shortUrl;
+            if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+            {
+                return shortUrl;
+            }
+
             using (IDocumentSession shortenerSession = documentStoreOutput.OpenSession())
             {
                 const int maxImpressionsPerMonth = 1000;
