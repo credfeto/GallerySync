@@ -239,7 +239,7 @@ namespace OutputBuilderClient
             {
                 var items = new HashSet<string>();
 
-                foreach (Photo sourcePhoto in inputSession.GetAll<Photo>())
+                foreach (Photo sourcePhoto in inputSession.GetAll<Photo>().AsParallel())
                 {
                     ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
                 }

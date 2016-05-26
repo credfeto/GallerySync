@@ -552,7 +552,7 @@ namespace BuildSiteIndex
             string outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
 
             string json = JsonConvert.SerializeObject(data);
-            if (!_ignoreExisting || File.Exists(outputFilename))
+            if (!_ignoreExisting && File.Exists(outputFilename))
             {
                 Console.WriteLine("Previous Json file exists");
                 byte[] originalBytes = File.ReadAllBytes(outputFilename);
@@ -830,8 +830,6 @@ namespace BuildSiteIndex
 
                     client.DefaultRequestHeaders.Accept.Add(
                         new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.TransferEncoding.Add(
-                        new TransferCodingWithQualityHeaderValue("application/json"));
 
                     var formatter = new JsonMediaTypeFormatter
                         {
