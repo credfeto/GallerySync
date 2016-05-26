@@ -166,7 +166,8 @@ namespace OutputBuilderClient
 
             var documentStoreInput = new EmbeddableDocumentStore
                 {
-                    DataDirectory = dbInputFolder
+                    DataDirectory = dbInputFolder,
+                    RunInMemory = true
                 };
 
             documentStoreInput.Initialize();
@@ -180,8 +181,9 @@ namespace OutputBuilderClient
 
             var documentStoreOutput = new EmbeddableDocumentStore
                 {
-                    DataDirectory = dbOutputFolder
-                };
+                    DataDirectory = dbOutputFolder,
+                    RunInMemory = true
+            };
 
             documentStoreOutput.Initialize();
 

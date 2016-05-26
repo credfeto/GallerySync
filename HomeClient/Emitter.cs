@@ -16,6 +16,7 @@ namespace HomeClient
     {
         private readonly EmbeddableDocumentStore _documentStore;
 
+        [CLSCompliant(false)]
         public Emitter(EmbeddableDocumentStore documentStore)
         {
             _documentStore = documentStore;

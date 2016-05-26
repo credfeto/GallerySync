@@ -58,8 +58,9 @@ namespace HomeClient
 
             var documentStore = new EmbeddableDocumentStore
                 {
-                    DataDirectory = dbFolder
-                };
+                    DataDirectory = dbFolder,
+                    RunInMemory = true
+            };
 
             documentStore.Initialize();
 

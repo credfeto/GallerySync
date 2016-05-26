@@ -415,7 +415,7 @@ namespace OutputBuilderClient
         private static void ExtractXmpIsoSpeed(List<PhotoMetadata> metadata, ExifReader reader)
         {
             UInt16 isoSpeed;
-            if (reader.GetTagValue(ExifTags.ISOSpeedRatings, out isoSpeed))
+            if (reader.GetTagValue(ExifTags.PhotographicSensitivity, out isoSpeed))
             {
                 AppendMetadata(metadata, MetadataNames.ISOSpeed, isoSpeed);
             }

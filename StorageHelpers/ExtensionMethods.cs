@@ -5,7 +5,6 @@ using Raven.Abstractions.Data;
 using Raven.Abstractions.Smuggler;
 using Raven.Client;
 using Raven.Client.Embedded;
-using Raven.Database.Smuggler;
 
 namespace StorageHelpers
 {
@@ -32,19 +31,19 @@ namespace StorageHelpers
 
         public static void Backup(this EmbeddableDocumentStore documentStore, string path)
         {
-            Directory.CreateDirectory(path);
+            //Directory.CreateDirectory(path);
 
-            string file = Path.Combine(path, "ravendb.backup");
-            RotateLastGenerations(file);
+            //string file = Path.Combine(path, "ravendb.backup");
+            //RotateLastGenerations(file);
 
-            var options = new SmugglerOptions
-                {
-                    BackupPath = file
-                };
+            //var options = new SmugglerOptions
+            //    {
+            //        BackupPath = file
+            //    };
 
-            var dumper = new DataDumper(documentStore.DocumentDatabase, options);
+            //var dumper = new DataDumper(documentStore.DocumentDatabase, options);
 
-            dumper.ExportData(null, options, false);
+            //dumper.ExportData(null, options, false);
         }
 
         public static void RotateLastGenerations(string file)
@@ -122,25 +121,25 @@ namespace StorageHelpers
 
         public static void Restore(this EmbeddableDocumentStore documentStore, string path)
         {
-            if (!Directory.Exists(path))
-            {
-                return;
-            }
+            //if (!Directory.Exists(path))
+            //{
+            //    return;
+            //}
 
-            string file = Path.Combine(path, "ravendb.backup");
-            if (!File.Exists(file))
-            {
-                return;
-            }
+            //string file = Path.Combine(path, "ravendb.backup");
+            //if (!File.Exists(file))
+            //{
+            //    return;
+            //}
 
-            var options = new SmugglerOptions
-                {
-                    BackupPath = file
-                };
+            //var options = new SmugglerOptions
+            //    {
+            //        BackupPath = file
+            //    };
 
-            var dumper = new DataDumper(documentStore.DocumentDatabase, options);
+            //var dumper = new DataDumper(documentStore.DocumentDatabase, options);
 
-            dumper.ImportData(options);
+            //dumper.ImportData(options);
         }
     }
 }

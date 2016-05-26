@@ -150,7 +150,8 @@ namespace BuildSiteIndex
 
             var documentStoreInput = new EmbeddableDocumentStore
                 {
-                    DataDirectory = dbInputFolder
+                    DataDirectory = dbInputFolder,
+                    RunInMemory = true
                 };
 
             documentStoreInput.Initialize();
