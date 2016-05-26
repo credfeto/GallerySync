@@ -41,5 +41,8 @@
     <Setting Name="ImagesOutputPath" Type="System.String" Scope="Application">
       <Value Profile="(Default)">\\nas-01.yggdrasil.local\GalleryUpload</Value>
     </Setting>
+    <Setting Name="LatestDatabaseBackupFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)">I:\Database\Backup\Latest</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

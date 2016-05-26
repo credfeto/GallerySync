@@ -139,5 +139,17 @@ namespace OutputBuilderClient.Properties {
                 return ((string)(this["ImagesOutputPath"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("I:\\Database\\Backup\\Latest")]
+        public string LatestDatabaseBackupFolder {
+            get {
+                return ((string)(this["LatestDatabaseBackupFolder"]));
+            }
+            set {
+                this["LatestDatabaseBackupFolder"] = value;
+            }
+        }
     }
 }

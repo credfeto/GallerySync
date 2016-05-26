@@ -50,7 +50,7 @@ namespace UploadToAmazon
             var documentStoreInput = new EmbeddableDocumentStore
                 {
                     DataDirectory = dbInputFolder,
-                    RunInMemory = true
+                    RunInMemory = false
                 };
 
             documentStoreInput.Initialize();

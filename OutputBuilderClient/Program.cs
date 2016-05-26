@@ -162,15 +162,15 @@ namespace OutputBuilderClient
 
         private static void ProcessGallery()
         {
-            string dbInputFolder = Settings.Default.DatabaseInputFolder;
-
             var documentStoreInput = new EmbeddableDocumentStore
                 {
-                    DataDirectory = dbInputFolder,
                     RunInMemory = true
                 };
-
             documentStoreInput.Initialize();
+            if (!documentStoreInput.Restore(Settings.Default.LatestDatabaseBackupFolder))
+            {
+                return;
+            }
 
             string dbOutputFolder = Settings.Default.DatabaseOutputFolder;
             bool restore = !Directory.Exists(dbOutputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
@@ -182,7 +182,7 @@ namespace OutputBuilderClient
             var documentStoreOutput = new EmbeddableDocumentStore
                 {
                     DataDirectory = dbOutputFolder,
-                    RunInMemory = true
+                    RunInMemory = false
             };
 
             documentStoreOutput.Initialize();

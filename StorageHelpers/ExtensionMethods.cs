@@ -1,23 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Raven.Abstractions.Data;
-using Raven.Abstractions.Smuggler;
-using Raven.Client;
-using Raven.Client.Embedded;
-
-namespace StorageHelpers
+﻿namespace StorageHelpers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+
+    using Raven.Abstractions.Data;
+    using Raven.Abstractions.Smuggler;
+    using Raven.Client;
+    using Raven.Client.Embedded;
+    using Raven.Database.Smuggler;
+
     public static class ExtensionMethods
     {
+        public static void Backup(this EmbeddableDocumentStore documentStore, string path)
+        {
+            Directory.CreateDirectory(path);
+
+            string file = Path.Combine(path, "ravendb.backup");
+            RotateLastGenerations(file);
+
+            var options = new SmugglerDatabaseOptions();
+
+            var dumper = new DatabaseDataDumper(documentStore.DocumentDatabase, options);
+
+            var exportOptions = new SmugglerExportOptions<RavenConnectionStringOptions>() { ToFile = file };
+
+            dumper.ExportData(exportOptions);
+        }
+
         public static IEnumerable<TObjectType> GetAll<TObjectType>(this IDocumentSession session)
             where TObjectType : class
         {
             using (
-                IEnumerator<StreamResult<object>> enumerator =
-                    session.Advanced.Stream<object>(fromEtag: Etag.Empty,
-                                                    start: 0,
-                                                    pageSize: Int32.MaxValue))
+                IEnumerator<StreamResult<object>> enumerator = session.Advanced.Stream<object>(
+                    fromEtag: Etag.Empty,
+                    start: 0,
+                    pageSize: int.MaxValue))
                 while (enumerator.MoveNext())
                 {
                     var file = enumerator.Current.Document as TObjectType;
@@ -28,22 +46,27 @@ namespace StorageHelpers
                 }
         }
 
-
-        public static void Backup(this EmbeddableDocumentStore documentStore, string path)
+        public static bool Restore(this EmbeddableDocumentStore documentStore, string path)
         {
-            //Directory.CreateDirectory(path);
+            if (!Directory.Exists(path))
+            {
+                return false;
+            }
 
-            //string file = Path.Combine(path, "ravendb.backup");
-            //RotateLastGenerations(file);
+            string file = Path.Combine(path, "ravendb.backup");
+            if (!File.Exists(file))
+            {
+                return false;
+            }
 
-            //var options = new SmugglerOptions
-            //    {
-            //        BackupPath = file
-            //    };
+            var options = new SmugglerDatabaseOptions();
 
-            //var dumper = new DataDumper(documentStore.DocumentDatabase, options);
+            var dumper = new DatabaseDataDumper(documentStore.DocumentDatabase, options);
 
-            //dumper.ExportData(null, options, false);
+            var importOptions = new SmugglerImportOptions<RavenConnectionStringOptions>() { FromFile = file };
+            dumper.ImportData(importOptions);
+
+            return true;
         }
 
         public static void RotateLastGenerations(string file)
@@ -69,19 +92,6 @@ namespace StorageHelpers
             }
         }
 
-        private static void RotateWithRetry(string current, string previous)
-        {
-            const int maxRetries = 5;
-
-            for (int retry = 0; retry < maxRetries; ++retry)
-            {
-                if (Rotate(current, previous))
-                {
-                    return;
-                }
-            }
-        }
-
         private static bool Rotate(string current, string previous)
         {
             Console.WriteLine("Moving {0} to {1}", current, previous);
@@ -104,6 +114,19 @@ namespace StorageHelpers
             }
         }
 
+        private static void RotateWithRetry(string current, string previous)
+        {
+            const int maxRetries = 5;
+
+            for (int retry = 0; retry < maxRetries; ++retry)
+            {
+                if (Rotate(current, previous))
+                {
+                    return;
+                }
+            }
+        }
+
         private static bool SlowMove(string current, string previous)
         {
             try
@@ -117,29 +140,6 @@ namespace StorageHelpers
                 Console.WriteLine("ERROR: Failed to move file (SLOW): {0}", exception.Message);
                 return false;
             }
-        }
-
-        public static void Restore(this EmbeddableDocumentStore documentStore, string path)
-        {
-            //if (!Directory.Exists(path))
-            //{
-            //    return;
-            //}
-
-            //string file = Path.Combine(path, "ravendb.backup");
-            //if (!File.Exists(file))
-            //{
-            //    return;
-            //}
-
-            //var options = new SmugglerOptions
-            //    {
-            //        BackupPath = file
-            //    };
-
-            //var dumper = new DataDumper(documentStore.DocumentDatabase, options);
-
-            //dumper.ImportData(options);
         }
     }
 }
