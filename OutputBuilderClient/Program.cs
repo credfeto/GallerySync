@@ -384,9 +384,9 @@ namespace OutputBuilderClient
 
             using (IDocumentSession shortenerSession = documentStoreOutput.OpenSession())
             {
-                const int maxImpressionsPerMonth = 1000;
+                const int maxImpressionsPerMonth = 100;
 
-                const string tag = "BitlyShortenerStats";
+                const string tag = @"BitlyShortenerStats";
                 DateTime now = DateTime.UtcNow;
                 var counter = shortenerSession.Load<ShortenerCount>(tag);
                 if (counter == null)
@@ -415,6 +415,8 @@ namespace OutputBuilderClient
 
                     if (counter.Impressions < maxImpressionsPerMonth)
                     {
+                        Console.WriteLine("Bitly Impressions for {0:M}", counter.Impressions);
+                        Console.WriteLine("Bitly Impressions total {0:M}", counter.TotalImpressionsEver);
                         ++counter.Impressions;
                         ++counter.TotalImpressionsEver;
 
