@@ -6,32 +6,21 @@
 //   The item loader base.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Xml;
-
-#endregion
-
 namespace OutputBuilderClient.Metadata
 {
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Contracts;
+    using System.Xml;
+
     /// <summary>
     ///     The item loader base.
     /// </summary>
     internal abstract class ItemLoaderBase : IItemLoader
     {
-        #region Constants and Fields
-
         /// <summary>
         ///     The property.
         /// </summary>
         private readonly string _property;
-
-        #endregion
-
-        #region Constructors and Destructors
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ItemLoaderBase" /> class.
@@ -43,12 +32,8 @@ namespace OutputBuilderClient.Metadata
         {
             Contract.Requires(!string.IsNullOrEmpty(property));
 
-            _property = property;
+            this._property = property;
         }
-
-        #endregion
-
-        #region Properties
 
         /// <summary>
         ///     Gets the Name.
@@ -62,15 +47,9 @@ namespace OutputBuilderClient.Metadata
             {
                 Contract.Ensures(!string.IsNullOrEmpty(Contract.Result<string>()));
 
-                return _property;
+                return this._property;
             }
         }
-
-        #endregion
-
-        #region Implemented Interfaces
-
-        #region IItemLoader
 
         /// <summary>
         ///     Reads the value out of the specified document.
@@ -86,12 +65,6 @@ namespace OutputBuilderClient.Metadata
         /// </returns>
         public abstract string Read(XmlDocument document, XmlNamespaceManager nameManager);
 
-        #endregion
-
-        #endregion
-
-        #region Methods
-
         /// <summary>
         ///     The object invariant.
         /// </summary>
@@ -102,9 +75,7 @@ namespace OutputBuilderClient.Metadata
             Justification = "Invoked by Code Contracts")]
         private void ObjectInvariant()
         {
-            Contract.Invariant(!string.IsNullOrEmpty(_property));
+            Contract.Invariant(!string.IsNullOrEmpty(this._property));
         }
-
-        #endregion
     }
 }

@@ -1,35 +1,29 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="XmpFile.cs" company="Twaddle Software">
+// <copyright file="XmpAlphaleonis.Win32.Filesystem.File.cs" company="Twaddle Software">
 //   Copyright (c) Twaddle Software
 // </copyright>
 // <summary>
-//   The XMP file.
+//   The XMP Alphaleonis.Win32.Filesystem.File.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
-using System.Xml;
-using FileNaming;
-
-#endregion
-
 namespace OutputBuilderClient.Metadata
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
+    using System.Linq;
+    using System.Text;
+    using System.Xml;
+
+    using FileNaming;
+
     /// <summary>
-    ///     The XMP file.
+    ///     The XMP Alphaleonis.Win32.Filesystem.File.
     /// </summary>
     public static class XmpFile
     {
-        #region Public Methods
-
         /// <summary>
-        ///     Extracts the properties from the file.
+        ///     Extracts the properties from the Alphaleonis.Win32.Filesystem.File.
         /// </summary>
         /// <param name="fileName">
         ///     The filename.
@@ -80,8 +74,7 @@ namespace OutputBuilderClient.Metadata
         /// <returns>
         ///     True, if the property was written; false, otherwise.
         /// </returns>
-        public static bool SetProperty(
-            string fileName, string propertyName, string value)
+        public static bool SetProperty(string fileName, string propertyName, string value)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
             Contract.Requires(!string.IsNullOrEmpty(propertyName));
@@ -95,7 +88,8 @@ namespace OutputBuilderClient.Metadata
             if (StringComparer.InvariantCultureIgnoreCase.Equals(propertyName, MetadataNames.Keywords))
             {
                 var keywordLoader = new ElementItemListLoader(
-                    MetadataNames.Keywords, "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
+                    MetadataNames.Keywords,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
 
                 string existingRawKeywords = keywordLoader.Read(doc, nsmgr);
                 IEnumerable<string> existingKeywords = from record in existingRawKeywords.Split(';')
@@ -124,13 +118,13 @@ namespace OutputBuilderClient.Metadata
                 }
 
                 var xmlWriterSerttings = new XmlWriterSettings
-                    {
-                        OmitXmlDeclaration = true,
-                        Encoding = Encoding.UTF8,
-                        Indent = true,
-                        NewLineHandling = NewLineHandling.Entitize,
-                        NewLineOnAttributes = true
-                    };
+                                             {
+                                                 OmitXmlDeclaration = true,
+                                                 Encoding = Encoding.UTF8,
+                                                 Indent = true,
+                                                 NewLineHandling = NewLineHandling.Entitize,
+                                                 NewLineOnAttributes = true
+                                             };
 
                 using (XmlWriter w = XmlWriter.Create(fileName, xmlWriterSerttings))
                 {
@@ -141,10 +135,6 @@ namespace OutputBuilderClient.Metadata
 
             return false;
         }
-
-        #endregion
-
-        #region Methods
 
         /// <summary>
         ///     Creates the element.
@@ -161,8 +151,7 @@ namespace OutputBuilderClient.Metadata
         /// <returns>
         ///     The created element.
         /// </returns>
-        private static XmlElement CreateElement(
-            XmlDocument document, XmlNamespaceManager namespaceManager, string node)
+        private static XmlElement CreateElement(XmlDocument document, XmlNamespaceManager namespaceManager, string node)
         {
             Contract.Requires(document != null);
             Contract.Requires(namespaceManager != null);
@@ -191,8 +180,9 @@ namespace OutputBuilderClient.Metadata
             Contract.Ensures(Contract.Result<IEnumerable<IItemLoader>>() != null);
 
             yield return
-                new AttributeItemLoader(MetadataNames.CameraManufacturer,
-                                        "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Make");
+                new AttributeItemLoader(
+                    MetadataNames.CameraManufacturer,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Make");
             yield return
                 new ElementItemLoader(MetadataNames.CameraManufacturer, "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Make");
             yield return
@@ -200,57 +190,63 @@ namespace OutputBuilderClient.Metadata
             yield return
                 new ElementItemLoader(MetadataNames.CameraModel, "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Model");
             yield return
-                new AttributeItemLoader(MetadataNames.Orientation,
-                                        "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Orientation");
+                new AttributeItemLoader(
+                    MetadataNames.Orientation,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Orientation");
             yield return
-                new ElementItemLoader(MetadataNames.Orientation, "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Orientation")
-                ;
+                new ElementItemLoader(MetadataNames.Orientation, "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Orientation");
             yield return
-                new AttributeItemLoader(MetadataNames.ExposureTime,
-                                        "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:ExposureTime");
+                new AttributeItemLoader(
+                    MetadataNames.ExposureTime,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:ExposureTime");
             yield return
-                new ElementItemLoader(MetadataNames.ExposureTime, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ExposureTime")
-                ;
+                new ElementItemLoader(
+                    MetadataNames.ExposureTime,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ExposureTime");
             yield return
                 new AttributeItemLoader(MetadataNames.Aperture, "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FNumber");
             yield return
                 new ElementItemLoader(MetadataNames.Aperture, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FNumber");
             yield return
-                new AttributeItemLoader(MetadataNames.DateTaken,
-                                        "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:DateTimeOriginal");
+                new AttributeItemLoader(
+                    MetadataNames.DateTaken,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:DateTimeOriginal");
             yield return
-                new ElementItemLoader(MetadataNames.DateTaken,
-                                      "/x:xmpmeta/rdf:RDF/rdf:Description/exif:DateTimeOriginal");
+                new ElementItemLoader(
+                    MetadataNames.DateTaken,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/exif:DateTimeOriginal");
             yield return new AttributeItemLoader(MetadataNames.Rating, "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating")
                 ;
             yield return new ElementItemLoader(MetadataNames.Rating, "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
             yield return
-                new AttributeItemLoader(MetadataNames.FocalLength,
-                                        "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FocalLength");
+                new AttributeItemLoader(
+                    MetadataNames.FocalLength,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FocalLength");
             yield return
                 new ElementItemLoader(MetadataNames.FocalLength, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FocalLength");
+
             //yield return new AttributeItemLoader(MetadataNames.Lens, "/x:xmpmeta/rdf:RDF/rdf:Description/@aux:Lens");
             //yield return new ElementItemLoader(MetadataNames.Lens, "/x:xmpmeta/rdf:RDF/rdf:Description/aux:Lens");
-
             yield return
                 new AttributeItemLoader(MetadataNames.Latitude, "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLatitude");
             yield return
                 new ElementItemLoader(MetadataNames.Latitude, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLatitude");
 
-
             yield return
-                new AttributeItemLoader(MetadataNames.Longitude, "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLongitude")
-                ;
+                new AttributeItemLoader(
+                    MetadataNames.Longitude,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLongitude");
             yield return
                 new ElementItemLoader(MetadataNames.Longitude, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLongitude");
 
-
             yield return
                 new ElementItemLoader(
-                    MetadataNames.ISOSpeed, "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ISOSpeedRatings/rdf:Seq/rdf:li");
+                    MetadataNames.ISOSpeed,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ISOSpeedRatings/rdf:Seq/rdf:li");
             yield return
                 new ElementItemListLoader(
-                    MetadataNames.Keywords, "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
+                    MetadataNames.Keywords,
+                    "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
         }
 
         /// <summary>
@@ -285,108 +281,9 @@ namespace OutputBuilderClient.Metadata
             return nsmgr;
         }
 
-        /// <summary>
-        ///     Selects or creates a single node.
-        /// </summary>
-        /// <param name="document">
-        ///     The document.
-        /// </param>
-        /// <param name="namespaceManager">
-        ///     The namespace manager.
-        /// </param>
-        /// <param name="baseNode">
-        ///     The base node.
-        /// </param>
-        /// <param name="path">
-        ///     The path to the node.
-        /// </param>
-        /// <returns>
-        ///     The node to that path.
-        /// </returns>
-        private static XmlElement SelectOrCreateSingleNode(
-            XmlDocument document,
-            XmlNamespaceManager namespaceManager,
-            XmlNode baseNode,
-            string path)
-        {
-            Contract.Requires(document != null);
-            Contract.Requires(namespaceManager != null);
-            Contract.Requires(baseNode != null);
-            Contract.Requires(!string.IsNullOrEmpty(path));
-
-            XmlNode fullNode = baseNode.SelectSingleNode(path, namespaceManager);
-            if (fullNode != null)
-            {
-                return (XmlElement) fullNode;
-            }
-
-            string[] fragments = path.Split('/');
-
-            // find the most deep element that exists
-            int depth = 0;
-            while (depth < fragments.Length)
-            {
-                XmlNode found = baseNode.SelectSingleNode(fragments[depth], namespaceManager);
-                if (found == null)
-                {
-                    break;
-                }
-
-                ++depth;
-                baseNode = found;
-            }
-
-            // Create any nodes that need creating.
-            while (depth < fragments.Length)
-            {
-                string node = fragments[depth];
-                XmlElement newElement = CreateElement(document, namespaceManager, node);
-                baseNode.AppendChild(newElement);
-                baseNode = newElement;
-                ++depth;
-            }
-
-            return (XmlElement) baseNode;
-        }
-
-        /// <summary>
-        ///     Stores the value.
-        /// </summary>
-        /// <param name="loader">
-        ///     The loader.
-        /// </param>
-        /// <param name="properties">
-        ///     The properties.
-        /// </param>
-        /// <param name="value">
-        ///     The value.
-        /// </param>
-        private static void StoreValue(
-            IItemLoader loader, Dictionary<string, string> properties, string value)
-        {
-            Contract.Requires(loader != null);
-            Contract.Requires(properties != null);
-
-            string lastValue;
-            if (properties.TryGetValue(loader.Name, out lastValue))
-            {
-                if (string.IsNullOrWhiteSpace(lastValue) && !string.IsNullOrWhiteSpace(value))
-                {
-                    properties[loader.Name] = NormalizeValue( loader.Name, value );
-                }
-            }
-            else
-            {
-                if (value != null)
-                {
-                    properties.Add(loader.Name, NormalizeValue(loader.Name, value));
-                }
-            }
-        }
-
         private static string NormalizeValue(string name, string value)
         {
-            if ( StringComparer.InvariantCultureIgnoreCase.Equals(name , MetadataNames.FocalLength))
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.FocalLength))
             {
                 uint v1;
                 uint v2;
@@ -405,7 +302,6 @@ namespace OutputBuilderClient.Metadata
                 if (SplitParts(value, out v1, out v2))
                 {
                     var d = MetadataNormalizationFunctions.ToReal(v1, v2);
-
 
                     return MetadataFormatting.FormatFNumber(d);
                 }
@@ -436,7 +332,6 @@ namespace OutputBuilderClient.Metadata
                     //8888      8888    8888  8888    88          8888888888  8888888888          88
                     //88          88      88  88
                     //88          88  888888  888888
-
                     switch (orientation)
                     {
                         case 1:
@@ -445,7 +340,7 @@ namespace OutputBuilderClient.Metadata
                             return "TopRight";
                         case 3:
                             return "BottomRight";
-                        case 4:                            
+                        case 4:
                             return "BottomLeft";
                         case 5:
                             return "LeftTop";
@@ -459,8 +354,71 @@ namespace OutputBuilderClient.Metadata
                 }
             }
 
-
             return value;
+        }
+
+        /// <summary>
+        ///     Selects or creates a single node.
+        /// </summary>
+        /// <param name="document">
+        ///     The document.
+        /// </param>
+        /// <param name="namespaceManager">
+        ///     The namespace manager.
+        /// </param>
+        /// <param name="baseNode">
+        ///     The base node.
+        /// </param>
+        /// <param name="path">
+        ///     The path to the node.
+        /// </param>
+        /// <returns>
+        ///     The node to that Alphaleonis.Win32.Filesystem.Path.
+        /// </returns>
+        private static XmlElement SelectOrCreateSingleNode(
+            XmlDocument document,
+            XmlNamespaceManager namespaceManager,
+            XmlNode baseNode,
+            string path)
+        {
+            Contract.Requires(document != null);
+            Contract.Requires(namespaceManager != null);
+            Contract.Requires(baseNode != null);
+            Contract.Requires(!string.IsNullOrEmpty(path));
+
+            XmlNode fullNode = baseNode.SelectSingleNode(path, namespaceManager);
+            if (fullNode != null)
+            {
+                return (XmlElement)fullNode;
+            }
+
+            string[] fragments = path.Split('/');
+
+            // find the most deep element that exists
+            int depth = 0;
+            while (depth < fragments.Length)
+            {
+                XmlNode found = baseNode.SelectSingleNode(fragments[depth], namespaceManager);
+                if (found == null)
+                {
+                    break;
+                }
+
+                ++depth;
+                baseNode = found;
+            }
+
+            // Create any nodes that need creating.
+            while (depth < fragments.Length)
+            {
+                string node = fragments[depth];
+                XmlElement newElement = CreateElement(document, namespaceManager, node);
+                baseNode.AppendChild(newElement);
+                baseNode = newElement;
+                ++depth;
+            }
+
+            return (XmlElement)baseNode;
         }
 
         private static bool SplitParts(string value, out uint v1, out uint v2)
@@ -480,13 +438,45 @@ namespace OutputBuilderClient.Metadata
             }
 
             if (!uint.TryParse(split[1], out v2))
-            {                
+            {
                 return false;
             }
 
             return true;
         }
 
-        #endregion
+        /// <summary>
+        ///     Stores the value.
+        /// </summary>
+        /// <param name="loader">
+        ///     The loader.
+        /// </param>
+        /// <param name="properties">
+        ///     The properties.
+        /// </param>
+        /// <param name="value">
+        ///     The value.
+        /// </param>
+        private static void StoreValue(IItemLoader loader, Dictionary<string, string> properties, string value)
+        {
+            Contract.Requires(loader != null);
+            Contract.Requires(properties != null);
+
+            string lastValue;
+            if (properties.TryGetValue(loader.Name, out lastValue))
+            {
+                if (string.IsNullOrWhiteSpace(lastValue) && !string.IsNullOrWhiteSpace(value))
+                {
+                    properties[loader.Name] = NormalizeValue(loader.Name, value);
+                }
+            }
+            else
+            {
+                if (value != null)
+                {
+                    properties.Add(loader.Name, NormalizeValue(loader.Name, value));
+                }
+            }
+        }
     }
 }

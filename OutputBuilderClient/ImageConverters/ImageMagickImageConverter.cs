@@ -6,17 +6,12 @@
 //   Image converter that uses ImageMagick.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System;
-using GraphicsMagick;
-using TagLib.Matroska;
-
-#endregion
-
 namespace OutputBuilderClient.ImageConverters
 {
+    using System;
+
+    using GraphicsMagick;
+
     /// <summary>
     ///     Image converter that uses ImageMagick.
     /// </summary>
@@ -32,10 +27,6 @@ namespace OutputBuilderClient.ImageConverters
     [SupportedExtension("bmp")]
     internal class ImageMagickImageConverter : IImageConverter
     {
-        #region Implemented Interfaces
-
-        #region IImageConverter
-
         public MagickImage LoadImage(string fileName)
         {
             MagickImage image = null;
@@ -64,9 +55,5 @@ namespace OutputBuilderClient.ImageConverters
                 throw;
             }
         }
-
-        #endregion
-
-        #endregion
     }
 }

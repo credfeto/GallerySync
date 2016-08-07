@@ -6,32 +6,21 @@
 //   The attribute item loader.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Xml;
-
-#endregion
-
 namespace OutputBuilderClient.Metadata
 {
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Contracts;
+    using System.Xml;
+
     /// <summary>
     ///     The attribute item loader.
     /// </summary>
     internal sealed class AttributeItemLoader : ItemLoaderBase
     {
-        #region Constants and Fields
-
         /// <summary>
         ///     The path to item.
         /// </summary>
         private readonly string _pathToItem;
-
-        #endregion
-
-        #region Constructors and Destructors
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="AttributeItemLoader" /> class.
@@ -44,12 +33,8 @@ namespace OutputBuilderClient.Metadata
             Contract.Requires(!string.IsNullOrEmpty(property));
             Contract.Requires(!string.IsNullOrEmpty(pathToItem));
 
-            _pathToItem = pathToItem;
+            this._pathToItem = pathToItem;
         }
-
-        #endregion
-
-        #region Public Methods
 
         /// <summary>
         ///     Reads the value out of the specified document.
@@ -68,7 +53,7 @@ namespace OutputBuilderClient.Metadata
             Contract.Requires(document != null);
             Contract.Requires(nameSpaceManager != null);
 
-            var imageNode = document.SelectSingleNode(_pathToItem, nameSpaceManager) as XmlAttribute;
+            var imageNode = document.SelectSingleNode(this._pathToItem, nameSpaceManager) as XmlAttribute;
             if (imageNode == null)
             {
                 return string.Empty;
@@ -76,10 +61,6 @@ namespace OutputBuilderClient.Metadata
 
             return imageNode.Value;
         }
-
-        #endregion
-
-        #region Methods
 
         /// <summary>
         ///     The object invariant.
@@ -91,9 +72,7 @@ namespace OutputBuilderClient.Metadata
             Justification = "Invoked by Code Contracts")]
         private void ObjectInvariant()
         {
-            Contract.Invariant(!string.IsNullOrEmpty(_pathToItem));
+            Contract.Invariant(!string.IsNullOrEmpty(this._pathToItem));
         }
-
-        #endregion
     }
 }

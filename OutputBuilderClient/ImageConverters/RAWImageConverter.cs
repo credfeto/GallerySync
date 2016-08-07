@@ -6,22 +6,19 @@
 //   Image converter that uses DCRAW.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Globalization;
-using System.IO;
-using GraphicsMagick;
-using OutputBuilderClient.Properties;
-
-#endregion
-
 namespace OutputBuilderClient.ImageConverters
 {
+    using System;
+    using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Contracts;
+    using System.Globalization;
+    using System.IO;
+
+    using GraphicsMagick;
+
+    using OutputBuilderClient.Properties;
+
     /// <summary>
     ///     Image converter that uses DCRAW.
     /// </summary>
@@ -43,16 +40,10 @@ namespace OutputBuilderClient.ImageConverters
     [SupportedExtension("x3f")]
     internal sealed class RawImageConverter : IImageConverter
     {
-        #region Constants and Fields
-
         /// <summary>
         ///     The Tiff converter.
         /// </summary>
         private static readonly IImageConverter TiffConverter = new ImageMagickImageConverter();
-
-        #endregion
-
-        #region Properties
 
         /// <summary>
         ///     Gets the DCRaw executable.
@@ -62,14 +53,11 @@ namespace OutputBuilderClient.ImageConverters
         /// </value>
         private static string DcRawExecutable
         {
-            get { return Settings.Default.DCRAWExecutable; }
+            get
+            {
+                return Settings.Default.DCRAWExecutable;
+            }
         }
-
-        #endregion
-
-        #region Implemented Interfaces
-
-        #region IImageConverter
 
         /// <summary>
         ///     Loads the image.
@@ -97,11 +85,79 @@ namespace OutputBuilderClient.ImageConverters
             return image;
         }
 
-        #endregion
+        /// <summary>
+        ///     Converts the bytes using image magick.
+        /// </summary>
+        /// <param name="fileName">Name of the Alphaleonis.Win32.Filesystem.File.</param>
+        /// <param name="bytes">The TIFF bytes.</param>
+        /// <returns>
+        ///     The converted bitmap.
+        /// </returns>
+        private static MagickImage ConvertUsingImageMagick(string fileName, byte[] bytes)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(fileName));
+            Contract.Requires(bytes != null);
+            Contract.Requires(bytes.Length > 0);
 
-        #endregion
+            try
+            {
+                FileHelpers.WriteAllBytes(fileName, bytes);
 
-        #region Methods
+                return TiffConverter.LoadImage(fileName);
+            }
+            finally
+            {
+                try
+                {
+                    Alphaleonis.Win32.Filesystem.File.Delete(fileName);
+                }
+                catch (DirectoryNotFoundException)
+                {
+                }
+                catch (IOException)
+                {
+                }
+                catch (UnauthorizedAccessException)
+                {
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Creates the process.
+        /// </summary>
+        /// <param name="dcraw">
+        ///     The filename of the DCRAW executable.
+        /// </param>
+        /// <param name="fileName">
+        ///     Name of the Alphaleonis.Win32.Filesystem.File.
+        /// </param>
+        /// <returns>
+        ///     The process.
+        /// </returns>
+        private static Process CreateProcess(string dcraw, string fileName)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(dcraw));
+            Contract.Requires(!string.IsNullOrEmpty(fileName));
+
+            //string.Format(CultureInfo.InvariantCulture, "-6 -w -q 3 -c -T \"{0}\"", fileName),
+            return new Process
+                       {
+                           StartInfo =
+                               {
+                                   FileName = dcraw,
+                                   Arguments =
+                                       string.Format(
+                                           CultureInfo.InvariantCulture,
+                                           "-6 -w -q 3 -c -T \"{0}\"",
+                                           fileName),
+                                   UseShellExecute = false,
+                                   CreateNoWindow = true,
+                                   RedirectStandardOutput = true,
+                                   RedirectStandardError = true
+                               }
+                       };
+        }
 
         /// <summary>
         ///     Converts to tiff array.
@@ -153,82 +209,11 @@ namespace OutputBuilderClient.ImageConverters
                         {
                             image.Dispose();
                         }
+
                         throw;
                     }
                 }
             }
-        }
-
-
-        /// <summary>
-        ///     Converts the bytes using image magick.
-        /// </summary>
-        /// <param name="fileName">Name of the file.</param>
-        /// <param name="bytes">The TIFF bytes.</param>
-        /// <returns>
-        ///     The converted bitmap.
-        /// </returns>
-        private static MagickImage ConvertUsingImageMagick(string fileName, byte[] bytes)
-        {
-            Contract.Requires(!string.IsNullOrEmpty(fileName));
-            Contract.Requires(bytes != null);
-            Contract.Requires(bytes.Length > 0);
-
-            try
-            {
-                FileHelpers.WriteAllBytes(fileName, bytes);
-
-                return TiffConverter.LoadImage(fileName);
-            }
-            finally
-            {
-                try
-                {
-                    File.Delete(fileName);
-                }
-                catch (DirectoryNotFoundException)
-                {
-                }
-                catch (IOException)
-                {
-                }
-                catch (UnauthorizedAccessException)
-                {
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Creates the process.
-        /// </summary>
-        /// <param name="dcraw">
-        ///     The filename of the DCRAW executable.
-        /// </param>
-        /// <param name="fileName">
-        ///     Name of the file.
-        /// </param>
-        /// <returns>
-        ///     The process.
-        /// </returns>
-        private static Process CreateProcess(string dcraw, string fileName)
-        {
-            Contract.Requires(!string.IsNullOrEmpty(dcraw));
-            Contract.Requires(!string.IsNullOrEmpty(fileName));
-
-            //string.Format(CultureInfo.InvariantCulture, "-6 -w -q 3 -c -T \"{0}\"", fileName),
-
-            return new Process
-                {
-                    StartInfo =
-                        {
-                            FileName = dcraw,
-                            Arguments = string.Format(CultureInfo.InvariantCulture, "-6 -w -q 3 -c -T \"{0}\"", fileName),
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true
-                        }
-                };
         }
 
         /// <summary>
@@ -272,7 +257,5 @@ namespace OutputBuilderClient.ImageConverters
                 throw;
             }
         }
-
-        #endregion
     }
 }

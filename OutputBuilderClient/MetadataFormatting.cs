@@ -1,9 +1,31 @@
-﻿using System;
-
-namespace OutputBuilderClient
+﻿namespace OutputBuilderClient
 {
+    using System;
+
     internal static class MetadataFormatting
     {
+        public static string FormatAperture(double d)
+        {
+            var sz = string.Empty;
+
+            if (d != 0.0)
+            {
+                var dd = MetadataNormalizationFunctions.ClosestFStop(d);
+
+                if (!double.IsInfinity(dd) && dd > 0)
+                {
+                    //sprintf_s(sz, len, "f/%.01f", dd);
+                    sz = string.Format("f/{0:0.0#}", dd);
+                }
+            }
+            else
+            {
+                sz = "f/0";
+            }
+
+            return sz;
+        }
+
         public static string FormatExposure(double d, bool bucket = true)
         {
             string sz = string.Empty; // empty
@@ -11,12 +33,11 @@ namespace OutputBuilderClient
             if (d != 0.0)
             {
                 //auto s = std::exp(std::log(2.0) * d);
-
                 if (bucket)
                 {
                     if (d < 1.0)
                     {
-                        int n = ExpRound(1.0/d);
+                        int n = ExpRound(1.0 / d);
 
                         if (n == 1)
                         {
@@ -39,7 +60,7 @@ namespace OutputBuilderClient
                     if (d < 1.0)
                     {
                         // sprintf_s(sz, len, "1/%ds", Core::Round(1.0 / d));
-                        sz = string.Format("1/{0}s", Round(1.0/d));
+                        sz = string.Format("1/{0}s", Round(1.0 / d));
                     }
                     else
                     {
@@ -47,6 +68,37 @@ namespace OutputBuilderClient
                         sz = string.Format("{0}s", Round(d));
                     }
                 }
+            }
+
+            return sz;
+        }
+
+        public static string FormatFNumber(double d)
+        {
+            // sprintf_s(sz, len, "f/%.01f", d)
+            return string.Format("f/{0:0.#}", d);
+        }
+
+        public static string FormatFocalLength(double d, int filmEquivalent = 0)
+        {
+            var sz = string.Empty;
+
+            if (d != 0.0)
+            {
+                if (filmEquivalent != 0)
+                {
+                    // sprintf_s(sz, len, "%.1fmm (%dmm film eq)", d, filmEquivalent);
+                    sz = string.Format("{0:0.#}mm ({1}mm film eq)", d, filmEquivalent);
+                }
+                else
+                {
+                    //sprintf_s(sz, len, d < 1 ? "%.1fmm" : "%.0fmm", d);
+                    sz = string.Format(d < 1 ? "{0:0.#}mm" : "{0:0}mm", d);
+                }
+            }
+            else
+            {
+                sz = "0mm";
             }
 
             return sz;
@@ -69,78 +121,22 @@ namespace OutputBuilderClient
 
             if ((d - f) >= 0.5)
             {
-                return (int) (d >= 0.0 ? Math.Ceiling(d) : f);
+                return (int)(d >= 0.0 ? Math.Ceiling(d) : f);
             }
             else
             {
-                return (int) (d < 0.0 ? Math.Ceiling(d) : f);
+                return (int)(d < 0.0 ? Math.Ceiling(d) : f);
             }
         }
 
-
         private static int Round(int x, int y)
         {
-            return ((x + (y/2))/y)*y;
+            return ((x + (y / 2)) / y) * y;
         }
 
         private static long Round(long x, long y)
         {
-            return ((x + (y/2))/y)*y;
-        }
-
-        public static string FormatFocalLength(double d, int filmEquivalent = 0)
-        {
-            var sz = string.Empty;
-
-            if (d != 0.0)
-            {
-                if (filmEquivalent != 0)
-                {
-                    // sprintf_s(sz, len, "%.1fmm (%dmm film eq)", d, filmEquivalent);
-                    sz = string.Format("{0:0.#}mm ({1}mm film eq)", d, filmEquivalent);
-                }
-                else
-                {
-                    //sprintf_s(sz, len, d < 1 ? "%.1fmm" : "%.0fmm", d);
-                    sz = string.Format(d < 1 ? "{0:0.#}mm" : "{0:0}mm", d);
-                }
-            }
-            else
-            {
-                sz ="0mm";
-            }
-
-            return sz;
-        }
-
-        public static string FormatAperture(double d)
-        {
-            var sz = string.Empty;
-
-            if (d != 0.0)
-            {
-                var dd = MetadataNormalizationFunctions.ClosestFStop(d);
-
-                
-                if (!double.IsInfinity(dd) && dd > 0)
-                {
-                    //sprintf_s(sz, len, "f/%.01f", dd);
-                    sz = string.Format("f/{0:0.0#}", dd);
-                }
-            }
-            else
-            {
-                sz ="f/0";
-            }
-
-            return sz;
-        }
-
-        public static string FormatFNumber(double d)
-        {
-            // sprintf_s(sz, len, "f/%.01f", d)
-
-            return string.Format("f/{0:0.#}", d);
+            return ((x + (y / 2)) / y) * y;
         }
     }
 }

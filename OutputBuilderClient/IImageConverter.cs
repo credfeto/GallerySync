@@ -6,23 +6,15 @@
 //   Image converter.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-#endregion
-
-using System.Drawing;
-using GraphicsMagick;
-
 namespace OutputBuilderClient
 {
+    using GraphicsMagick;
+
     /// <summary>
     ///     Image converter.
     /// </summary>
     public interface IImageConverter
     {
-        #region Public Methods
-
         /// <summary>
         ///     Loads the image.
         /// </summary>
@@ -33,7 +25,5 @@ namespace OutputBuilderClient
         ///     An image, if it could be loaded.
         /// </returns>
         MagickImage LoadImage(string fileName);
-
-        #endregion
     }
 }

@@ -6,39 +6,28 @@
 //   Removes temporary files of specific mask.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-
-#endregion
-
 namespace OutputBuilderClient
 {
+    using System;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Contracts;
+    using System.IO;
+    using System.Linq;
+
     /// <summary>
     ///     Removes temporary files of specific mask.
     /// </summary>
     internal sealed class TemporaryFilesCleaner : IDisposable
     {
-        #region Constants and Fields
-
         /// <summary>
         ///     The mask to search for the files with.
         /// </summary>
-         private readonly string _fileMask;
+        private readonly string _fileMask;
 
         /// <summary>
         ///     The path to the temporary files.
         /// </summary>
-         private readonly string _path;
-
-        #endregion
-
-        #region Constructors and Destructors
+        private readonly string _path;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="TemporaryFilesCleaner" /> class.
@@ -46,12 +35,12 @@ namespace OutputBuilderClient
         /// <param name="fileMask">
         ///     The file mask.
         /// </param>
-        public TemporaryFilesCleaner( string fileMask)
+        public TemporaryFilesCleaner(string fileMask)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileMask));
 
-            _path = Path.GetTempPath();
-            _fileMask = fileMask;
+            this._path = Alphaleonis.Win32.Filesystem.Path.GetTempPath();
+            this._fileMask = fileMask;
         }
 
         /// <summary>
@@ -59,14 +48,8 @@ namespace OutputBuilderClient
         /// </summary>
         ~TemporaryFilesCleaner()
         {
-            Dispose(false);
+            this.Dispose(false);
         }
-
-        #endregion
-
-        #region Implemented Interfaces
-
-        #region IDisposable
 
         /// <summary>
         ///     Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -74,29 +57,23 @@ namespace OutputBuilderClient
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
-
-        #endregion
-
-        #endregion
-
-        #region Methods
 
         /// <summary>
         ///     Silently removes the file, ignoring any failures.
         /// </summary>
         /// <param name="fullFileName">
-        ///     Full name of the file.
+        ///     Full name of the Alphaleonis.Win32.Filesystem.File.
         /// </param>
-        private static void SilentlyRemoveFile( string fullFileName)
+        private static void SilentlyRemoveFile(string fullFileName)
         {
             Contract.Requires(!string.IsNullOrEmpty(fullFileName));
 
             try
             {
-                File.Delete(fullFileName);
+                Alphaleonis.Win32.Filesystem.File.Delete(fullFileName);
             }
             catch (DirectoryNotFoundException)
             {
@@ -122,14 +99,14 @@ namespace OutputBuilderClient
                 return;
             }
 
-            string[] files = Directory.GetFiles(_path, _fileMask);
-            foreach (string fullFileName in files.Select(file => Path.Combine(_path, file)))
+            string[] files = Directory.GetFiles(this._path, this._fileMask);
+            foreach (
+                string fullFileName in files.Select(file => Alphaleonis.Win32.Filesystem.Path.Combine(this._path, file))
+                )
             {
                 SilentlyRemoveFile(fullFileName);
             }
         }
-
-        #endregion
 
         /// <summary>
         ///     The object invariant.
@@ -141,8 +118,8 @@ namespace OutputBuilderClient
         [ContractInvariantMethod]
         private void ObjectInvariant()
         {
-            Contract.Invariant(!string.IsNullOrEmpty(_fileMask));
-            Contract.Invariant(!string.IsNullOrEmpty(_path));
+            Contract.Invariant(!string.IsNullOrEmpty(this._fileMask));
+            Contract.Invariant(!string.IsNullOrEmpty(this._path));
         }
     }
 }

@@ -6,25 +6,18 @@
 //   The element item list loader.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Text;
-using System.Xml;
-
-#endregion
-
 namespace OutputBuilderClient.Metadata
 {
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Contracts;
+    using System.Text;
+    using System.Xml;
+
     /// <summary>
     ///     The element item list loader.
     /// </summary>
     internal sealed class ElementItemListLoader : IItemLoader
     {
-        #region Constants and Fields
-
         /// <summary>
         ///     The path to item.
         /// </summary>
@@ -34,10 +27,6 @@ namespace OutputBuilderClient.Metadata
         ///     The property.
         /// </summary>
         private readonly string _property;
-
-        #endregion
-
-        #region Constructors and Destructors
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ElementItemListLoader" /> class.
@@ -52,13 +41,9 @@ namespace OutputBuilderClient.Metadata
         {
             Contract.Requires(!string.IsNullOrEmpty(property));
             Contract.Requires(!string.IsNullOrEmpty(pathToItem));
-            _property = property;
-            _pathToItem = pathToItem;
+            this._property = property;
+            this._pathToItem = pathToItem;
         }
-
-        #endregion
-
-        #region Properties
 
         /// <summary>
         ///     Gets the Name.
@@ -72,15 +57,9 @@ namespace OutputBuilderClient.Metadata
             {
                 Contract.Ensures(!string.IsNullOrEmpty(Contract.Result<string>()));
 
-                return _property;
+                return this._property;
             }
         }
-
-        #endregion
-
-        #region Implemented Interfaces
-
-        #region IItemLoader
 
         /// <summary>
         ///     Reads the value out of the specified document.
@@ -99,7 +78,7 @@ namespace OutputBuilderClient.Metadata
             Contract.Requires(document != null);
             Contract.Requires(nameSpaceManager != null);
 
-            XmlNodeList imageNodes = document.SelectNodes(_pathToItem, nameSpaceManager);
+            XmlNodeList imageNodes = document.SelectNodes(this._pathToItem, nameSpaceManager);
             if (imageNodes == null)
             {
                 return string.Empty;
@@ -134,12 +113,6 @@ namespace OutputBuilderClient.Metadata
             return sb.ToString();
         }
 
-        #endregion
-
-        #endregion
-
-        #region Methods
-
         /// <summary>
         ///     The object invariant.
         /// </summary>
@@ -150,10 +123,8 @@ namespace OutputBuilderClient.Metadata
             Justification = "Invoked by Code Contracts")]
         private void ObjectInvariant()
         {
-            Contract.Invariant(!string.IsNullOrEmpty(_property));
-            Contract.Invariant(!string.IsNullOrEmpty(_pathToItem));
+            Contract.Invariant(!string.IsNullOrEmpty(this._property));
+            Contract.Invariant(!string.IsNullOrEmpty(this._pathToItem));
         }
-
-        #endregion
     }
 }

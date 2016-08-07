@@ -1,150 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using FileNaming;
-using OutputBuilderClient.Properties;
-using Raven.Client;
-using Raven.Client.Embedded;
-using StorageHelpers;
-using Twaddle.Directory.Scanner;
-using Twaddle.Gallery.ObjectModel;
-
-namespace OutputBuilderClient
+﻿namespace OutputBuilderClient
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text;
+
+    using Alphaleonis.Win32.Filesystem;
+
+    using FileNaming;
+
+    using OutputBuilderClient.Properties;
+
+    using Raven.Abstractions.Extensions;
+    using Raven.Client;
+    using Raven.Client.Embedded;
+
+    using StorageHelpers;
+
+    using Twaddle.Directory.Scanner;
+    using Twaddle.Gallery.ObjectModel;
+
     internal class Program
     {
         private static readonly object Lock = new object();
 
+        private static readonly Dictionary<string, string> ShorternedUrls = new Dictionary<string, string>();
+
         private static readonly object ShortUrlLock = new object();
-        private static readonly Dictionary< string, string > ShorternedUrls = new Dictionary<string, string>();
 
-        private static int Main(string[] args)
+        public static bool MetadataVersionRequiresRebuild(Photo targetPhoto)
         {
-            Console.WriteLine("OutputBuilderClient");
-
-            BoostPriority();
-
-            if (args.Length == 1)
+            if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                LoadShortUrls();
-
-                try
-                {
-                    ReadMetadata(args[0]);
-
-                    return 0;
-                }
-                catch (Exception exception)
-                {
-                    OutputText("Error: {0}", exception.Message);
-                    OutputText("Stack Trace: {0}", exception.StackTrace);
-                    return 1;
-                }
+                OutputText(
+                    " +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version
+                    + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                return true;
             }
 
-            try
-            {
-
-                LoadShortUrls();
-
-                ProcessGallery();
-
-                return 0;
-            }
-            catch (Exception exception)
-            {
-                OutputText("Error: {0}", exception.Message);
-                OutputText("Stack Trace: {0}", exception.StackTrace);
-                return 1;
-            }
+            return false;
         }
 
-        private static void LoadShortUrls()
+        private static void AddUploadFiles(List<string> filesCreated, IDocumentSession outputSession)
         {
-            var logPath = Path.Combine(Settings.Default.ImagesOutputPath, @"ShortUrls.csv");
-
-            if (File.Exists(logPath))
+            foreach (string file in filesCreated)
             {
-                Console.WriteLine("Loading Existing Short Urls:");
-                var lines = File.ReadAllLines(logPath);
+                string key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(file));
 
-                foreach (var line in lines)
+                var existing = outputSession.Load<FileToUpload>(key);
+                if (existing == null)
                 {
-                    if (!line.StartsWith(@"http://", StringComparison.OrdinalIgnoreCase)
-                        && !line.StartsWith(@"https://", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
+                    var fileToUpload = new FileToUpload { FileName = file, Completed = false };
 
-                    var process = line.Trim().Split('\t');
-                    if (process.Length != 2)
+                    outputSession.Store(fileToUpload, key);
+                }
+                else
+                {
+                    if (existing.Completed)
                     {
-                        continue;
-                    }
-
-                    if (!ShorternedUrls.ContainsKey(process[0]))
-                    {
-                        ShorternedUrls.Add(process[0], process[1]);
-                        Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
+                        existing.Completed = false;
+                        outputSession.Store(existing, key);
                     }
                 }
-
-                Console.WriteLine("Total Known Short Urls: {0}", ShorternedUrls.Count);
-                Console.WriteLine();
-            }
-
-        }
-
-        private static void ReadMetadata(string filename)
-        {
-            string folder = Path.GetDirectoryName(filename);
-            string file = Path.GetFileName(filename);
-            string extension = Path.GetExtension(filename);
-
-            var fileGroup = new List<string>();
-            if (File.Exists(filename.Replace(extension, ".xmp")))
-            {
-                fileGroup.Add(file.Replace(extension, ".xmp"));
-            }
-
-
-            var entry = new FileEntry
-                {
-                    Folder = folder,
-                    RelativeFolder = folder.Substring(Settings.Default.RootFolder.Length + 1),
-                    LocalFileName = file,
-                    AlternateFileNames = fileGroup
-                };
-
-
-            string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
-
-            string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
-
-            var photo = new Photo
-                {
-                    BasePath = basePath,
-                    UrlSafePath = urlSafePath,
-                    PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
-                    ImageExtension = Path.GetExtension(entry.LocalFileName),
-                    Files = fileGroup.Select(x =>
-                                             new ComponentFile
-                                                 {
-                                                     Extension = Path.GetExtension(x).TrimStart('.'),
-                                                     Hash = string.Empty,
-                                                     LastModified = new DateTime(2014, 1, 1),
-                                                     FileSize = 1000
-                                                 }
-                        ).ToList()
-                };
-
-            List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo);
-            foreach (PhotoMetadata item in metadata)
-            {
-                Console.WriteLine("{0} = {1}", item.Name, item.Value);
             }
         }
 
@@ -152,51 +71,148 @@ namespace OutputBuilderClient
         {
             try
             {
-                System.Diagnostics.Process.GetCurrentProcess().PriorityClass =
-                    ProcessPriorityClass.High;
+                System.Diagnostics.Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
             }
             catch (Exception)
             {
             }
         }
 
-        private static void ProcessGallery()
+        private static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
         {
-            var documentStoreInput = new EmbeddableDocumentStore
+            PhotoMetadata dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
+            if (dateTaken == null)
+            {
+                return DateTime.MinValue;
+            }
+
+            DateTime value;
+            if (DateTime.TryParse(dateTaken.Value, out value))
+            {
+                return value;
+            }
+
+            return DateTime.MinValue;
+        }
+
+        private static void ForceGarbageCollection()
+        {
+            GC.GetTotalMemory(true);
+        }
+
+        private static bool HasMissingResizes(Photo photoToProcess)
+        {
+            if (photoToProcess.ImageSizes == null)
+            {
+                Console.WriteLine(" +++ Force rebuild: No image sizes at all!");
+                return true;
+            }
+
+            foreach (ImageSize resize in photoToProcess.ImageSizes)
+            {
+                string resizedFileName = Alphaleonis.Win32.Filesystem.Path.Combine(
+                    Settings.Default.ImagesOutputPath,
+                    HashNaming.PathifyHash(photoToProcess.PathHash),
+                    ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
+                if (!Alphaleonis.Win32.Filesystem.File.Exists(resizedFileName))
                 {
-                    RunInMemory = true
-                };
-            documentStoreInput.Initialize();
-            if (!documentStoreInput.Restore(Settings.Default.LatestDatabaseBackupFolder))
-            {
-                return;
-            }
+                    Console.WriteLine(
+                        " +++ Force rebuild: Missing image for size {0}x{1} (jpg)",
+                        resize.Width,
+                        resize.Height);
+                    return true;
+                }
 
-            string dbOutputFolder = Settings.Default.DatabaseOutputFolder;
-            bool restore = !Directory.Exists(dbOutputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
-            if (!Directory.Exists(dbOutputFolder))
-            {
-                Directory.CreateDirectory(dbOutputFolder);
-            }
+                // Moving this to a separate program
+                //try
+                //{
+                //    byte[] bytes = Alphaleonis.Win32.Filesystem.File.ReadAllBytes(resizedFileName);
 
-            var documentStoreOutput = new EmbeddableDocumentStore
+                //    if (!ImageHelpers.IsValidJpegImage(bytes, "Existing: " + resizedFileName))
+                //    {
+                //        Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,
+                //                          resize.Height);
+                //        return true;
+                //    }
+                //}
+                //catch( Exception exception)
+                //{
+                //    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt - Exception: {2}", resize.Width,
+                //                      resize.Height, exception.Message);
+                //    return true;
+                //}
+                if (resize.Width == Settings.Default.ThumbnailSize)
                 {
-                    DataDirectory = dbOutputFolder,
-                    RunInMemory = false
-            };
-
-            documentStoreOutput.Initialize();
-
-            if (restore)
-            {
-                documentStoreOutput.Restore(Settings.Default.DatabaseBackupFolder);
+                    resizedFileName = Alphaleonis.Win32.Filesystem.Path.Combine(
+                        Settings.Default.ImagesOutputPath,
+                        HashNaming.PathifyHash(photoToProcess.PathHash),
+                        ImageExtraction.IndividualResizeFileName(photoToProcess, resize, "png"));
+                    if (!Alphaleonis.Win32.Filesystem.File.Exists(resizedFileName))
+                    {
+                        Console.WriteLine(
+                            " +++ Force rebuild: Missing image for size {0}x{1} (png)",
+                            resize.Width,
+                            resize.Height);
+                        return true;
+                    }
+                }
             }
 
-            HashSet<string> liveItems = Process(documentStoreInput, documentStoreOutput);
+            return false;
+        }
 
-            KillDeadItems(documentStoreOutput, liveItems);
+        private static bool HaveFilesChanged(Photo sourcePhoto, Photo targetPhoto)
+        {
+            if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
+            {
+                OutputText(" +++ Metadata update: File count changed");
+                return true;
+            }
 
-            documentStoreOutput.Backup(Settings.Default.DatabaseBackupFolder);
+            foreach (ComponentFile componentFile in targetPhoto.Files)
+            {
+                ComponentFile found =
+                    sourcePhoto.Files.FirstOrDefault(
+                        candiate =>
+                        StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension, componentFile.Extension));
+
+                if (found != null)
+                {
+                    if (componentFile.FileSize != found.FileSize)
+                    {
+                        OutputText(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
+                        return true;
+                    }
+
+                    if (componentFile.LastModified == found.LastModified)
+                    {
+                        // Assume if file modified date not changed then the file itself hasn't changed
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(found.Hash))
+                    {
+                        string filename = Alphaleonis.Win32.Filesystem.Path.Combine(
+                            Settings.Default.RootFolder,
+                            sourcePhoto.BasePath + componentFile.Extension);
+
+                        found.Hash = Hasher.HashFile(filename);
+                    }
+
+                    if (componentFile.Hash != found.Hash)
+                    {
+                        OutputText(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
+                        return true;
+                    }
+                }
+                else
+                {
+                    OutputText(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void KillDeadItems(EmbeddableDocumentStore documentStoreOutput, HashSet<string> liveItems)
@@ -234,24 +250,259 @@ namespace OutputBuilderClient
             }
         }
 
-        private static HashSet<string> Process(EmbeddableDocumentStore documentStoreInput,
-                                               EmbeddableDocumentStore documentStoreOutput)
+        private static void LoadShortUrls()
+        {
+            var logPath = Alphaleonis.Win32.Filesystem.Path.Combine(Settings.Default.ImagesOutputPath, @"ShortUrls.csv");
+
+            if (Alphaleonis.Win32.Filesystem.File.Exists(logPath))
+            {
+                Console.WriteLine("Loading Existing Short Urls:");
+                var lines = Alphaleonis.Win32.Filesystem.File.ReadAllLines(logPath);
+
+                foreach (var line in lines)
+                {
+                    if (!line.StartsWith(@"http://", StringComparison.OrdinalIgnoreCase)
+                        && !line.StartsWith(@"https://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var process = line.Trim().Split('\t');
+                    if (process.Length != 2)
+                    {
+                        continue;
+                    }
+
+                    if (!ShorternedUrls.ContainsKey(process[0]))
+                    {
+                        ShorternedUrls.Add(process[0], process[1]);
+                        Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
+                    }
+                }
+
+                Console.WriteLine("Total Known Short Urls: {0}", ShorternedUrls.Count);
+                Console.WriteLine();
+            }
+        }
+
+        private static void LogShortUrl(string url, string shortUrl)
+        {
+            if (ShorternedUrls.ContainsKey(url))
+            {
+                return;
+            }
+
+            lock (ShortUrlLock)
+            {
+                ShorternedUrls.Add(url, shortUrl);
+            }
+
+            var logPath = Alphaleonis.Win32.Filesystem.Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
+
+            var text = new[] { string.Format("{0}\t{1}", url, shortUrl) };
+
+            Alphaleonis.Win32.Filesystem.File.AppendAllLines(logPath, text);
+        }
+
+        private static int Main(string[] args)
+        {
+            Console.WriteLine("OutputBuilderClient");
+
+            BoostPriority();
+
+            if (args.Length == 1)
+            {
+                LoadShortUrls();
+
+                try
+                {
+                    ReadMetadata(args[0]);
+
+                    return 0;
+                }
+                catch (Exception exception)
+                {
+                    OutputText("Error: {0}", exception.Message);
+                    OutputText("Stack Trace: {0}", exception.StackTrace);
+                    return 1;
+                }
+            }
+
+            try
+            {
+                LoadShortUrls();
+
+                ProcessGallery();
+
+                return 0;
+            }
+            catch (Exception exception)
+            {
+                OutputText("Error: {0}", exception.Message);
+                OutputText("Stack Trace: {0}", exception.StackTrace);
+                return 1;
+            }
+        }
+
+        private static bool MetadataVersionOutOfDate(Photo targetPhoto)
+        {
+            if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
+            {
+                OutputText(
+                    " +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version
+                    + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
+        {
+            return MetadataVersionRequiresRebuild(targetPhoto) || HaveFilesChanged(sourcePhoto, targetPhoto)
+                   || HasMissingResizes(targetPhoto);
+        }
+
+        private static void OutputText(string formatString, params object[] parameters)
+        {
+            string text = string.Format(formatString, parameters);
+
+            lock (Lock)
+            {
+                Console.WriteLine(text);
+            }
+        }
+
+        private static HashSet<string> Process(
+            EmbeddableDocumentStore documentStoreInput,
+            EmbeddableDocumentStore documentStoreOutput)
         {
             using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
                 var items = new HashSet<string>();
 
-                foreach (Photo sourcePhoto in inputSession.GetAll<Photo>().AsParallel())
-                {
-                    ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
-                }
+                var allPhotos = inputSession.GetAll<Photo>().ToArray();
+                var partitioner = Partitioner.Create(allPhotos, true);
+
+                var q = partitioner.AsParallel();
+
+                q.ForEach(
+                    sourcePhoto =>
+                        {
+                            ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
+                        });
 
                 return items;
             }
         }
 
-        private static void ProcessSinglePhoto(EmbeddableDocumentStore documentStoreOutput, Photo sourcePhoto,
-                                               HashSet<string> items)
+        private static void ProcessGallery()
+        {
+            var documentStoreInput = new EmbeddableDocumentStore { RunInMemory = true };
+            documentStoreInput.Initialize();
+            if (!documentStoreInput.Restore(Settings.Default.LatestDatabaseBackupFolder))
+            {
+                return;
+            }
+
+            string dbOutputFolder = Settings.Default.DatabaseOutputFolder;
+            bool restore = !Directory.Exists(dbOutputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
+            if (!Directory.Exists(dbOutputFolder))
+            {
+                Directory.CreateDirectory(dbOutputFolder);
+            }
+
+            var documentStoreOutput = new EmbeddableDocumentStore
+                                          {
+                                              DataDirectory = dbOutputFolder,
+                                              RunInMemory = false
+                                          };
+
+            documentStoreOutput.Initialize();
+
+            if (restore)
+            {
+                documentStoreOutput.Restore(Settings.Default.DatabaseBackupFolder);
+            }
+
+            HashSet<string> liveItems = Process(documentStoreInput, documentStoreOutput);
+
+            KillDeadItems(documentStoreOutput, liveItems);
+
+            documentStoreOutput.Backup(Settings.Default.DatabaseBackupFolder);
+        }
+
+        private static void ProcessOneFile(
+            IDocumentSession outputSession,
+            Photo sourcePhoto,
+            Photo targetPhoto,
+            bool rebuild,
+            bool rebuildMetadata,
+            string url,
+            string shortUrl)
+        {
+            OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
+
+            UpdateFileHashes(targetPhoto, sourcePhoto);
+
+            bool buildMetadata = targetPhoto == null || rebuild || rebuildMetadata
+                                 || (targetPhoto != null && targetPhoto.Metadata == null);
+
+            if (buildMetadata)
+            {
+                sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
+            }
+            else
+            {
+                sourcePhoto.Metadata = targetPhoto.Metadata;
+            }
+
+            bool buildImages = targetPhoto == null || rebuild
+                               || (targetPhoto != null && !targetPhoto.ImageSizes.HasAny());
+
+            var filesCreated = new List<string>();
+            if (buildImages)
+            {
+                DateTime creationDate = ExtractCreationDate(sourcePhoto.Metadata);
+                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(
+                    sourcePhoto,
+                    filesCreated,
+                    creationDate,
+                    url,
+                    shortUrl);
+            }
+            else
+            {
+                sourcePhoto.ImageSizes = targetPhoto.ImageSizes;
+            }
+
+            sourcePhoto.Version = Constants.CurrentMetadataVersion;
+
+            if (targetPhoto != null)
+            {
+                UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
+                targetPhoto.Version = Constants.CurrentMetadataVersion;
+
+                if (buildImages)
+                {
+                    AddUploadFiles(filesCreated, outputSession);
+                }
+
+                outputSession.Store(targetPhoto, targetPhoto.PathHash);
+            }
+            else
+            {
+                AddUploadFiles(filesCreated, outputSession);
+                outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
+            }
+
+            outputSession.SaveChanges();
+        }
+
+        private static void ProcessSinglePhoto(
+            EmbeddableDocumentStore documentStoreOutput,
+            Photo sourcePhoto,
+            HashSet<string> items)
         {
             ForceGarbageCollection();
 
@@ -261,10 +512,8 @@ namespace OutputBuilderClient
                 {
                     var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
                     bool build = targetPhoto == null;
-                    bool rebuild = targetPhoto != null &&
-                                   NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
-                    bool rebuildMetadata = targetPhoto != null &&
-                                           MetadataVersionOutOfDate(targetPhoto);
+                    bool rebuild = targetPhoto != null && NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
+                    bool rebuildMetadata = targetPhoto != null && MetadataVersionOutOfDate(targetPhoto);
 
                     string url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
                     string shortUrl;
@@ -282,7 +531,9 @@ namespace OutputBuilderClient
                                 LogShortUrl(url, shortUrl);
 
                                 rebuild = true;
-                                Console.WriteLine(" +++ Force rebuild: missing shortcut URL.  New short url: {0}", shortUrl);
+                                Console.WriteLine(
+                                    " +++ Force rebuild: missing shortcut URL.  New short url: {0}",
+                                    shortUrl);
                             }
                         }
                     }
@@ -294,8 +545,8 @@ namespace OutputBuilderClient
                         }
                     }
 
-                    if (!string.IsNullOrWhiteSpace(shortUrl) &&
-                        !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
+                    if (!string.IsNullOrWhiteSpace(shortUrl)
+                        && !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                     {
                         sourcePhoto.ShortUrl = shortUrl;
                     }
@@ -321,57 +572,84 @@ namespace OutputBuilderClient
             }
             catch (AbortProcessingException exception)
             {
-                OutputText("ERROR: Aborting at image {0} due to exception {1}", sourcePhoto.UrlSafePath,
-                           exception.Message);
+                OutputText(
+                    "ERROR: Aborting at image {0} due to exception {1}",
+                    sourcePhoto.UrlSafePath,
+                    exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
                 throw;
             }
             catch (Exception exception)
             {
-                OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
-                           exception.Message);
+                OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath, exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
             }
         }
 
-        private static void LogShortUrl(string url, string shortUrl)
+        private static void ReadMetadata(string filename)
         {
-            if (ShorternedUrls.ContainsKey(url))
+            string folder = Alphaleonis.Win32.Filesystem.Path.GetDirectoryName(filename);
+            string file = Alphaleonis.Win32.Filesystem.Path.GetFileName(filename);
+            string extension = Alphaleonis.Win32.Filesystem.Path.GetExtension(filename);
+
+            var fileGroup = new List<string>();
+            if (Alphaleonis.Win32.Filesystem.File.Exists(filename.Replace(extension, ".xmp")))
             {
-                return;
+                fileGroup.Add(file.Replace(extension, ".xmp"));
             }
 
-            lock (ShortUrlLock)
+            var entry = new FileEntry
+                            {
+                                Folder = folder,
+                                RelativeFolder = folder.Substring(Settings.Default.RootFolder.Length + 1),
+                                LocalFileName = file,
+                                AlternateFileNames = fileGroup
+                            };
+
+            string basePath = Alphaleonis.Win32.Filesystem.Path.Combine(
+                entry.RelativeFolder,
+                Alphaleonis.Win32.Filesystem.Path.GetFileNameWithoutExtension(entry.LocalFileName));
+
+            string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
+
+            var photo = new Photo
+                            {
+                                BasePath = basePath,
+                                UrlSafePath = urlSafePath,
+                                PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
+                                ImageExtension = Alphaleonis.Win32.Filesystem.Path.GetExtension(entry.LocalFileName),
+                                Files =
+                                    fileGroup.Select(
+                                        x =>
+                                        new ComponentFile
+                                            {
+                                                Extension =
+                                                    Alphaleonis.Win32.Filesystem.Path.GetExtension(x)
+                                                    .TrimStart('.'),
+                                                Hash = string.Empty,
+                                                LastModified = new DateTime(2014, 1, 1),
+                                                FileSize = 1000
+                                            }).ToList()
+                            };
+
+            List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo);
+            foreach (PhotoMetadata item in metadata)
             {
-                ShorternedUrls.Add(url, shortUrl);
+                Console.WriteLine("{0} = {1}", item.Name, item.Value);
             }
-            var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
-
-            var text = new[]
-            {
-                string.Format("{0}\t{1}", url, shortUrl)
-            };
-
-            File.AppendAllLines(logPath, text);
-        }
-
-        private static void ForceGarbageCollection()
-        {
-            GC.GetTotalMemory(true);
         }
 
         private static bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
         {
             // ONly want to generate a short URL, IF the photo has already been uploaded AND is public
-
             if (sourcePhoto.UrlSafePath.StartsWith("private/", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            return string.IsNullOrWhiteSpace(shortUrl) ||
-                   StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url) ||
-                   StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
+            return string.IsNullOrWhiteSpace(shortUrl)
+                   || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url)
+                   || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
         }
 
         private static string TryGenerateShortUrl(EmbeddableDocumentStore documentStoreOutput, string url)
@@ -409,7 +687,7 @@ namespace OutputBuilderClient
 
                         if (counter.Year == 2015 && counter.Month == 4)
                         {
-                            counter.Impressions = maxImpressionsPerMonth*10;
+                            counter.Impressions = maxImpressionsPerMonth * 10;
                         }
                     }
 
@@ -436,218 +714,16 @@ namespace OutputBuilderClient
             }
         }
 
-        private static bool NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
-        {
-            return MetadataVersionRequiresRebuild(targetPhoto) ||
-                   HaveFilesChanged(sourcePhoto, targetPhoto) ||
-                   HasMissingResizes(targetPhoto);
-        }
-
-        private static bool HasMissingResizes(Photo photoToProcess)
-        {
-            if (photoToProcess.ImageSizes == null)
-            {
-                Console.WriteLine(" +++ Force rebuild: No image sizes at all!");
-                return true;
-            }
-
-            foreach (ImageSize resize in photoToProcess.ImageSizes)
-            {
-                string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
-                                                      HashNaming.PathifyHash(photoToProcess.PathHash),
-                                                      ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
-                if (!File.Exists(resizedFileName))
-                {
-                    Console.WriteLine(" +++ Force rebuild: Missing image for size {0}x{1} (jpg)", resize.Width,
-                                      resize.Height);
-                    return true;
-                }
-
-                // Moving this to a separate program
-                //try
-                //{
-                //    byte[] bytes = File.ReadAllBytes(resizedFileName);
-
-                //    if (!ImageHelpers.IsValidJpegImage(bytes, "Existing: " + resizedFileName))
-                //    {
-                //        Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,
-                //                          resize.Height);
-                //        return true;
-                //    }
-                //}
-                //catch( Exception exception)
-                //{
-                //    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt - Exception: {2}", resize.Width,
-                //                      resize.Height, exception.Message);
-                //    return true;
-                //}
-
-                if (resize.Width == Settings.Default.ThumbnailSize)
-                {
-                    resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
-                                                   HashNaming.PathifyHash(photoToProcess.PathHash),
-                                                   ImageExtraction.IndividualResizeFileName(photoToProcess, resize,
-                                                                                            "png"));
-                    if (!File.Exists(resizedFileName))
-                    {
-                        Console.WriteLine(" +++ Force rebuild: Missing image for size {0}x{1} (png)", resize.Width,
-                                          resize.Height);
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private static bool MetadataVersionOutOfDate(Photo targetPhoto)
-        {
-            if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
-            {
-                OutputText(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version +
-                           " Expected: " + Constants.CurrentMetadataVersion + ")");
-                return true;
-            }
-
-            return false;
-        }
-
-        public static bool MetadataVersionRequiresRebuild(Photo targetPhoto)
-        {
-            if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
-            {
-                OutputText(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version +
-                           " Expected: " + Constants.CurrentMetadataVersion + ")");
-                return true;
-            }
-            return false;
-        }
-
-        private static void ProcessOneFile(IDocumentSession outputSession, Photo sourcePhoto, Photo targetPhoto,
-                                           bool rebuild, bool rebuildMetadata, string url, string shortUrl)
-        {
-            OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
-
-            UpdateFileHashes(targetPhoto, sourcePhoto);
-
-            bool buildMetadata = targetPhoto == null || rebuild || rebuildMetadata ||
-                                 (targetPhoto != null && targetPhoto.Metadata == null);
-
-            if (buildMetadata)
-            {
-                sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
-            }
-            else
-            {
-                sourcePhoto.Metadata = targetPhoto.Metadata;
-            }
-
-            bool buildImages = targetPhoto == null || rebuild ||
-                               (targetPhoto != null && !targetPhoto.ImageSizes.HasAny());
-
-            var filesCreated = new List<string>();
-            if (buildImages)
-            {
-                DateTime creationDate = ExtractCreationDate(sourcePhoto.Metadata);
-                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(sourcePhoto, filesCreated, creationDate, url,
-                                                                     shortUrl);
-            }
-            else
-            {
-                sourcePhoto.ImageSizes = targetPhoto.ImageSizes;
-            }
-
-            sourcePhoto.Version = Constants.CurrentMetadataVersion;
-
-            if (targetPhoto != null)
-            {
-                UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
-                targetPhoto.Version = Constants.CurrentMetadataVersion;
-
-                if (buildImages)
-                {
-                    AddUploadFiles(filesCreated, outputSession);
-                }
-
-                outputSession.Store(targetPhoto, targetPhoto.PathHash);
-            }
-            else
-            {
-                AddUploadFiles(filesCreated, outputSession);
-                outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
-            }
-
-            outputSession.SaveChanges();
-        }
-
-        private static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
-        {
-            PhotoMetadata dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
-            if (dateTaken == null)
-            {
-                return DateTime.MinValue;
-            }
-
-            DateTime value;
-            if (DateTime.TryParse(dateTaken.Value, out value))
-            {
-                return value;
-            }
-
-            return DateTime.MinValue;
-        }
-
-
-        private static void AddUploadFiles(List<string> filesCreated, IDocumentSession outputSession)
-        {
-            foreach (string file in filesCreated)
-            {
-                string key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(file));
-
-                var existing = outputSession.Load<FileToUpload>(key);
-                if (existing == null)
-                {
-                    var fileToUpload = new FileToUpload
-                        {
-                            FileName = file,
-                            Completed = false
-                        };
-
-                    outputSession.Store(fileToUpload, key);
-                }
-                else
-                {
-                    if (existing.Completed)
-                    {
-                        existing.Completed = false;
-                        outputSession.Store(existing, key);
-                    }
-                }
-            }
-        }
-
-        private static void OutputText(string formatString, params object[] parameters)
-        {
-            string text = string.Format(formatString, parameters);
-
-            lock (Lock)
-            {
-                Console.WriteLine(text);
-            }
-        }
-
         private static void UpdateFileHashes(Photo targetPhoto, Photo sourcePhoto)
         {
             if (targetPhoto != null)
             {
-                foreach (
-                    ComponentFile sourceFile in
-                        sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
+                foreach (ComponentFile sourceFile in
+                    sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
                 {
                     ComponentFile targetFile =
-                        targetPhoto.Files.FirstOrDefault(s =>
-                                                         s.Extension == sourceFile.Extension &&
-                                                         !string.IsNullOrWhiteSpace(s.Hash));
+                        targetPhoto.Files.FirstOrDefault(
+                            s => s.Extension == sourceFile.Extension && !string.IsNullOrWhiteSpace(s.Hash));
                     if (targetFile != null)
                     {
                         sourceFile.Hash = targetFile.Hash;
@@ -655,12 +731,12 @@ namespace OutputBuilderClient
                 }
             }
 
-            foreach (
-                ComponentFile file in
-                    sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
+            foreach (ComponentFile file in
+                sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
             {
-                string filename = Path.Combine(Settings.Default.RootFolder,
-                                               sourcePhoto.BasePath + file.Extension);
+                string filename = Alphaleonis.Win32.Filesystem.Path.Combine(
+                    Settings.Default.RootFolder,
+                    sourcePhoto.BasePath + file.Extension);
 
                 file.Hash = Hasher.HashFile(filename);
             }
@@ -677,59 +753,6 @@ namespace OutputBuilderClient
             targetPhoto.Metadata = sourcePhoto.Metadata;
             targetPhoto.ImageSizes = sourcePhoto.ImageSizes;
             targetPhoto.ShortUrl = sourcePhoto.ShortUrl;
-        }
-
-        private static bool HaveFilesChanged(Photo sourcePhoto, Photo targetPhoto)
-        {
-            if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
-            {
-                OutputText(" +++ Metadata update: File count changed");
-                return true;
-            }
-
-            foreach (ComponentFile componentFile in targetPhoto.Files)
-            {
-                ComponentFile found =
-                    sourcePhoto.Files.FirstOrDefault(
-                        candiate =>
-                        StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension, componentFile.Extension));
-
-                if (found != null)
-                {
-                    if (componentFile.FileSize != found.FileSize)
-                    {
-                        OutputText(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
-                        return true;
-                    }
-
-                    if (componentFile.LastModified == found.LastModified)
-                    {
-                        // Assume if file modified date not changed then the file itself hasn't changed
-                        continue;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(found.Hash))
-                    {
-                        string filename = Path.Combine(Settings.Default.RootFolder,
-                                                       sourcePhoto.BasePath + componentFile.Extension);
-
-                        found.Hash = Hasher.HashFile(filename);
-                    }
-
-                    if (componentFile.Hash != found.Hash)
-                    {
-                        OutputText(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
-                        return true;
-                    }
-                }
-                else
-                {
-                    OutputText(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

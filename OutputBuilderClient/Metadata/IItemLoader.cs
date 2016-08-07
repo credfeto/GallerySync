@@ -6,16 +6,11 @@
 //   The item loader.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System.Diagnostics.CodeAnalysis;
-using System.Xml;
-
-#endregion
-
 namespace OutputBuilderClient.Metadata
 {
+    using System.Diagnostics.CodeAnalysis;
+    using System.Xml;
+
     /// <summary>
     ///     The item loader.
     /// </summary>
@@ -23,8 +18,6 @@ namespace OutputBuilderClient.Metadata
         MessageId = "System.Xml.XmlDocument", Justification = "Better API")]
     internal interface IItemLoader
     {
-        #region Properties
-
         /// <summary>
         ///     Gets the name.
         /// </summary>
@@ -32,10 +25,6 @@ namespace OutputBuilderClient.Metadata
         ///     The name of the property.
         /// </value>
         string Name { get; }
-
-        #endregion
-
-        #region Public Methods
 
         /// <summary>
         ///     Reads the value out of the specified document.
@@ -50,7 +39,5 @@ namespace OutputBuilderClient.Metadata
         ///     The value at the specified document location.
         /// </returns>
         string Read(XmlDocument document, XmlNamespaceManager nameManager);
-
-        #endregion
     }
 }

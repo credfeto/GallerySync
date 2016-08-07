@@ -6,33 +6,22 @@
 //   Supported file extension.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
-#region Using Directives
-
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-
-#endregion
-
 namespace OutputBuilderClient
 {
+    using System;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Contracts;
+
     /// <summary>
     ///     Supported file extension.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     internal sealed class SupportedExtensionAttribute : Attribute
     {
-        #region Constants and Fields
-
         /// <summary>
         ///     The file extension.
         /// </summary>
         private readonly string _extension;
-
-        #endregion
-
-        #region Constructors and Destructors
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="SupportedExtensionAttribute" /> class.
@@ -44,12 +33,8 @@ namespace OutputBuilderClient
         {
             Contract.Requires(!string.IsNullOrEmpty(extension));
 
-            _extension = extension;
+            this._extension = extension;
         }
-
-        #endregion
-
-        #region Properties
 
         /// <summary>
         ///     Gets the extension.
@@ -62,11 +47,9 @@ namespace OutputBuilderClient
             get
             {
                 Contract.Ensures(!string.IsNullOrEmpty(Contract.Result<string>()));
-                return _extension;
+                return this._extension;
             }
         }
-
-        #endregion
 
         /// <summary>
         ///     The object invariant.
@@ -78,7 +61,7 @@ namespace OutputBuilderClient
         [ContractInvariantMethod]
         private void ObjectInvariant()
         {
-            Contract.Invariant(!string.IsNullOrEmpty(_extension));
+            Contract.Invariant(!string.IsNullOrEmpty(this._extension));
         }
     }
 }

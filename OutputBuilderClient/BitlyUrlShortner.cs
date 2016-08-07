@@ -1,14 +1,15 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Globalization;
-using System.IO;
-using System.Net;
-using System.Web;
-using OutputBuilderClient.Properties;
-
-namespace OutputBuilderClient
+﻿namespace OutputBuilderClient
 {
+    using System;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Contracts;
+    using System.Globalization;
+    using System.IO;
+    using System.Net;
+    using System.Web;
+
+    using OutputBuilderClient.Properties;
+
     /// <summary>
     ///     Bit.ly's URL Shortener.
     /// </summary>
@@ -19,14 +20,15 @@ namespace OutputBuilderClient
         Justification = "Bitly is name of site.")]
     public static class BitlyUrlShortner
     {
-        #region Constants and Fields
-
         /// <summary>
         ///     The API key.
         /// </summary>
         private static string Key
         {
-            get { return Settings.Default.BitlyApiKey; }
+            get
+            {
+                return Settings.Default.BitlyApiKey;
+            }
         }
 
         /// <summary>
@@ -34,12 +36,11 @@ namespace OutputBuilderClient
         /// </summary>
         private static string Login
         {
-            get { return Settings.Default.BitlyApiUser; }
+            get
+            {
+                return Settings.Default.BitlyApiUser;
+            }
         }
-
-        #endregion
-
-        #region Public Methods
 
         /// <summary>
         ///     Shortens the given URL.
@@ -56,20 +57,19 @@ namespace OutputBuilderClient
             Contract.Ensures(Contract.Result<Uri>() != null);
 
             string encodedUrl = HttpUtility.UrlEncode(url.ToString());
-            string urlRequest =
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "https://api-ssl.bit.ly/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}",
-                    Key,
-                    Login,
-                    encodedUrl);
+            string urlRequest = string.Format(
+                CultureInfo.InvariantCulture,
+                "https://api-ssl.bit.ly/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}",
+                Key,
+                Login,
+                encodedUrl);
 
-            var request = (HttpWebRequest) WebRequest.Create(new Uri(urlRequest));
+            var request = (HttpWebRequest)WebRequest.Create(new Uri(urlRequest));
             try
             {
                 request.ContentType = "application/json";
                 request.Headers.Add("Cache-Control", "no-cache");
-                using (var response = (HttpWebResponse) request.GetResponse())
+                using (var response = (HttpWebResponse)request.GetResponse())
                 {
                     using (Stream responseStream = response.GetResponseStream())
                     {
@@ -90,11 +90,10 @@ namespace OutputBuilderClient
             catch (Exception exception)
             {
                 Console.WriteLine("Error: Could not build Short Url: {0}", exception.Message);
+
                 // if Google's URL Shortner is down...
                 return url;
             }
         }
-
-        #endregion
     }
 }
