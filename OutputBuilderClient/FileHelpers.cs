@@ -77,17 +77,7 @@
 
         private static void WriteNoVerify(string path, byte[] bytes)
         {
-            using (
-                var fileStream = new FileStream(
-                    mode: FileMode.Create,
-                    access: FileAccess.Write,
-                    share: FileShare.None,
-                    path: path,
-                    bufferSize: 8192,
-                    useAsync: false))
-            {
-                fileStream.Write(bytes, 0, bytes.Length);
-            }
+            Alphaleonis.Win32.Filesystem.File.WriteAllBytes(path, bytes);            
         }
 
         private static void WriteWithRetries(string fileName, byte[] data, int maxRetries)
