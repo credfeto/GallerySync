@@ -693,8 +693,8 @@
 
                     if (counter.Impressions < maxImpressionsPerMonth)
                     {
-                        Console.WriteLine("Bitly Impressions for {0:M}", counter.Impressions);
-                        Console.WriteLine("Bitly Impressions total {0:M}", counter.TotalImpressionsEver);
+                        Console.WriteLine("Bitly Impressions for {0}", counter.Impressions);
+                        Console.WriteLine("Bitly Impressions total {0}", counter.TotalImpressionsEver);
                         ++counter.Impressions;
                         ++counter.TotalImpressionsEver;
 
