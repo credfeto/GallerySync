@@ -3,12 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using FileNaming;
-using Raven.Abstractions.Smuggler;
-using Raven.Client;
-using Raven.Client.Embedded;
-using Raven.Database;
-using Raven.Database.Smuggler;
-using StorageHelpers;
 using Twaddle.Gallery.ObjectModel;
 using UploadToAmazon.Properties;
 

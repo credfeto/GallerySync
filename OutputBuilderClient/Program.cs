@@ -13,11 +13,6 @@
 
     using OutputBuilderClient.Properties;
 
-    using Raven.Abstractions.Extensions;
-    using Raven.Client;
-    using Raven.Client.Embedded;
-
-    using StorageHelpers;
 
     using Twaddle.Directory.Scanner;
     using Twaddle.Gallery.ObjectModel;

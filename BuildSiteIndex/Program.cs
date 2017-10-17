@@ -14,8 +14,6 @@ using FileNaming;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using Raven.Client;
-using Raven.Client.Embedded;
 using StorageHelpers;
 using Twaddle.Gallery.ObjectModel;
 
