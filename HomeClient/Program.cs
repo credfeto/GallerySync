@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using HomeClient.Properties;
-using Raven.Client.Embedded;
-using StorageHelpers;
+//using Raven.Client.Embedded;
+//using StorageHelpers;
 using Twaddle.Directory.Scanner;
 
 namespace HomeClient
@@ -56,15 +56,17 @@ namespace HomeClient
 
             Directory.CreateDirectory(dbFolder);
 
-            var documentStore = new EmbeddableDocumentStore
-                {
-                    DataDirectory = dbFolder,
-                    RunInMemory = true
-            };
+//            var documentStore = new EmbeddableDocumentStore
+//                {
+//                    DataDirectory = dbFolder,
+//                    RunInMemory = true
+//            };
+//
+//            documentStore.Initialize();
+//
+//            var emitter = new Emitter(documentStore);
 
-            documentStore.Initialize();
-
-            var emitter = new Emitter(documentStore);
+            var emitter = new Emitter(dbFolder);
 
             var scores = new[]
                 {
@@ -87,7 +89,7 @@ namespace HomeClient
 
             Console.WriteLine("Files Found: {0}", filesFound);
 
-            documentStore.Backup(Settings.Default.DatabaseBackupFolder);
+            //documentStore.Backup(Settings.Default.DatabaseBackupFolder);
         }
     }
 }

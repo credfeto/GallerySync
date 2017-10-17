@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using Alphaleonis.Win32.Filesystem;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FileNaming;
-using Raven.Client;
-using Raven.Client.Embedded;
+using Newtonsoft.Json;
+//using Raven.Client;
+//using Raven.Client.Embedded;
 using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
 
@@ -14,13 +15,20 @@ namespace HomeClient
 {
     public sealed class Emitter : IFileEmitter
     {
-        private readonly EmbeddableDocumentStore _documentStore;
+        private readonly string _dbFolder;
 
-        [CLSCompliant(false)]
-        public Emitter(EmbeddableDocumentStore documentStore)
+        public Emitter(string dbFolder)
         {
-            _documentStore = documentStore;
+            _dbFolder = dbFolder;
+            Directory.Delete(dbFolder, recursive: true);
         }
+//        private readonly EmbeddableDocumentStore _documentStore;
+//
+//        [CLSCompliant(false)]
+//        public Emitter(EmbeddableDocumentStore documentStore)
+//        {
+//            _documentStore = documentStore;
+//        }
 
         public void FileFound(FileEntry entry)
         {
@@ -33,12 +41,27 @@ namespace HomeClient
 
         private void Store(Photo photo)
         {
-            using (IDocumentSession session = _documentStore.OpenSession())
-            {
-                session.Store(photo, photo.PathHash);
+            var safeUrl = photo.UrlSafePath.Replace('/', Path.DirectorySeparatorChar);
+            safeUrl = safeUrl.TrimEnd(new char[] {Path.DirectorySeparatorChar});
+            safeUrl += ".info";
 
-                session.SaveChanges();
-            }
+            var outputPath = Path.Combine(
+                _dbFolder,
+                safeUrl
+            );
+
+            //Console.WriteLine(outputPath);
+            var txt = JsonConvert.SerializeObject(photo);
+            FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
+
+
+
+//            using (IDocumentSession session = _documentStore.OpenSession())
+//            {
+//                session.Store(photo, photo.PathHash);
+//
+//                session.SaveChanges();
+//            }
         }
 
         private Photo CreatePhotoRecord(FileEntry entry, string basePath)

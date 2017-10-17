@@ -4,70 +4,70 @@
     using System.Collections.Generic;
     using System.IO;
 
-    using Raven.Abstractions.Data;
-    using Raven.Abstractions.Smuggler;
-    using Raven.Client;
-    using Raven.Client.Embedded;
-    using Raven.Database.Smuggler;
+//    using Raven.Abstractions.Data;
+//    using Raven.Abstractions.Smuggler;
+//    using Raven.Client;
+//    using Raven.Client.Embedded;
+//    using Raven.Database.Smuggler;
 
     public static class ExtensionMethods
     {
-        public static void Backup(this EmbeddableDocumentStore documentStore, string path)
-        {
-            Directory.CreateDirectory(path);
+//        public static void Backup(this EmbeddableDocumentStore documentStore, string path)
+//        {
+//            Directory.CreateDirectory(path);
+//
+//            string file = Path.Combine(path, "ravendb.backup");
+//            RotateLastGenerations(file);
+//
+//            var options = new SmugglerDatabaseOptions();
+//
+//            var dumper = new DatabaseDataDumper(documentStore.DocumentDatabase, options);
+//
+//            var exportOptions = new SmugglerExportOptions<RavenConnectionStringOptions>() { ToFile = file };
+//
+//            dumper.ExportData(exportOptions);
+//        }
 
-            string file = Path.Combine(path, "ravendb.backup");
-            RotateLastGenerations(file);
+//        public static IEnumerable<TObjectType> GetAll<TObjectType>(this IDocumentSession session)
+//            where TObjectType : class
+//        {
+//            using (
+//                IEnumerator<StreamResult<object>> enumerator = session.Advanced.Stream<object>(
+//                    fromEtag: Etag.Empty,
+//                    start: 0,
+//                    pageSize: int.MaxValue))
+//                while (enumerator.MoveNext())
+//                {
+//                    var file = enumerator.Current.Document as TObjectType;
+//                    if (file != null)
+//                    {
+//                        yield return file;
+//                    }
+//                }
+//        }
 
-            var options = new SmugglerDatabaseOptions();
-
-            var dumper = new DatabaseDataDumper(documentStore.DocumentDatabase, options);
-
-            var exportOptions = new SmugglerExportOptions<RavenConnectionStringOptions>() { ToFile = file };
-
-            dumper.ExportData(exportOptions);
-        }
-
-        public static IEnumerable<TObjectType> GetAll<TObjectType>(this IDocumentSession session)
-            where TObjectType : class
-        {
-            using (
-                IEnumerator<StreamResult<object>> enumerator = session.Advanced.Stream<object>(
-                    fromEtag: Etag.Empty,
-                    start: 0,
-                    pageSize: int.MaxValue))
-                while (enumerator.MoveNext())
-                {
-                    var file = enumerator.Current.Document as TObjectType;
-                    if (file != null)
-                    {
-                        yield return file;
-                    }
-                }
-        }
-
-        public static bool Restore(this EmbeddableDocumentStore documentStore, string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                return false;
-            }
-
-            string file = Path.Combine(path, "ravendb.backup");
-            if (!File.Exists(file))
-            {
-                return false;
-            }
-
-            var options = new SmugglerDatabaseOptions();
-
-            var dumper = new DatabaseDataDumper(documentStore.DocumentDatabase, options);
-
-            var importOptions = new SmugglerImportOptions<RavenConnectionStringOptions>() { FromFile = file };
-            dumper.ImportData(importOptions);
-
-            return true;
-        }
+//        public static bool Restore(this EmbeddableDocumentStore documentStore, string path)
+//        {
+//            if (!Directory.Exists(path))
+//            {
+//                return false;
+//            }
+//
+//            string file = Path.Combine(path, "ravendb.backup");
+//            if (!File.Exists(file))
+//            {
+//                return false;
+//            }
+//
+//            var options = new SmugglerDatabaseOptions();
+//
+//            var dumper = new DatabaseDataDumper(documentStore.DocumentDatabase, options);
+//
+//            var importOptions = new SmugglerImportOptions<RavenConnectionStringOptions>() { FromFile = file };
+//            dumper.ImportData(importOptions);
+//
+//            return true;
+//        }
 
         public static void RotateLastGenerations(string file)
         {
