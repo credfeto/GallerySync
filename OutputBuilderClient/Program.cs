@@ -1,4 +1,7 @@
-﻿namespace OutputBuilderClient
+﻿using System.Threading.Tasks;
+using Newtonsoft.Json;
+
+namespace OutputBuilderClient
 {
     using System;
     using System.Collections.Concurrent;
@@ -371,69 +374,40 @@
             }
         }
 
-//        private static HashSet<string> Process(
-//            EmbeddableDocumentStore documentStoreInput,
-//            EmbeddableDocumentStore documentStoreOutput)
-//        {
-//            using (IDocumentSession inputSession = documentStoreInput.OpenSession())
-//            {
-//                var items = new HashSet<string>();
-//
-//                var allPhotos = inputSession.GetAll<Photo>().ToArray();
-//                var partitioner = Partitioner.Create(allPhotos, true);
-//
-//                var q = partitioner.AsParallel();
-//
-//                q.ForEach(
-//                    sourcePhoto =>
-//                        {
-//                            ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
-//                        });
-//
-//                return items;
-//            }
-//        }
+        private static HashSet<string> Process(
+            Photo[] source,
+            Photo[] target)
+        {
+            
+            {
+                var items = new HashSet<string>();
+
+                var partitioner = Partitioner.Create(source, true);
+
+                ParallelQuery<Photo> q = partitioner.AsParallel();
+
+                q.ForAll(
+                    sourcePhoto =>
+                        {
+                            ProcessSinglePhoto(target, sourcePhoto, items);
+                        });
+
+                return items;
+            }
+        }
 
         private static void ProcessGallery()
         {
-            List<Photo> source = LoadRepository(Settings.Default.DatabaseInputFolder);
-            List<Photo> output = LoadRepository(Settings.Default.DatabaseOutputFolder);
+            Photo[] source = LoadRepository(Settings.Default.DatabaseInputFolder);
+            Photo[] target = LoadRepository(Settings.Default.DatabaseOutputFolder);
+
             
-//            var documentStoreInput = new EmbeddableDocumentStore { RunInMemory = true };
-//            documentStoreInput.Initialize();
-//            if (!documentStoreInput.Restore(Settings.Default.LatestDatabaseBackupFolder))
-//            {
-//                return;
-//            }
-//
-//            string dbOutputFolder = Settings.Default.DatabaseOutputFolder;
-//            bool restore = !Directory.Exists(dbOutputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
-//            if (!Directory.Exists(dbOutputFolder))
-//            {
-//                Directory.CreateDirectory(dbOutputFolder);
-//            }
-//
-//            var documentStoreOutput = new EmbeddableDocumentStore
-//                                          {
-//                                              DataDirectory = dbOutputFolder,
-//                                              RunInMemory = false
-//                                          };
-//
-//            documentStoreOutput.Initialize();
-//
-//            if (restore)
-//            {
-//                documentStoreOutput.Restore(Settings.Default.DatabaseBackupFolder);
-//            }
-//
-//            HashSet<string> liveItems = Process(documentStoreInput, documentStoreOutput);
-//
-//            KillDeadItems(documentStoreOutput, liveItems);
-//
-//            documentStoreOutput.Backup(Settings.Default.DatabaseBackupFolder);
+            HashSet<string> liveItems = Process(source, target);
+
+            KillDeadItems(liveItems);
         }
 
-        private static List<Photo> LoadRepository(string baseFolder)
+        private static Photo[] LoadRepository(string baseFolder)
         {
             Console.WriteLine("Loading Repository from {0}...", baseFolder);
             var scores = new[]
@@ -456,7 +430,6 @@
         }
 
         private static void ProcessOneFile(
-            //IDocumentSession outputSession,
             Photo sourcePhoto,
             Photo targetPhoto,
             bool rebuild,
@@ -511,22 +484,34 @@
                     AddUploadFiles(filesCreated);
                 }
 
-                //TODO:
-                //outputSession.Store(targetPhoto, targetPhoto.PathHash);
+                Store(targetPhoto);
             }
             else
             {
                 AddUploadFiles(filesCreated);
-                // TODO
-                //outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
+
+                Store(sourcePhoto);
             }
 
-            // TODO
-            //outputSession.SaveChanges();
+        }
+        
+        private static void Store(Photo photo)
+        {
+            var safeUrl = photo.UrlSafePath.Replace('/', Path.DirectorySeparatorChar);
+            safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
+            safeUrl += ".info";
+
+            var outputPath = Path.Combine(
+                Settings.Default.DatabaseOutputFolder,
+                safeUrl
+            );
+
+            var txt = JsonConvert.SerializeObject(photo);
+            FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
         }
 
         private static void ProcessSinglePhoto(
-            //EmbeddableDocumentStore documentStoreOutput,
+            Photo[] target,
             Photo sourcePhoto,
             HashSet<string> items)
         {
@@ -537,7 +522,7 @@
                 //using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
                 {
                     // TODO:
-                    Photo targetPhoto = null; //outputSession.Load<Photo>(sourcePhoto.PathHash);
+                    Photo targetPhoto = target.FirstOrDefault( item => item.PathHash == sourcePhoto.PathHash); //outputSession.Load<Photo>(sourcePhoto.PathHash);
                     bool build = targetPhoto == null;
                     bool rebuild = targetPhoto != null && NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
                     bool rebuildMetadata = targetPhoto != null && MetadataVersionOutOfDate(targetPhoto);

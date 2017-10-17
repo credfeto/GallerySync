@@ -11,7 +11,18 @@
         {
             const int maxRetries = 5;
 
+            EnsureFolderExists(fileName);
+
             WriteWithRetries(fileName, bytes, maxRetries);
+        }
+        
+        private static void EnsureFolderExists(string fileName)
+        {
+            var path = Path.GetDirectoryName(fileName);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
         }
 
         private static void DeleteFile(string fileName)

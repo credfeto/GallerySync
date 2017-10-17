@@ -29,7 +29,6 @@ namespace Twaddle.Directory.Scanner
                 while (!completed)
                 {
                     filesFound += ProcessEntries(context);
-                    
 
                     completed = t.Join(waitTime);
                 }

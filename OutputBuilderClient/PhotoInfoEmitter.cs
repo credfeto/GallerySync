@@ -18,9 +18,9 @@ namespace OutputBuilderClient
             _basePath = basePath;
         }
         
-        public List<Photo> Photos
+        public Photo[] Photos
         {
-            get { return _photos; }
+            get { return _photos.ToArray(); }
         }
 
         public void FileFound(FileEntry entry)
