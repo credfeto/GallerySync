@@ -151,5 +151,14 @@ namespace OutputBuilderClient.Properties {
                 this["LatestDatabaseBackupFolder"] = value;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\PhotoDb\\ShortUrls.csv")]
+        public string ShortNamesFile {
+            get {
+                return ((string)(this["ShortNamesFile"]));
+            }
+        }
     }
 }

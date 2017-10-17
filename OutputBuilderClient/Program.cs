@@ -38,28 +38,29 @@
             return false;
         }
 
-        private static void AddUploadFiles(List<string> filesCreated, IDocumentSession outputSession)
+        private static void AddUploadFiles(List<string> filesCreated)
         {
-            foreach (string file in filesCreated)
-            {
-                string key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(file));
-
-                var existing = outputSession.Load<FileToUpload>(key);
-                if (existing == null)
-                {
-                    var fileToUpload = new FileToUpload { FileName = file, Completed = false };
-
-                    outputSession.Store(fileToUpload, key);
-                }
-                else
-                {
-                    if (existing.Completed)
-                    {
-                        existing.Completed = false;
-                        outputSession.Store(existing, key);
-                    }
-                }
-            }
+            // TODO: Ire-implement
+//            foreach (string file in filesCreated)
+//            {
+//                string key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(file));
+//
+//                var existing = outputSession.Load<FileToUpload>(key);
+//                if (existing == null)
+//                {
+//                    var fileToUpload = new FileToUpload { FileName = file, Completed = false };
+//
+//                    outputSession.Store(fileToUpload, key);
+//                }
+//                else
+//                {
+//                    if (existing.Completed)
+//                    {
+//                        existing.Completed = false;
+//                        outputSession.Store(existing, key);
+//                    }
+//                }
+//            }
         }
 
         private static void BoostPriority()
@@ -210,44 +211,46 @@
             return false;
         }
 
-        private static void KillDeadItems(EmbeddableDocumentStore documentStoreOutput, HashSet<string> liveItems)
+        private static void KillDeadItems( HashSet<string> liveItems)
         {
-            using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
-            {
-                foreach (Photo sourcePhoto in outputSession.GetAll<Photo>())
-                {
-                    if (liveItems.Contains(sourcePhoto.PathHash))
-                    {
-                        continue;
-                    }
-
-                    KillOnePhoto(documentStoreOutput, sourcePhoto);
-                }
-            }
+            // TODO: REIMPLEMENT
+//            using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
+//            {
+//                foreach (Photo sourcePhoto in outputSession.GetAll<Photo>())
+//                {
+//                    if (liveItems.Contains(sourcePhoto.PathHash))
+//                    {
+//                        continue;
+//                    }
+//
+//                    KillOnePhoto(documentStoreOutput, sourcePhoto);
+//                }
+//            }
         }
 
-        private static void KillOnePhoto(EmbeddableDocumentStore documentStoreOutput, Photo sourcePhoto)
+        private static void KillOnePhoto(Photo sourcePhoto)
         {
-            using (IDocumentSession deletionSession = documentStoreOutput.OpenSession())
-            {
-                var targetPhoto = deletionSession.Load<Photo>(sourcePhoto.PathHash);
-                if (targetPhoto != null)
-                {
-                    OutputText("Deleting {0} as no longer exists", sourcePhoto.UrlSafePath);
-                    deletionSession.Delete(targetPhoto);
-
-                    deletionSession.SaveChanges();
-                }
-                else
-                {
-                    OutputText("Could not delete {0}", sourcePhoto.UrlSafePath);
-                }
-            }
+            // TODO: REIMPLEMENT
+//            using (IDocumentSession deletionSession = documentStoreOutput.OpenSession())
+//            {
+//                var targetPhoto = deletionSession.Load<Photo>(sourcePhoto.PathHash);
+//                if (targetPhoto != null)
+//                {
+//                    OutputText("Deleting {0} as no longer exists", sourcePhoto.UrlSafePath);
+//                    deletionSession.Delete(targetPhoto);
+//
+//                    deletionSession.SaveChanges();
+//                }
+//                else
+//                {
+//                    OutputText("Could not delete {0}", sourcePhoto.UrlSafePath);
+//                }
+//            }
         }
 
         private static void LoadShortUrls()
         {
-            var logPath = Alphaleonis.Win32.Filesystem.Path.Combine(Settings.Default.ImagesOutputPath, @"ShortUrls.csv");
+            var logPath = Settings.Default.ShortNamesFile;
 
             if (Alphaleonis.Win32.Filesystem.File.Exists(logPath))
             {
@@ -368,67 +371,92 @@
             }
         }
 
-        private static HashSet<string> Process(
-            EmbeddableDocumentStore documentStoreInput,
-            EmbeddableDocumentStore documentStoreOutput)
-        {
-            using (IDocumentSession inputSession = documentStoreInput.OpenSession())
-            {
-                var items = new HashSet<string>();
-
-                var allPhotos = inputSession.GetAll<Photo>().ToArray();
-                var partitioner = Partitioner.Create(allPhotos, true);
-
-                var q = partitioner.AsParallel();
-
-                q.ForEach(
-                    sourcePhoto =>
-                        {
-                            ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
-                        });
-
-                return items;
-            }
-        }
+//        private static HashSet<string> Process(
+//            EmbeddableDocumentStore documentStoreInput,
+//            EmbeddableDocumentStore documentStoreOutput)
+//        {
+//            using (IDocumentSession inputSession = documentStoreInput.OpenSession())
+//            {
+//                var items = new HashSet<string>();
+//
+//                var allPhotos = inputSession.GetAll<Photo>().ToArray();
+//                var partitioner = Partitioner.Create(allPhotos, true);
+//
+//                var q = partitioner.AsParallel();
+//
+//                q.ForEach(
+//                    sourcePhoto =>
+//                        {
+//                            ProcessSinglePhoto(documentStoreOutput, sourcePhoto, items);
+//                        });
+//
+//                return items;
+//            }
+//        }
 
         private static void ProcessGallery()
         {
-            var documentStoreInput = new EmbeddableDocumentStore { RunInMemory = true };
-            documentStoreInput.Initialize();
-            if (!documentStoreInput.Restore(Settings.Default.LatestDatabaseBackupFolder))
+            List<Photo> source = LoadRepository(Settings.Default.DatabaseInputFolder);
+            List<Photo> output = LoadRepository(Settings.Default.DatabaseOutputFolder);
+            
+//            var documentStoreInput = new EmbeddableDocumentStore { RunInMemory = true };
+//            documentStoreInput.Initialize();
+//            if (!documentStoreInput.Restore(Settings.Default.LatestDatabaseBackupFolder))
+//            {
+//                return;
+//            }
+//
+//            string dbOutputFolder = Settings.Default.DatabaseOutputFolder;
+//            bool restore = !Directory.Exists(dbOutputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
+//            if (!Directory.Exists(dbOutputFolder))
+//            {
+//                Directory.CreateDirectory(dbOutputFolder);
+//            }
+//
+//            var documentStoreOutput = new EmbeddableDocumentStore
+//                                          {
+//                                              DataDirectory = dbOutputFolder,
+//                                              RunInMemory = false
+//                                          };
+//
+//            documentStoreOutput.Initialize();
+//
+//            if (restore)
+//            {
+//                documentStoreOutput.Restore(Settings.Default.DatabaseBackupFolder);
+//            }
+//
+//            HashSet<string> liveItems = Process(documentStoreInput, documentStoreOutput);
+//
+//            KillDeadItems(documentStoreOutput, liveItems);
+//
+//            documentStoreOutput.Backup(Settings.Default.DatabaseBackupFolder);
+        }
+
+        private static List<Photo> LoadRepository(string baseFolder)
+        {
+            Console.WriteLine("Loading Repository from {0}...", baseFolder);
+            var scores = new[]
             {
-                return;
-            }
+                ".info"
+            };
 
-            string dbOutputFolder = Settings.Default.DatabaseOutputFolder;
-            bool restore = !Directory.Exists(dbOutputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
-            if (!Directory.Exists(dbOutputFolder))
+            var sidecarFiles = new List<string>();
+
+            var emitter = new PhotoInfoEmitter(baseFolder);
+
+            if (Directory.Exists(baseFolder))
             {
-                Directory.CreateDirectory(dbOutputFolder);
+                long filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+
+                Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
             }
-
-            var documentStoreOutput = new EmbeddableDocumentStore
-                                          {
-                                              DataDirectory = dbOutputFolder,
-                                              RunInMemory = false
-                                          };
-
-            documentStoreOutput.Initialize();
-
-            if (restore)
-            {
-                documentStoreOutput.Restore(Settings.Default.DatabaseBackupFolder);
-            }
-
-            HashSet<string> liveItems = Process(documentStoreInput, documentStoreOutput);
-
-            KillDeadItems(documentStoreOutput, liveItems);
-
-            documentStoreOutput.Backup(Settings.Default.DatabaseBackupFolder);
+            
+            return emitter.Photos;
         }
 
         private static void ProcessOneFile(
-            IDocumentSession outputSession,
+            //IDocumentSession outputSession,
             Photo sourcePhoto,
             Photo targetPhoto,
             bool rebuild,
@@ -480,22 +508,25 @@
 
                 if (buildImages)
                 {
-                    AddUploadFiles(filesCreated, outputSession);
+                    AddUploadFiles(filesCreated);
                 }
 
-                outputSession.Store(targetPhoto, targetPhoto.PathHash);
+                //TODO:
+                //outputSession.Store(targetPhoto, targetPhoto.PathHash);
             }
             else
             {
-                AddUploadFiles(filesCreated, outputSession);
-                outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
+                AddUploadFiles(filesCreated);
+                // TODO
+                //outputSession.Store(sourcePhoto, sourcePhoto.PathHash);
             }
 
-            outputSession.SaveChanges();
+            // TODO
+            //outputSession.SaveChanges();
         }
 
         private static void ProcessSinglePhoto(
-            EmbeddableDocumentStore documentStoreOutput,
+            //EmbeddableDocumentStore documentStoreOutput,
             Photo sourcePhoto,
             HashSet<string> items)
         {
@@ -503,9 +534,10 @@
 
             try
             {
-                using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
+                //using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
                 {
-                    var targetPhoto = outputSession.Load<Photo>(sourcePhoto.PathHash);
+                    // TODO:
+                    Photo targetPhoto = null; //outputSession.Load<Photo>(sourcePhoto.PathHash);
                     bool build = targetPhoto == null;
                     bool rebuild = targetPhoto != null && NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
                     bool rebuildMetadata = targetPhoto != null && MetadataVersionOutOfDate(targetPhoto);
@@ -519,7 +551,7 @@
 
                         if (ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
                         {
-                            shortUrl = TryGenerateShortUrl(documentStoreOutput, url);
+                            shortUrl = TryGenerateShortUrl(url);
 
                             if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                             {
@@ -552,7 +584,7 @@
 
                     if (build || rebuild || rebuildMetadata)
                     {
-                        ProcessOneFile(outputSession, sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
+                        ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
                     }
                     else
                     {
@@ -647,7 +679,7 @@
                    || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
         }
 
-        private static string TryGenerateShortUrl(EmbeddableDocumentStore documentStoreOutput, string url)
+        private static string TryGenerateShortUrl(string url)
         {
             string shortUrl;
             if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
@@ -655,57 +687,60 @@
                 return shortUrl;
             }
 
-            using (IDocumentSession shortenerSession = documentStoreOutput.OpenSession())
+            //using (IDocumentSession shortenerSession = documentStoreOutput.OpenSession())
             {
-                const int maxImpressionsPerMonth = 100;
+                //const int maxImpressionsPerMonth = 100;
 
-                const string tag = @"BitlyShortenerStats";
-                DateTime now = DateTime.UtcNow;
-                var counter = shortenerSession.Load<ShortenerCount>(tag);
-                if (counter == null)
-                {
-                    counter = new ShortenerCount();
-
-                    counter.Year = now.Year;
-                    counter.Month = now.Month;
-                    counter.Impressions = 1;
-                    counter.TotalImpressionsEver = 1;
-
-                    shortenerSession.Store(counter, tag);
-                    shortenerSession.SaveChanges();
-                }
-                else
-                {
-                    if (counter.Year != now.Year || counter.Month != now.Month)
-                    {
-                        counter.Impressions = 0;
-
-                        if (counter.Year == 2015 && counter.Month == 4)
-                        {
-                            counter.Impressions = maxImpressionsPerMonth * 10;
-                        }
-                    }
-
-                    if (counter.Impressions < maxImpressionsPerMonth)
-                    {
-                        Console.WriteLine("Bitly Impressions for {0}", counter.Impressions);
-                        Console.WriteLine("Bitly Impressions total {0}", counter.TotalImpressionsEver);
-                        ++counter.Impressions;
-                        ++counter.TotalImpressionsEver;
-
-                        shortenerSession.Store(counter, tag);
-                        shortenerSession.SaveChanges();
-                    }
-                }
-
-                if (counter.Impressions < maxImpressionsPerMonth)
-                {
-                    return BitlyUrlShortner.Shorten(new Uri(url)).ToString();
-                }
-                else
-                {
-                    return url;
-                }
+                //const string tag = @"BitlyShortenerStats";
+                //DateTime now = DateTime.UtcNow;
+                
+                // TODO:
+//                var counter = shortenerSession.Load<ShortenerCount>(tag);
+//                if (counter == null)
+//                {
+//                    counter = new ShortenerCount();
+//
+//                    counter.Year = now.Year;
+//                    counter.Month = now.Month;
+//                    counter.Impressions = 1;
+//                    counter.TotalImpressionsEver = 1;
+//
+//                    shortenerSession.Store(counter, tag);
+//                    shortenerSession.SaveChanges();
+//                }
+//                else
+//                {
+//                    if (counter.Year != now.Year || counter.Month != now.Month)
+//                    {
+//                        counter.Impressions = 0;
+//
+//                        if (counter.Year == 2015 && counter.Month == 4)
+//                        {
+//                            counter.Impressions = maxImpressionsPerMonth * 10;
+//                        }
+//                    }
+//
+//                    if (counter.Impressions < maxImpressionsPerMonth)
+//                    {
+//                        Console.WriteLine("Bitly Impressions for {0}", counter.Impressions);
+//                        Console.WriteLine("Bitly Impressions total {0}", counter.TotalImpressionsEver);
+//                        ++counter.Impressions;
+//                        ++counter.TotalImpressionsEver;
+//
+//                        shortenerSession.Store(counter, tag);
+//                        shortenerSession.SaveChanges();
+//                    }
+//                }
+//
+//                if (counter.Impressions < maxImpressionsPerMonth)
+//                {
+//                    return BitlyUrlShortner.Shorten(new Uri(url)).ToString();
+//                }
+//                else
+//                {
+//                    return url;
+//                }
+                return url;
             }
         }
 
