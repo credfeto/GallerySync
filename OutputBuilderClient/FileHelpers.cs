@@ -1,10 +1,10 @@
-﻿namespace OutputBuilderClient
+﻿using System;
+using Alphaleonis.Win32.Filesystem;
+using TagLib;
+using File = Alphaleonis.Win32.Filesystem.File;
+
+namespace OutputBuilderClient
 {
-    using System;
-    using System.IO;
-
-    using TagLib;
-
     internal static class FileHelpers
     {
         public static void WriteAllBytes(string fileName, byte[] bytes)
@@ -15,21 +15,19 @@
 
             WriteWithRetries(fileName, bytes, maxRetries);
         }
-        
+
         private static void EnsureFolderExists(string fileName)
         {
             var path = Path.GetDirectoryName(fileName);
             if (!Directory.Exists(path))
-            {
                 Directory.CreateDirectory(path);
-            }
         }
 
         private static void DeleteFile(string fileName)
         {
             try
             {
-                Alphaleonis.Win32.Filesystem.File.Delete(fileName);
+                File.Delete(fileName);
             }
             catch
             {
@@ -38,8 +36,7 @@
 
         private static void RemoveExistingFile(string fileName)
         {
-            if (Alphaleonis.Win32.Filesystem.File.Exists(fileName))
-            {
+            if (File.Exists(fileName))
                 try
                 {
                     DeleteFile(fileName);
@@ -48,26 +45,21 @@
                 {
                     // Don't care if it fails
                 }
-            }
         }
 
         private static void VerifyContent(string path, byte[] bytes)
         {
-            var written = Alphaleonis.Win32.Filesystem.File.ReadAllBytes(path);
+            var written = File.ReadAllBytes(path);
             if (bytes.Length != written.Length)
-            {
                 throw new CorruptFileException(
                     string.Format(
                         "File {0} does not contain the bytes that were written (size different Src:{1} != Dest:{2})",
                         path,
                         bytes.Length,
                         written.Length));
-            }
 
-            for (int pos = 0; pos < bytes.Length; ++pos)
-            {
+            for (var pos = 0; pos < bytes.Length; ++pos)
                 if (bytes[pos] != written[pos])
-                {
                     throw new CorruptFileException(
                         string.Format(
                             "File {0} does not contain the bytes that were written (different at position {1} Src:{2} != Dest:{3})",
@@ -75,8 +67,6 @@
                             pos,
                             bytes[pos],
                             written[pos]));
-                }
-            }
         }
 
         private static void WriteContent(string path, byte[] bytes)
@@ -88,12 +78,12 @@
 
         private static void WriteNoVerify(string path, byte[] bytes)
         {
-            Alphaleonis.Win32.Filesystem.File.WriteAllBytes(path, bytes);            
+            File.WriteAllBytes(path, bytes);
         }
 
         private static void WriteWithRetries(string fileName, byte[] data, int maxRetries)
         {
-            int retries = 0;
+            var retries = 0;
             while (retries < maxRetries)
             {
                 RemoveExistingFile(fileName);
