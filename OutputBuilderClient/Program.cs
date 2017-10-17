@@ -627,60 +627,65 @@ namespace OutputBuilderClient
             if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                 return shortUrl;
 
-            //using (IDocumentSession shortenerSession = documentStoreOutput.OpenSession())
+            
+            lock(Lock)
             {
-                //const int maxImpressionsPerMonth = 100;
+                string filename = Settings.Default.ShortNamesFile + ".tracking.json";
+                
+                List<ShortenerCount> tracking = new List<ShortenerCount>();
+                if (File.Exists(filename))
+                {
+                    var bytes = File.ReadAllBytes(filename);
 
-                //const string tag = @"BitlyShortenerStats";
-                //DateTime now = DateTime.UtcNow;
+                    var items = JsonConvert.DeserializeObject<ShortenerCount[]>(Encoding.UTF8.GetString(bytes));
+
+                    tracking.AddRange(items);
+                }
+                
+                const int maxImpressionsPerMonth = 100;
+
+                DateTime now = DateTime.UtcNow;
 
                 // TODO:
-//                var counter = shortenerSession.Load<ShortenerCount>(tag);
-//                if (counter == null)
-//                {
-//                    counter = new ShortenerCount();
-//
-//                    counter.Year = now.Year;
-//                    counter.Month = now.Month;
-//                    counter.Impressions = 1;
-//                    counter.TotalImpressionsEver = 1;
-//
-//                    shortenerSession.Store(counter, tag);
-//                    shortenerSession.SaveChanges();
-//                }
-//                else
-//                {
-//                    if (counter.Year != now.Year || counter.Month != now.Month)
-//                    {
-//                        counter.Impressions = 0;
-//
-//                        if (counter.Year == 2015 && counter.Month == 4)
-//                        {
-//                            counter.Impressions = maxImpressionsPerMonth * 10;
-//                        }
-//                    }
-//
-//                    if (counter.Impressions < maxImpressionsPerMonth)
-//                    {
-//                        Console.WriteLine("Bitly Impressions for {0}", counter.Impressions);
-//                        Console.WriteLine("Bitly Impressions total {0}", counter.TotalImpressionsEver);
-//                        ++counter.Impressions;
-//                        ++counter.TotalImpressionsEver;
-//
-//                        shortenerSession.Store(counter, tag);
-//                        shortenerSession.SaveChanges();
-//                    }
-//                }
-//
-//                if (counter.Impressions < maxImpressionsPerMonth)
-//                {
-//                    return BitlyUrlShortner.Shorten(new Uri(url)).ToString();
-//                }
-//                else
-//                {
-//                    return url;
-//                }
-                return url;
+                var counter = tracking.FirstOrDefault( item => item.Year == now.Year && item.Month == now.Month );
+                if (counter == null)
+                {
+                    counter = new ShortenerCount();
+
+                    counter.Year = now.Year;
+                    counter.Month = now.Month;
+                    counter.Impressions = 1;
+                    counter.TotalImpressionsEver = 1;
+                    
+                    tracking.Add(counter);
+
+                    File.WriteAllBytes(
+                        filename, 
+                        Encoding.UTF8.GetBytes( JsonConvert.SerializeObject(tracking.ToArray())));
+                }
+                else
+                {
+                    if (counter.Impressions < maxImpressionsPerMonth)
+                    {
+                        Console.WriteLine("Bitly Impressions for {0}", counter.Impressions);
+                        Console.WriteLine("Bitly Impressions total {0}", counter.TotalImpressionsEver);
+                        ++counter.Impressions;
+                        ++counter.TotalImpressionsEver;
+
+                        File.WriteAllBytes(
+                            filename, 
+                            Encoding.UTF8.GetBytes( JsonConvert.SerializeObject(tracking.ToArray())));
+                    }
+                }
+
+                if (counter.Impressions < maxImpressionsPerMonth)
+                {
+                    return BitlyUrlShortner.Shorten(new Uri(url)).ToString();
+                }
+                else
+                {
+                    return url;
+                }
             }
         }
 
