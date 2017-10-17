@@ -1,25 +1,18 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using Alphaleonis.Win32.Filesystem;
+using FileNaming;
 using Newtonsoft.Json;
+using OutputBuilderClient.Properties;
+using Twaddle.Directory.Scanner;
+using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
 {
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
-
-    using Alphaleonis.Win32.Filesystem;
-
-    using FileNaming;
-
-    using OutputBuilderClient.Properties;
-
-
-    using Twaddle.Directory.Scanner;
-    using Twaddle.Gallery.ObjectModel;
-
     internal class Program
     {
         private static readonly object Lock = new object();
@@ -79,17 +72,13 @@ namespace OutputBuilderClient
 
         private static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
         {
-            PhotoMetadata dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
+            var dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
             if (dateTaken == null)
-            {
                 return DateTime.MinValue;
-            }
 
             DateTime value;
             if (DateTime.TryParse(dateTaken.Value, out value))
-            {
                 return value;
-            }
 
             return DateTime.MinValue;
         }
@@ -107,13 +96,13 @@ namespace OutputBuilderClient
                 return true;
             }
 
-            foreach (ImageSize resize in photoToProcess.ImageSizes)
+            foreach (var resize in photoToProcess.ImageSizes)
             {
-                string resizedFileName = Alphaleonis.Win32.Filesystem.Path.Combine(
+                var resizedFileName = Path.Combine(
                     Settings.Default.ImagesOutputPath,
                     HashNaming.PathifyHash(photoToProcess.PathHash),
                     ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
-                if (!Alphaleonis.Win32.Filesystem.File.Exists(resizedFileName))
+                if (!File.Exists(resizedFileName))
                 {
                     Console.WriteLine(
                         " +++ Force rebuild: Missing image for size {0}x{1} (jpg)",
@@ -142,11 +131,11 @@ namespace OutputBuilderClient
                 //}
                 if (resize.Width == Settings.Default.ThumbnailSize)
                 {
-                    resizedFileName = Alphaleonis.Win32.Filesystem.Path.Combine(
+                    resizedFileName = Path.Combine(
                         Settings.Default.ImagesOutputPath,
                         HashNaming.PathifyHash(photoToProcess.PathHash),
                         ImageExtraction.IndividualResizeFileName(photoToProcess, resize, "png"));
-                    if (!Alphaleonis.Win32.Filesystem.File.Exists(resizedFileName))
+                    if (!File.Exists(resizedFileName))
                     {
                         Console.WriteLine(
                             " +++ Force rebuild: Missing image for size {0}x{1} (png)",
@@ -168,12 +157,13 @@ namespace OutputBuilderClient
                 return true;
             }
 
-            foreach (ComponentFile componentFile in targetPhoto.Files)
+            foreach (var componentFile in targetPhoto.Files)
             {
-                ComponentFile found =
+                var found =
                     sourcePhoto.Files.FirstOrDefault(
                         candiate =>
-                        StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension, componentFile.Extension));
+                            StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension,
+                                componentFile.Extension));
 
                 if (found != null)
                 {
@@ -184,14 +174,11 @@ namespace OutputBuilderClient
                     }
 
                     if (componentFile.LastModified == found.LastModified)
-                    {
-                        // Assume if file modified date not changed then the file itself hasn't changed
                         continue;
-                    }
 
                     if (string.IsNullOrWhiteSpace(found.Hash))
                     {
-                        string filename = Alphaleonis.Win32.Filesystem.Path.Combine(
+                        var filename = Path.Combine(
                             Settings.Default.RootFolder,
                             sourcePhoto.BasePath + componentFile.Extension);
 
@@ -214,7 +201,7 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static void KillDeadItems( HashSet<string> liveItems)
+        private static void KillDeadItems(HashSet<string> liveItems)
         {
             // TODO: REIMPLEMENT
 //            using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
@@ -255,24 +242,20 @@ namespace OutputBuilderClient
         {
             var logPath = Settings.Default.ShortNamesFile;
 
-            if (Alphaleonis.Win32.Filesystem.File.Exists(logPath))
+            if (File.Exists(logPath))
             {
                 Console.WriteLine("Loading Existing Short Urls:");
-                var lines = Alphaleonis.Win32.Filesystem.File.ReadAllLines(logPath);
+                var lines = File.ReadAllLines(logPath);
 
                 foreach (var line in lines)
                 {
                     if (!line.StartsWith(@"http://", StringComparison.OrdinalIgnoreCase)
                         && !line.StartsWith(@"https://", StringComparison.OrdinalIgnoreCase))
-                    {
                         continue;
-                    }
 
                     var process = line.Trim().Split('\t');
                     if (process.Length != 2)
-                    {
                         continue;
-                    }
 
                     if (!ShorternedUrls.ContainsKey(process[0]))
                     {
@@ -289,20 +272,18 @@ namespace OutputBuilderClient
         private static void LogShortUrl(string url, string shortUrl)
         {
             if (ShorternedUrls.ContainsKey(url))
-            {
                 return;
-            }
 
             lock (ShortUrlLock)
             {
                 ShorternedUrls.Add(url, shortUrl);
             }
 
-            var logPath = Alphaleonis.Win32.Filesystem.Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
+            var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
 
-            var text = new[] { string.Format("{0}\t{1}", url, shortUrl) };
+            var text = new[] {string.Format("{0}\t{1}", url, shortUrl)};
 
-            Alphaleonis.Win32.Filesystem.File.AppendAllLines(logPath, text);
+            File.AppendAllLines(logPath, text);
         }
 
         private static int Main(string[] args)
@@ -366,7 +347,7 @@ namespace OutputBuilderClient
 
         private static void OutputText(string formatString, params object[] parameters)
         {
-            string text = string.Format(formatString, parameters);
+            var text = string.Format(formatString, parameters);
 
             lock (Lock)
             {
@@ -378,31 +359,27 @@ namespace OutputBuilderClient
             Photo[] source,
             Photo[] target)
         {
-            
             {
-                var items = new HashSet<string>();
+                var items = new ConcurrentDictionary<string, bool>();
 
                 var partitioner = Partitioner.Create(source, true);
 
-                ParallelQuery<Photo> q = partitioner.AsParallel();
+                var q = partitioner.AsParallel();
 
                 q.ForAll(
-                    sourcePhoto =>
-                        {
-                            ProcessSinglePhoto(target, sourcePhoto, items);
-                        });
+                    sourcePhoto => { ProcessSinglePhoto(target, sourcePhoto, items); });
 
-                return items;
+                return new HashSet<string>(items.Keys);
             }
         }
 
         private static void ProcessGallery()
         {
-            Photo[] source = LoadRepository(Settings.Default.DatabaseInputFolder);
-            Photo[] target = LoadRepository(Settings.Default.DatabaseOutputFolder);
+            var source = LoadRepository(Settings.Default.DatabaseInputFolder);
+            var target = LoadRepository(Settings.Default.DatabaseOutputFolder);
 
-            
-            HashSet<string> liveItems = Process(source, target);
+
+            var liveItems = Process(source, target);
 
             KillDeadItems(liveItems);
         }
@@ -421,11 +398,11 @@ namespace OutputBuilderClient
 
             if (Directory.Exists(baseFolder))
             {
-                long filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                var filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
                 Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
             }
-            
+
             return emitter.Photos;
         }
 
@@ -441,25 +418,21 @@ namespace OutputBuilderClient
 
             UpdateFileHashes(targetPhoto, sourcePhoto);
 
-            bool buildMetadata = targetPhoto == null || rebuild || rebuildMetadata
-                                 || (targetPhoto != null && targetPhoto.Metadata == null);
+            var buildMetadata = targetPhoto == null || rebuild || rebuildMetadata
+                                || targetPhoto != null && targetPhoto.Metadata == null;
 
             if (buildMetadata)
-            {
                 sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
-            }
             else
-            {
                 sourcePhoto.Metadata = targetPhoto.Metadata;
-            }
 
-            bool buildImages = targetPhoto == null || rebuild
-                               || (targetPhoto != null && !targetPhoto.ImageSizes.HasAny());
+            var buildImages = targetPhoto == null || rebuild
+                              || targetPhoto != null && !targetPhoto.ImageSizes.HasAny();
 
             var filesCreated = new List<string>();
             if (buildImages)
             {
-                DateTime creationDate = ExtractCreationDate(sourcePhoto.Metadata);
+                var creationDate = ExtractCreationDate(sourcePhoto.Metadata);
                 sourcePhoto.ImageSizes = ImageExtraction.BuildImages(
                     sourcePhoto,
                     filesCreated,
@@ -480,9 +453,7 @@ namespace OutputBuilderClient
                 targetPhoto.Version = Constants.CurrentMetadataVersion;
 
                 if (buildImages)
-                {
                     AddUploadFiles(filesCreated);
-                }
 
                 Store(targetPhoto);
             }
@@ -492,9 +463,8 @@ namespace OutputBuilderClient
 
                 Store(sourcePhoto);
             }
-
         }
-        
+
         private static void Store(Photo photo)
         {
             var safeUrl = photo.UrlSafePath.Replace('/', Path.DirectorySeparatorChar);
@@ -507,13 +477,16 @@ namespace OutputBuilderClient
             );
 
             var txt = JsonConvert.SerializeObject(photo);
-            FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
+            lock (Lock)
+            {
+                FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
+            }
         }
 
         private static void ProcessSinglePhoto(
             Photo[] target,
             Photo sourcePhoto,
-            HashSet<string> items)
+            ConcurrentDictionary<string, bool> items)
         {
             ForceGarbageCollection();
 
@@ -522,12 +495,14 @@ namespace OutputBuilderClient
                 //using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
                 {
                     // TODO:
-                    Photo targetPhoto = target.FirstOrDefault( item => item.PathHash == sourcePhoto.PathHash); //outputSession.Load<Photo>(sourcePhoto.PathHash);
-                    bool build = targetPhoto == null;
-                    bool rebuild = targetPhoto != null && NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
-                    bool rebuildMetadata = targetPhoto != null && MetadataVersionOutOfDate(targetPhoto);
+                    var targetPhoto =
+                        target.FirstOrDefault(item =>
+                            item.PathHash == sourcePhoto.PathHash); //outputSession.Load<Photo>(sourcePhoto.PathHash);
+                    var build = targetPhoto == null;
+                    var rebuild = targetPhoto != null && NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
+                    var rebuildMetadata = targetPhoto != null && MetadataVersionOutOfDate(targetPhoto);
 
-                    string url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
+                    var url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
                     string shortUrl;
 
                     if (targetPhoto != null)
@@ -552,35 +527,22 @@ namespace OutputBuilderClient
                     else
                     {
                         if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
-                        {
                             Console.WriteLine("* Reusing existing short url: {0}", shortUrl);
-                        }
                     }
 
                     if (!string.IsNullOrWhiteSpace(shortUrl)
                         && !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
-                    {
                         sourcePhoto.ShortUrl = shortUrl;
-                    }
                     else
-                    {
                         shortUrl = Constants.DefaultShortUrl;
-                    }
 
                     if (build || rebuild || rebuildMetadata)
-                    {
                         ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
-                    }
                     else
-                    {
                         OutputText("Unchanged: {0}", targetPhoto.UrlSafePath);
-                    }
                 }
 
-                lock (Lock)
-                {
-                    items.Add(sourcePhoto.PathHash);
-                }
+                items.TryAdd(sourcePhoto.PathHash, true);
             }
             catch (AbortProcessingException exception)
             {
@@ -593,71 +555,66 @@ namespace OutputBuilderClient
             }
             catch (Exception exception)
             {
-                OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath, exception.Message);
+                OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
+                    exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
             }
         }
 
         private static void ReadMetadata(string filename)
         {
-            string folder = Alphaleonis.Win32.Filesystem.Path.GetDirectoryName(filename);
-            string file = Alphaleonis.Win32.Filesystem.Path.GetFileName(filename);
-            string extension = Alphaleonis.Win32.Filesystem.Path.GetExtension(filename);
+            var folder = Path.GetDirectoryName(filename);
+            var file = Path.GetFileName(filename);
+            var extension = Path.GetExtension(filename);
 
             var fileGroup = new List<string>();
-            if (Alphaleonis.Win32.Filesystem.File.Exists(filename.Replace(extension, ".xmp")))
-            {
+            if (File.Exists(filename.Replace(extension, ".xmp")))
                 fileGroup.Add(file.Replace(extension, ".xmp"));
-            }
 
             var entry = new FileEntry
-                            {
-                                Folder = folder,
-                                RelativeFolder = folder.Substring(Settings.Default.RootFolder.Length + 1),
-                                LocalFileName = file,
-                                AlternateFileNames = fileGroup
-                            };
+            {
+                Folder = folder,
+                RelativeFolder = folder.Substring(Settings.Default.RootFolder.Length + 1),
+                LocalFileName = file,
+                AlternateFileNames = fileGroup
+            };
 
-            string basePath = Alphaleonis.Win32.Filesystem.Path.Combine(
+            var basePath = Path.Combine(
                 entry.RelativeFolder,
-                Alphaleonis.Win32.Filesystem.Path.GetFileNameWithoutExtension(entry.LocalFileName));
+                Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
-            string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
+            var urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
             var photo = new Photo
-                            {
-                                BasePath = basePath,
-                                UrlSafePath = urlSafePath,
-                                PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
-                                ImageExtension = Alphaleonis.Win32.Filesystem.Path.GetExtension(entry.LocalFileName),
-                                Files =
-                                    fileGroup.Select(
-                                        x =>
-                                        new ComponentFile
-                                            {
-                                                Extension =
-                                                    Alphaleonis.Win32.Filesystem.Path.GetExtension(x)
-                                                    .TrimStart('.'),
-                                                Hash = string.Empty,
-                                                LastModified = new DateTime(2014, 1, 1),
-                                                FileSize = 1000
-                                            }).ToList()
-                            };
-
-            List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo);
-            foreach (PhotoMetadata item in metadata)
             {
+                BasePath = basePath,
+                UrlSafePath = urlSafePath,
+                PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
+                ImageExtension = Path.GetExtension(entry.LocalFileName),
+                Files =
+                    fileGroup.Select(
+                        x =>
+                            new ComponentFile
+                            {
+                                Extension =
+                                    Path.GetExtension(x)
+                                        .TrimStart('.'),
+                                Hash = string.Empty,
+                                LastModified = new DateTime(2014, 1, 1),
+                                FileSize = 1000
+                            }).ToList()
+            };
+
+            var metadata = MetadataExtraction.ExtractMetadata(photo);
+            foreach (var item in metadata)
                 Console.WriteLine("{0} = {1}", item.Name, item.Value);
-            }
         }
 
         private static bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
         {
             // ONly want to generate a short URL, IF the photo has already been uploaded AND is public
             if (sourcePhoto.UrlSafePath.StartsWith("private/", StringComparison.OrdinalIgnoreCase))
-            {
                 return false;
-            }
 
             return string.IsNullOrWhiteSpace(shortUrl)
                    || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url)
@@ -668,9 +625,7 @@ namespace OutputBuilderClient
         {
             string shortUrl;
             if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
-            {
                 return shortUrl;
-            }
 
             //using (IDocumentSession shortenerSession = documentStoreOutput.OpenSession())
             {
@@ -678,7 +633,7 @@ namespace OutputBuilderClient
 
                 //const string tag = @"BitlyShortenerStats";
                 //DateTime now = DateTime.UtcNow;
-                
+
                 // TODO:
 //                var counter = shortenerSession.Load<ShortenerCount>(tag);
 //                if (counter == null)
@@ -732,24 +687,20 @@ namespace OutputBuilderClient
         private static void UpdateFileHashes(Photo targetPhoto, Photo sourcePhoto)
         {
             if (targetPhoto != null)
-            {
-                foreach (ComponentFile sourceFile in
+                foreach (var sourceFile in
                     sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
                 {
-                    ComponentFile targetFile =
+                    var targetFile =
                         targetPhoto.Files.FirstOrDefault(
                             s => s.Extension == sourceFile.Extension && !string.IsNullOrWhiteSpace(s.Hash));
                     if (targetFile != null)
-                    {
                         sourceFile.Hash = targetFile.Hash;
-                    }
                 }
-            }
 
-            foreach (ComponentFile file in
+            foreach (var file in
                 sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
             {
-                string filename = Alphaleonis.Win32.Filesystem.Path.Combine(
+                var filename = Path.Combine(
                     Settings.Default.RootFolder,
                     sourcePhoto.BasePath + file.Extension);
 
