@@ -17,7 +17,7 @@ namespace OutputBuilderClient
 
         public Photo[] Photos
         {
-            get { return _photos.ToArray(); }
+            get { return _photos.OrderBy(x => x.UrlSafePath).ToArray(); }
         }
 
         public void FileFound(FileEntry entry)

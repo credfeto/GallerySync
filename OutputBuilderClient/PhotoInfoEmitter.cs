@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Linq;
 using System.Text;
 using Alphaleonis.Win32.Filesystem;
 using Newtonsoft.Json;
@@ -19,7 +20,7 @@ namespace OutputBuilderClient
 
         public Photo[] Photos
         {
-            get { return _photos.ToArray(); }
+            get { return _photos.OrderBy(x => x.UrlSafePath).ToArray(); }
         }
 
         public void FileFound(FileEntry entry)
