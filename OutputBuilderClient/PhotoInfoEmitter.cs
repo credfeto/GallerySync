@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Text;
 using Alphaleonis.Win32.Filesystem;
 using Newtonsoft.Json;
@@ -11,13 +10,13 @@ namespace OutputBuilderClient
     public class PhotoInfoEmitter : IFileEmitter
     {
         private readonly string _basePath;
-        private readonly List<Photo> _photos = new List<Photo>();
+        private readonly ConcurrentBag<Photo> _photos = new ConcurrentBag<Photo>();
 
         public PhotoInfoEmitter(string basePath)
         {
             _basePath = basePath;
         }
-        
+
         public Photo[] Photos
         {
             get { return _photos.ToArray(); }
@@ -28,10 +27,10 @@ namespace OutputBuilderClient
             var fullPath = Path.Combine(_basePath, entry.RelativeFolder, entry.LocalFileName);
 
             var bytes = File.ReadAllBytes(fullPath);
-            
-            
+
+
             var photo = JsonConvert.DeserializeObject<Photo>(Encoding.UTF8.GetString(bytes));
-            
+
             _photos.Add(photo);
         }
     }

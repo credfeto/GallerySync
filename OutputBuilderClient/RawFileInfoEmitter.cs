@@ -1,24 +1,23 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Alphaleonis.Win32.Filesystem;
 using FileNaming;
-using Newtonsoft.Json;
 using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
 
-namespace HomeClient
+namespace OutputBuilderClient
 {
-    public sealed class Emitter : IFileEmitter
+    public sealed class RawFileInfoEmitter : IFileEmitter
     {
-        private readonly string _dbFolder;
+        private readonly ConcurrentBag<Photo> _photos = new ConcurrentBag<Photo>();
 
-        public Emitter(string dbFolder)
+        public Photo[] Photos
         {
-            _dbFolder = dbFolder;
-            Directory.Delete(dbFolder, true);
+            get { return _photos.ToArray(); }
         }
 
         public void FileFound(FileEntry entry)
@@ -32,17 +31,7 @@ namespace HomeClient
 
         private void Store(Photo photo)
         {
-            var safeUrl = photo.UrlSafePath.Replace('/', Path.DirectorySeparatorChar);
-            safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
-            safeUrl += ".info";
-
-            var outputPath = Path.Combine(
-                _dbFolder,
-                safeUrl
-            );
-
-            var txt = JsonConvert.SerializeObject(photo);
-            FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
+            _photos.Add(photo);
         }
 
         private static Photo CreatePhotoRecord(FileEntry entry, string basePath)
@@ -69,7 +58,7 @@ namespace HomeClient
 
             Task.WhenAll(tasks).ContinueWith(t => componentFiles.AddRange(t.Result)).Wait();
 
-            Console.WriteLine("Found: {0}", basePath);
+            //Console.WriteLine("Found: {0}", basePath);
 
             return item;
         }

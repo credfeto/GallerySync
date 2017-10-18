@@ -5,9 +5,6 @@
     <Setting Name="DatabaseOutputFolder" Type="System.String" Scope="Application">
       <Value Profile="(Default)">I:\Database\Current</Value>
     </Setting>
-    <Setting Name="DatabaseInputFolder" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">I:\Database\Latest</Value>
-    </Setting>
     <Setting Name="RootFolder" Type="System.String" Scope="Application">
       <Value Profile="(Default)">I:\Photos\Sorted</Value>
     </Setting>

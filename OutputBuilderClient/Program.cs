@@ -375,7 +375,7 @@ namespace OutputBuilderClient
 
         private static void ProcessGallery()
         {
-            var source = LoadRepository(Settings.Default.DatabaseInputFolder);
+            var source = LoadEmptyRepository(Settings.Default.RootFolder);
             var target = LoadRepository(Settings.Default.DatabaseOutputFolder);
 
 
@@ -403,6 +403,36 @@ namespace OutputBuilderClient
                 Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
             }
 
+            return emitter.Photos;
+        }
+
+        private static Photo[] LoadEmptyRepository(string baseFolder)
+        {
+            Console.WriteLine("Loading Repository from {0}...", baseFolder);
+        
+            var emitter = new RawFileInfoEmitter();
+
+            var scores = new[]
+            {
+                ".xmp",
+                ".jpg",
+                ".cr2",
+                ".mrw",
+                ".rw2",
+                ".tif",
+                ".tiff",
+                ".psd"
+            };
+
+            var sidecarFiles = new[]
+            {
+                ".xmp"
+            };
+
+            long filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
+            
+            Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
+            
             return emitter.Photos;
         }
 

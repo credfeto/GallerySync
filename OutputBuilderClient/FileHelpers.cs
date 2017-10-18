@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Alphaleonis.Win32.Filesystem;
 using TagLib;
 using File = Alphaleonis.Win32.Filesystem.File;
@@ -101,7 +102,9 @@ namespace OutputBuilderClient
                     Console.WriteLine("Attempt: {0} of {1}", retries + 1, maxRetries);
                     Console.WriteLine("Stack:");
                     Console.WriteLine(exception.StackTrace);
+                    Thread.Sleep(500);
                     DeleteFile(fileName);
+                    Thread.Sleep(1500);
                 }
 
                 ++retries;

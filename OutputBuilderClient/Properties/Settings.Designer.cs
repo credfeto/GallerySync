@@ -32,14 +32,7 @@ namespace OutputBuilderClient.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("I:\\Database\\Latest")]
-        public string DatabaseInputFolder {
-            get {
-                return ((string)(this["DatabaseInputFolder"]));
-            }
-        }
+        
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
