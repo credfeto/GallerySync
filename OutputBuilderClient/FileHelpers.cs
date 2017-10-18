@@ -98,6 +98,7 @@ namespace OutputBuilderClient
                 {
                     Console.WriteLine("Error: {0}", exception.Message);
                     Console.WriteLine("File: {0}", fileName);
+                    Console.WriteLine("Attempt: {0} of {1}", retries + 1, maxRetries);
                     Console.WriteLine("Stack:");
                     Console.WriteLine(exception.StackTrace);
                     DeleteFile(fileName);
