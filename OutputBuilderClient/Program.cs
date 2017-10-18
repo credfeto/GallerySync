@@ -682,10 +682,16 @@ namespace OutputBuilderClient
                 {
                     counter = new ShortenerCount();
 
+                    long totalImpressionsEver = 0L;
+                    foreach (var month in tracking)
+                    {
+                        totalImpressionsEver += month.Impressions;
+                    }
+
                     counter.Year = now.Year;
                     counter.Month = now.Month;
                     counter.Impressions = 1;
-                    counter.TotalImpressionsEver = 1;
+                    counter.TotalImpressionsEver = totalImpressionsEver;
                     
                     tracking.Add(counter);
 

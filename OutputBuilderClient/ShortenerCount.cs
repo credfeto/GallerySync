@@ -12,7 +12,7 @@
 
         public int Month { get; set; }
 
-        public int TotalImpressionsEver { get; set; }
+        public long TotalImpressionsEver { get; set; }
 
         public int Year { get; set; }
     }
