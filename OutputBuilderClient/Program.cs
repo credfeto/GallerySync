@@ -21,6 +21,9 @@ namespace OutputBuilderClient
 
         private static readonly object ShortUrlLock = new object();
 
+        private static readonly ConcurrentDictionary<string, string> _brokenImages =
+            new ConcurrentDictionary<string, string>();
+
         public static bool MetadataVersionRequiresRebuild(Photo targetPhoto)
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
@@ -316,14 +319,28 @@ namespace OutputBuilderClient
 
                 ProcessGallery();
 
+                DumpBrokenImages();
                 return 0;
             }
             catch (Exception exception)
             {
                 OutputText("Error: {0}", exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
+
+                DumpBrokenImages();
+
                 return 1;
             }
+        }
+
+        private static void DumpBrokenImages()
+        {
+            var images = _brokenImages.OrderBy(item => item.Key)
+                .Select(item => string.Concat(item.Key, "\t", item.Value)).ToArray();
+
+            File.WriteAllLines(Settings.Default.BrokenImagesFile, images, Encoding.UTF8);
+            
+            Console.WriteLine("Broken Images: {0}", images.Length);
         }
 
         private static bool MetadataVersionOutOfDate(Photo targetPhoto)
@@ -409,7 +426,7 @@ namespace OutputBuilderClient
         private static Photo[] LoadEmptyRepository(string baseFolder)
         {
             Console.WriteLine("Loading Repository from {0}...", baseFolder);
-        
+
             var emitter = new RawFileInfoEmitter();
 
             var scores = new[]
@@ -429,10 +446,10 @@ namespace OutputBuilderClient
                 ".xmp"
             };
 
-            long filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
-            
+            var filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
+
             Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
-            
+
             return emitter.Photos;
         }
 
@@ -522,55 +539,51 @@ namespace OutputBuilderClient
 
             try
             {
-                //using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
+                var targetPhoto =
+                    target.FirstOrDefault(item =>
+                        item.PathHash == sourcePhoto.PathHash);
+                var build = targetPhoto == null;
+                var rebuild = targetPhoto != null && NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
+                var rebuildMetadata = targetPhoto != null && MetadataVersionOutOfDate(targetPhoto);
+
+                var url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
+                string shortUrl;
+
+                if (targetPhoto != null)
                 {
-                    // TODO:
-                    var targetPhoto =
-                        target.FirstOrDefault(item =>
-                            item.PathHash == sourcePhoto.PathHash); //outputSession.Load<Photo>(sourcePhoto.PathHash);
-                    var build = targetPhoto == null;
-                    var rebuild = targetPhoto != null && NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
-                    var rebuildMetadata = targetPhoto != null && MetadataVersionOutOfDate(targetPhoto);
+                    shortUrl = targetPhoto.ShortUrl;
 
-                    var url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
-                    string shortUrl;
-
-                    if (targetPhoto != null)
+                    if (ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
                     {
-                        shortUrl = targetPhoto.ShortUrl;
+                        shortUrl = TryGenerateShortUrl(url);
 
-                        if (ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
+                        if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                         {
-                            shortUrl = TryGenerateShortUrl(url);
+                            LogShortUrl(url, shortUrl);
 
-                            if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
-                            {
-                                LogShortUrl(url, shortUrl);
-
-                                rebuild = true;
-                                Console.WriteLine(
-                                    " +++ Force rebuild: missing shortcut URL.  New short url: {0}",
-                                    shortUrl);
-                            }
+                            rebuild = true;
+                            Console.WriteLine(
+                                " +++ Force rebuild: missing shortcut URL.  New short url: {0}",
+                                shortUrl);
                         }
                     }
-                    else
-                    {
-                        if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
-                            Console.WriteLine("* Reusing existing short url: {0}", shortUrl);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(shortUrl)
-                        && !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
-                        sourcePhoto.ShortUrl = shortUrl;
-                    else
-                        shortUrl = Constants.DefaultShortUrl;
-
-                    if (build || rebuild || rebuildMetadata)
-                        ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
-                    else
-                        OutputText("Unchanged: {0}", targetPhoto.UrlSafePath);
                 }
+                else
+                {
+                    if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+                        Console.WriteLine("* Reusing existing short url: {0}", shortUrl);
+                }
+
+                if (!string.IsNullOrWhiteSpace(shortUrl)
+                    && !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
+                    sourcePhoto.ShortUrl = shortUrl;
+                else
+                    shortUrl = Constants.DefaultShortUrl;
+
+                if (build || rebuild || rebuildMetadata)
+                    ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
+                else
+                    OutputText("Unchanged: {0}", targetPhoto.UrlSafePath);
 
                 items.TryAdd(sourcePhoto.PathHash, true);
             }
@@ -581,6 +594,7 @@ namespace OutputBuilderClient
                     sourcePhoto.UrlSafePath,
                     exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
+                LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
                 throw;
             }
             catch (Exception exception)
@@ -588,7 +602,13 @@ namespace OutputBuilderClient
                 OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
                     exception.Message);
                 OutputText("Stack Trace: {0}", exception.StackTrace);
+                LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
             }
+        }
+
+        private static void LogBrokenImage(string path, string message)
+        {
+            _brokenImages.TryAdd(path, message);
         }
 
         private static void ReadMetadata(string filename)
@@ -657,12 +677,12 @@ namespace OutputBuilderClient
             if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                 return shortUrl;
 
-            
-            lock(Lock)
+
+            lock (Lock)
             {
-                string filename = Settings.Default.ShortNamesFile + ".tracking.json";
-                
-                List<ShortenerCount> tracking = new List<ShortenerCount>();
+                var filename = Settings.Default.ShortNamesFile + ".tracking.json";
+
+                var tracking = new List<ShortenerCount>();
                 if (File.Exists(filename))
                 {
                     var bytes = File.ReadAllBytes(filename);
@@ -671,33 +691,30 @@ namespace OutputBuilderClient
 
                     tracking.AddRange(items);
                 }
-                
+
                 const int maxImpressionsPerMonth = 100;
 
-                DateTime now = DateTime.UtcNow;
+                var now = DateTime.UtcNow;
 
-                // TODO:
-                var counter = tracking.FirstOrDefault( item => item.Year == now.Year && item.Month == now.Month );
+                var counter = tracking.FirstOrDefault(item => item.Year == now.Year && item.Month == now.Month);
                 if (counter == null)
                 {
                     counter = new ShortenerCount();
 
-                    long totalImpressionsEver = 0L;
+                    var totalImpressionsEver = 0L;
                     foreach (var month in tracking)
-                    {
                         totalImpressionsEver += month.Impressions;
-                    }
 
                     counter.Year = now.Year;
                     counter.Month = now.Month;
                     counter.Impressions = 1;
                     counter.TotalImpressionsEver = totalImpressionsEver;
-                    
+
                     tracking.Add(counter);
 
                     File.WriteAllBytes(
-                        filename, 
-                        Encoding.UTF8.GetBytes( JsonConvert.SerializeObject(tracking.ToArray())));
+                        filename,
+                        Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tracking.ToArray())));
                 }
                 else
                 {
@@ -709,19 +726,14 @@ namespace OutputBuilderClient
                         ++counter.TotalImpressionsEver;
 
                         File.WriteAllBytes(
-                            filename, 
-                            Encoding.UTF8.GetBytes( JsonConvert.SerializeObject(tracking.ToArray())));
+                            filename,
+                            Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tracking.ToArray())));
                     }
                 }
 
                 if (counter.Impressions < maxImpressionsPerMonth)
-                {
                     return BitlyUrlShortner.Shorten(new Uri(url)).ToString();
-                }
-                else
-                {
-                    return url;
-                }
+                return url;
             }
         }
 

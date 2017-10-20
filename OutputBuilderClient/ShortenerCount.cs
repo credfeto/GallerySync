@@ -4,7 +4,7 @@
     using System.Diagnostics;
 
     [Serializable]
-    [DebuggerDisplay("Year: {Year}, Mpnth:{Month} Impressions:{Impressions} TotalImpressionsEver:{TotalImpressionsEver}"
+    [DebuggerDisplay("Year: {Year}, Month:{Month} Impressions:{Impressions} TotalImpressionsEver:{TotalImpressionsEver}"
         )]
     public class ShortenerCount
     {

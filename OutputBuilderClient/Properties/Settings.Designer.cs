@@ -153,5 +153,14 @@ namespace OutputBuilderClient.Properties {
                 return ((string)(this["ShortNamesFile"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\PhotoDb\\BrokenImages.csv")]
+        public string BrokenImagesFile {
+             get {
+                 return ((string)(this["BrokenImagesFile"]));
+             }
+        }
     }
 }
