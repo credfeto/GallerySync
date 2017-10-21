@@ -25,7 +25,7 @@ namespace BuildSiteIndex.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("I:\\Database\\Current")]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\PhotoDb\\Source")]
         public string DatabaseInputFolder {
             get {
                 return ((string)(this["DatabaseInputFolder"]));
@@ -34,7 +34,16 @@ namespace BuildSiteIndex.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("E:\\GalleryMetadata")]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\PhotoDB\\Queue")]
+        public string QueueFolder {
+            get {
+                return ((string)(this["QueueFolder"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\PhotoDB\\Output")]
         public string OutputFolder {
             get {
                 return ((string)(this["OutputFolder"]));

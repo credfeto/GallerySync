@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using StorageHelpers;
+using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
 
 namespace BuildSiteIndex
@@ -142,20 +143,7 @@ namespace BuildSiteIndex
         {
             var contents = new Dictionary<string, GalleryEntry>();
 
-//            var dbInputFolder = Settings.Default.DatabaseInputFolder;
-//            var restore = !Directory.Exists(dbInputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
-//
-//            var documentStoreInput = new EmbeddableDocumentStore
-//            {
-//                DataDirectory = dbInputFolder,
-//                RunInMemory = false
-//            };
-//
-//            documentStoreInput.Initialize();
-//
-//            if (restore)
-//                documentStoreInput.Restore(Settings.Default.DatabaseBackupFolder);
-
+            var target = LoadRepository(Settings.Default.DatabaseInputFolder);
 
             AppendRootEntry(contents);
 
@@ -164,7 +152,7 @@ namespace BuildSiteIndex
 
             //using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
-                foreach (Photo sourcePhoto in inputSession.GetAll<Photo>())
+                foreach (var sourcePhoto in target)
                 {
                     var path = EnsureTerminatedPath("/" + AlbumsRoot + "/" + sourcePhoto.UrlSafePath);
                     var breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + AlbumsTitle + "\\" + sourcePhoto.BasePath);
@@ -201,9 +189,50 @@ namespace BuildSiteIndex
             AddCoordinatesFromChildren(contents);
             ProcessSiteIndex(contents);
 
+            var documentStoreInput = LoadQueuedItems();
             UploadQueuedItems(documentStoreInput);
 
             //documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
+        }
+
+        private static List<UploadQueueItem> LoadQueuedItems()
+        {
+            var files = Directory.EnumerateFiles(Settings.Default.QueueFolder, "*.queue");
+
+            var loaded = new List<UploadQueueItem>();
+
+            foreach (var file in files)
+            {
+                var bytes = File.ReadAllBytes(file);
+
+                var item = JsonConvert.DeserializeObject<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
+
+                loaded.Add(item);
+            }
+
+            return loaded;
+        }
+
+        private static Photo[] LoadRepository(string baseFolder)
+        {
+            Console.WriteLine("Loading Repository from {0}...", baseFolder);
+            var scores = new[]
+            {
+                ".info"
+            };
+
+            var sidecarFiles = new List<string>();
+
+            var emitter = new PhotoInfoEmitter(baseFolder);
+
+            if (Directory.Exists(baseFolder))
+            {
+                var filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+
+                Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
+            }
+
+            return emitter.Photos;
         }
 
         private static void BuildEvents(Dictionary<string, GalleryEntry> contents)
@@ -333,11 +362,8 @@ namespace BuildSiteIndex
 
         private static void RemoveQueuedItem(UploadQueueItem updateItem)
         {
-            
             // TODO: Remove the queued item 
             var key = BuildUploadQueueHash(updateItem);
-
-            
 
 
             var filename = BuildQueueItemFileName(key);
@@ -716,6 +742,11 @@ namespace BuildSiteIndex
         private static string BuildUploadQueueHash(GalleryItem item)
         {
             return "UploadQueue" + Hasher.HashBytes(Encoding.UTF8.GetBytes(item.Path));
+        }
+
+        private static string BuildUploadQueueHash(UploadQueueItem item)
+        {
+            return BuildUploadQueueHash(item.Item);
         }
 
         private static bool UploadOneItem(UploadQueueItem item)
