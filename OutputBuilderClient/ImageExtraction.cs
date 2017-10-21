@@ -1,30 +1,25 @@
-﻿using StorageHelpers;
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Linq;
+using FileNaming;
+using Gma.QrCodeNet.Encoding;
+using Gma.QrCodeNet.Encoding.Windows.Render;
+using GraphicsMagick;
+using OutputBuilderClient.Properties;
+using StorageHelpers;
+using Twaddle.Gallery.ObjectModel;
+using File = Alphaleonis.Win32.Filesystem.File;
+using Path = Alphaleonis.Win32.Filesystem.Path;
 
 namespace OutputBuilderClient
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Configuration;
-    using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
-    using System.Drawing;
-    using System.Drawing.Imaging;
-    using System.IO;
-    using System.Linq;
-    using System.Reflection;
-
-    using FileNaming;
-
-    using Gma.QrCodeNet.Encoding;
-    using Gma.QrCodeNet.Encoding.Windows.Render;
-
-    using GraphicsMagick;
-
-    using OutputBuilderClient.Properties;
-
-    using Twaddle.Gallery.ObjectModel;
-
     internal static class ImageExtraction
     {
         private static readonly Dictionary<string, IImageConverter> RegisteredConverters = LocateConverters();
@@ -54,38 +49,37 @@ namespace OutputBuilderClient
         {
             var sizes = new List<ImageSize>();
 
-            string rawExtension = sourcePhoto.ImageExtension.TrimStart('.').ToUpperInvariant();
+            var rawExtension = sourcePhoto.ImageExtension.TrimStart('.').ToUpperInvariant();
 
             IImageConverter converter;
             if (RegisteredConverters.TryGetValue(rawExtension, out converter))
             {
-                int[] imageSizes = StandardImageSizesWithThumbnailSize();
+                var imageSizes = StandardImageSizesWithThumbnailSize();
 
-                string filename = Alphaleonis.Win32.Filesystem.Path.Combine(
+                var filename = Path.Combine(
                     Settings.Default.RootFolder,
                     sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
-                using (MagickImage sourceBitmap = converter.LoadImage(filename))
+                using (var sourceBitmap = converter.LoadImage(filename))
                 {
-                    int sourceImageWidth = sourceBitmap.Width;
-                    int sourceImageHeight = sourceBitmap.Height;
+                    var sourceImageWidth = sourceBitmap.Width;
+                    var sourceImageHeight = sourceBitmap.Height;
 
-                    foreach (int dimension in
+                    foreach (var dimension in
                         imageSizes.Where(size => ResziedImageWillNotBeBigger(size, sourceImageWidth, sourceImageHeight))
-                        )
-                    {
-                        using (MagickImage resized = ResizeImage(sourceBitmap, dimension))
+                    )
+                        using (var resized = ResizeImage(sourceBitmap, dimension))
                         {
-                            string resizedFileName =
-                                Alphaleonis.Win32.Filesystem.Path.Combine(
+                            var resizedFileName =
+                                Path.Combine(
                                     Settings.Default.ImagesOutputPath,
                                     HashNaming.PathifyHash(sourcePhoto.PathHash),
                                     IndividualResizeFileName(sourcePhoto, resized));
 
                             ApplyWatermark(resized, shortUrl);
 
-                            int quality = Settings.Default.JpegOutputQuality;
-                            byte[] resizedBytes = SaveImageAsJpegBytes(
+                            var quality = Settings.Default.JpegOutputQuality;
+                            var resizedBytes = SaveImageAsJpegBytes(
                                 resized,
                                 quality,
                                 url,
@@ -98,15 +92,13 @@ namespace OutputBuilderClient
                                 !ImageHelpers.IsValidJpegImage(
                                     resizedBytes,
                                     "In memory image to be saved as: " + resizedFileName))
-                            {
                                 throw new Exception(string.Format("File {0} produced an invalid image", filename));
-                            }
 
                             WriteImage(resizedFileName, resizedBytes, creationDate);
 
                             if (
                                 !ImageHelpers.IsValidJpegImage(
-                                    Alphaleonis.Win32.Filesystem.File.ReadAllBytes(resizedFileName),
+                                    File.ReadAllBytes(resizedFileName),
                                     "Saved resize image: " + resizedFileName))
                             {
                                 Console.WriteLine("Error: File {0} produced an invalid image", resizedFileName);
@@ -122,7 +114,7 @@ namespace OutputBuilderClient
                             if (resized.Width == Settings.Default.ThumbnailSize)
                             {
                                 resizedFileName =
-                                    Alphaleonis.Win32.Filesystem.Path.Combine(
+                                    Path.Combine(
                                         Settings.Default.ImagesOutputPath,
                                         HashNaming.PathifyHash(sourcePhoto.PathHash),
                                         IndividualResizeFileName(sourcePhoto, resized, "png"));
@@ -140,9 +132,8 @@ namespace OutputBuilderClient
                                     + IndividualResizeFileName(sourcePhoto, resized, "png"));
                             }
 
-                            sizes.Add(new ImageSize { Width = resized.Width, Height = resized.Height });
+                            sizes.Add(new ImageSize {Width = resized.Width, Height = resized.Height});
                         }
-                    }
                 }
             }
             else
@@ -160,11 +151,11 @@ namespace OutputBuilderClient
 
         public static string IndividualResizeFileName(Photo sourcePhoto, MagickImage resized, string extension)
         {
-            string basePath =
+            var basePath =
                 UrlNaming.BuildUrlSafePath(
                     string.Format(
                         "{0}-{1}x{2}",
-                        Alphaleonis.Win32.Filesystem.Path.GetFileName(sourcePhoto.BasePath),
+                        Path.GetFileName(sourcePhoto.BasePath),
                         resized.Width,
                         resized.Height)).TrimEnd('/').TrimStart('-');
 
@@ -178,11 +169,11 @@ namespace OutputBuilderClient
 
         public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized, string extension)
         {
-            string basePath =
+            var basePath =
                 UrlNaming.BuildUrlSafePath(
                     string.Format(
                         "{0}-{1}x{2}",
-                        Alphaleonis.Win32.Filesystem.Path.GetFileName(sourcePhoto.BasePath),
+                        Path.GetFileName(sourcePhoto.BasePath),
                         resized.Width,
                         resized.Height)).TrimEnd('/').TrimStart('-');
 
@@ -270,16 +261,12 @@ namespace OutputBuilderClient
 
             const int spacer = 5;
 
-            string watermarkFilename = Settings.Default.WatermarkImage;
+            var watermarkFilename = Settings.Default.WatermarkImage;
             if (string.IsNullOrEmpty(watermarkFilename))
-            {
                 return;
-            }
 
-            if (!Alphaleonis.Win32.Filesystem.File.Exists(watermarkFilename))
-            {
+            if (!File.Exists(watermarkFilename))
                 return;
-            }
 
             using (var watermark = new MagickImage())
             {
@@ -292,42 +279,38 @@ namespace OutputBuilderClient
                 watermark.BackgroundColor = MagickColor.Transparent;
                 watermark.Read(watermarkFilename);
 
-                int width = watermark.Width;
-                int height = watermark.Height;
+                var width = watermark.Width;
+                var height = watermark.Height;
 
-                using (MagickImage qr = EncodeUrl(url, watermark.Height))
+                using (var qr = EncodeUrl(url, watermark.Height))
                 {
                     if (qr != null)
                     {
                         qr.BackgroundColor = MagickColor.Transparent;
 
-                        int qrWidth = qr.Width;
-                        int qrHeight = qr.Height;
+                        var qrWidth = qr.Width;
+                        var qrHeight = qr.Height;
 
-                        int qrXPos = imageToAddWatermarkTo.Width - (qrWidth + spacer);
-                        int qrYpos = imageToAddWatermarkTo.Height - (qrHeight + spacer);
+                        var qrXPos = imageToAddWatermarkTo.Width - (qrWidth + spacer);
+                        var qrYpos = imageToAddWatermarkTo.Height - (qrHeight + spacer);
 
-                        width = watermark.Width + (qrWidth > 0 ? qrWidth + (2 * spacer) : 0);
+                        width = watermark.Width + (qrWidth > 0 ? qrWidth + 2 * spacer : 0);
 
                         var maxHeight = Math.Max(watermark.Height, qrHeight + spacer);
 
-                        if ((imageToAddWatermarkTo.Width <= width) || (imageToAddWatermarkTo.Height <= maxHeight))
-                        {
+                        if (imageToAddWatermarkTo.Width <= width || imageToAddWatermarkTo.Height <= maxHeight)
                             return;
-                        }
 
                         compositionOperator = CompositeOperator.Over;
                         imageToAddWatermarkTo.Composite(qr, qrXPos, qrYpos, compositionOperator);
                     }
                 }
 
-                if ((imageToAddWatermarkTo.Width <= width) || (imageToAddWatermarkTo.Height <= height))
-                {
+                if (imageToAddWatermarkTo.Width <= width || imageToAddWatermarkTo.Height <= height)
                     return;
-                }
 
-                int x = imageToAddWatermarkTo.Width - width;
-                int y = imageToAddWatermarkTo.Height - height;
+                var x = imageToAddWatermarkTo.Width - width;
+                var y = imageToAddWatermarkTo.Height - height;
 
                 compositionOperator = CompositeOperator.Over;
                 imageToAddWatermarkTo.Composite(watermark, x, y, compositionOperator);
@@ -365,10 +348,10 @@ namespace OutputBuilderClient
             Contract.Requires(scaleWidth > 0);
             Contract.Requires(originalWidth > 0);
             Contract.Requires(originalHeight > 0);
-            Contract.Requires((int)(((double)scaleWidth / (double)originalWidth) * (double)originalHeight) > 0);
+            Contract.Requires((int) (scaleWidth / (double) originalWidth * originalHeight) > 0);
             Contract.Ensures(Contract.Result<int>() > 0);
 
-            return (int)((scaleWidth / (double)originalWidth) * originalHeight);
+            return (int) (scaleWidth / (double) originalWidth * originalHeight);
         }
 
         private static MagickImage EncodeUrl(string url, int height)
@@ -378,11 +361,11 @@ namespace OutputBuilderClient
             QrCode qr;
             if (encoder.TryEncode(url, out qr))
             {
-                int moduleSize = CaclulateQrModuleSize(height);
+                var moduleSize = CaclulateQrModuleSize(height);
 
                 using (var stream = new MemoryStream())
                 {
-                    Brush darkBrush = Brushes.Black;
+                    var darkBrush = Brushes.Black;
                     Brush lightBrush = new SolidBrush(Color.FromArgb(128, 255, 255, 255));
 
                     var renderer = new GraphicsRenderer(
@@ -401,12 +384,10 @@ namespace OutputBuilderClient
 
         private static void EnsureFolderExistsForFile(string fileName)
         {
-            string folder = Alphaleonis.Win32.Filesystem.Path.GetDirectoryName(fileName);
+            var folder = Path.GetDirectoryName(fileName);
 
             if (!Directory.Exists(folder))
-            {
                 Directory.CreateDirectory(folder);
-            }
         }
 
         private static string ExtractDescription(
@@ -415,35 +396,25 @@ namespace OutputBuilderClient
             string shortUrl,
             DateTime creationDate)
         {
-            string description = string.Empty;
-            PhotoMetadata desc =
+            var description = string.Empty;
+            var desc =
                 metadata.FirstOrDefault(
                     item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
             if (desc != null)
-            {
                 description = desc.Value;
-            }
 
             if (!string.IsNullOrWhiteSpace(description))
-            {
                 description += ". ";
-            }
 
             description += "Source : ";
             if (StringComparer.InvariantCultureIgnoreCase.Equals(Constants.DefaultShortUrl, shortUrl))
-            {
                 description += url;
-            }
             else
-            {
                 description += shortUrl;
-            }
 
             description += " Photo taken by Mark Ridgwell";
             if (creationDate != DateTime.MinValue)
-            {
                 description += " (" + creationDate.ToString("yyyy-MM-dd") + ")";
-            }
 
             description += ".";
 
@@ -452,24 +423,20 @@ namespace OutputBuilderClient
 
         private static string ExtractTitle(string path, List<PhotoMetadata> metadata)
         {
-            string title = string.Empty;
-            PhotoMetadata desc =
+            var title = string.Empty;
+            var desc =
                 metadata.FirstOrDefault(
                     item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Title));
             if (desc != null)
-            {
                 title = desc.Value;
-            }
 
             if (string.IsNullOrWhiteSpace(title))
             {
-                string[] fragments =
+                var fragments =
                     path.Split('\\').Where(candidate => !string.IsNullOrWhiteSpace(candidate)).ToArray();
 
                 if (fragments.Length > 0)
-                {
                     title = fragments[fragments.Length - 1];
-                }
             }
 
             return title;
@@ -492,7 +459,7 @@ namespace OutputBuilderClient
             Contract.Requires(classType != null);
             Contract.Requires(interfaceType != null);
 
-            Type[] interfaces = classType.GetInterfaces();
+            var interfaces = classType.GetInterfaces();
             return interfaces.Any(i => i == interfaceType);
         }
 
@@ -509,29 +476,25 @@ namespace OutputBuilderClient
 
             var converters = new Dictionary<string, IImageConverter>();
 
-            Assembly ass = typeof(IImageConverter).Assembly;
+            var ass = typeof(IImageConverter).Assembly;
 
-            Type[] types = ass.GetTypes();
-            foreach (Type t in types.Where(t => ImplementsInterface(t, typeof(IImageConverter))))
+            var types = ass.GetTypes();
+            foreach (var t in types.Where(t => ImplementsInterface(t, typeof(IImageConverter))))
             {
                 IImageConverter converter = null;
-                object[] attributes = t.GetCustomAttributes(false);
+                var attributes = t.GetCustomAttributes(false);
                 foreach (
-                    SupportedExtensionAttribute supportedExtension in attributes.OfType<SupportedExtensionAttribute>())
+                    var supportedExtension in attributes.OfType<SupportedExtensionAttribute>())
                 {
                     if (converter == null)
-                    {
-                        converter = (IImageConverter)Activator.CreateInstance(t);
-                    }
+                        converter = (IImageConverter) Activator.CreateInstance(t);
 
                     converters.Add(supportedExtension.Extension.ToUpperInvariant(), converter);
                 }
             }
 
             if (!converters.Any())
-            {
                 throw new ConfigurationErrorsException("No registered converters!");
-            }
 
             return converters;
         }
@@ -554,17 +517,17 @@ namespace OutputBuilderClient
             Contract.Requires(image.Width > 0);
             Contract.Requires(image.Height > 0);
             Contract.Requires(maximumDimension > 0);
-            Contract.Requires((int)(((double)maximumDimension / (double)image.Width) * (double)image.Height) > 0);
+            Contract.Requires((int) (maximumDimension / (double) image.Width * image.Height) > 0);
             Contract.Ensures(Contract.Result<MagickImage>() != null);
 
-            int yscale = CalculateScaledHeightFromWidth(maximumDimension, image.Width, image.Height);
+            var yscale = CalculateScaledHeightFromWidth(maximumDimension, image.Width, image.Height);
 
             MagickImage resized = null;
             try
             {
                 resized = image.Clone();
 
-                var geometry = new MagickGeometry(maximumDimension, yscale) { IgnoreAspectRatio = true };
+                var geometry = new MagickGeometry(maximumDimension, yscale) {IgnoreAspectRatio = true};
 
                 resized.Resize(geometry);
 
@@ -576,9 +539,7 @@ namespace OutputBuilderClient
             catch
             {
                 if (resized != null)
-                {
                     resized.Dispose();
-                }
 
                 throw;
             }
@@ -607,7 +568,7 @@ namespace OutputBuilderClient
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            image.Quality = (int)compression;
+            image.Quality = (int) compression;
             return image.ToByteArray(MagickFormat.Jpeg);
         }
 
@@ -642,7 +603,7 @@ namespace OutputBuilderClient
             StripExifProperties(image);
             SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate);
 
-            var qSettings = new QuantizeSettings { Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB };
+            var qSettings = new QuantizeSettings {Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
             image.Quantize(qSettings);
 
             return image.ToByteArray(MagickFormat.Png8);
@@ -657,8 +618,8 @@ namespace OutputBuilderClient
             string credit,
             string program)
         {
-            Action<ExifProfile> completeExifProfile = (p) => { };
-            ExifProfile exifProfile = image.GetExifProfile();
+            Action<ExifProfile> completeExifProfile = p => { };
+            var exifProfile = image.GetExifProfile();
             if (exifProfile == null)
             {
                 exifProfile = new ExifProfile();
@@ -690,9 +651,9 @@ namespace OutputBuilderClient
             string program,
             string licensing)
         {
-            Action<IptcProfile> completeIptcProfile = (p) => { };
+            Action<IptcProfile> completeIptcProfile = p => { };
 
-            IptcProfile iptcProfile = image.GetIptcProfile();
+            var iptcProfile = image.GetIptcProfile();
             if (iptcProfile == null)
             {
                 iptcProfile = new IptcProfile();
@@ -709,10 +670,10 @@ namespace OutputBuilderClient
                 // Ok some images are crap and don't like the normal way of setting metadata
                 iptcProfile = new IptcProfile();
                 completeIptcProfile = p =>
-                    {
-                        image.RemoveProfile(p.Name);
-                        image.AddProfile(p);
-                    };
+                {
+                    image.RemoveProfile(p.Name);
+                    image.AddProfile(p);
+                };
 
                 SetIptcMetadataInternal(iptcProfile, url, creationDate, title, description, credit, program, licensing);
             }
@@ -766,13 +727,13 @@ namespace OutputBuilderClient
         {
             Contract.Requires(image != null);
 
-            string copyright = CopyrightDeclaration;
+            var copyright = CopyrightDeclaration;
             const string credit =
                 "Camera owner, Mark Ridgwell; Photographer, Mark Ridgwell; Image creator, Mark Ridgwell";
             const string licensing = "For licensing information see https://www.markridgwell.co.uk/about/";
             const string program = "https://www.markridgwell.co.uk/";
-            string title = ExtractTitle(filePath, metadata);
-            string description = ExtractDescription(metadata, url, shortUrl, creationDate);
+            var title = ExtractTitle(filePath, metadata);
+            var description = ExtractDescription(metadata, url, shortUrl, creationDate);
 
             image.Format = MagickFormat.Jpeg;
 
@@ -786,7 +747,7 @@ namespace OutputBuilderClient
             return
                 Settings.Default.ImageMaximumDimensions.Split(',')
                     .Select(value => Convert.ToInt32(value))
-                    .Concat(new[] { Settings.Default.ThumbnailSize })
+                    .Concat(new[] {Settings.Default.ThumbnailSize})
                     .OrderByDescending(x => x)
                     .ToArray();
         }
@@ -801,23 +762,17 @@ namespace OutputBuilderClient
         {
             Contract.Requires(image != null);
 
-            IptcProfile ipctProfile = image.GetIptcProfile();
+            var ipctProfile = image.GetIptcProfile();
             if (ipctProfile != null)
-            {
                 image.RemoveProfile(ipctProfile.Name);
-            }
 
-            ExifProfile exifProfile = image.GetExifProfile();
+            var exifProfile = image.GetExifProfile();
             if (exifProfile != null)
-            {
                 image.RemoveProfile(exifProfile.Name);
-            }
 
-            XmpProfile xmpProfile = image.GetXmpProfile();
+            var xmpProfile = image.GetXmpProfile();
             if (xmpProfile != null)
-            {
                 image.RemoveProfile(xmpProfile.Name);
-            }
         }
     }
 }

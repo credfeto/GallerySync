@@ -1,54 +1,36 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
+using Alphaleonis.Win32.Filesystem;
 
 namespace Twaddle.Directory.Scanner
 {
     public static class DirectoryScanner
     {
-        public static long ScanFolder(string baseFolder, IFileEmitter fileEmitter,
-                                      List<string> extensionsToRetrieveInOrderOfPrecendence,
-                                      List<string> sidecarFiles)
+        public static async Task<long> ScanFolder(string baseFolder, IFileEmitter fileEmitter,
+            List<string> extensionsToRetrieveInOrderOfPrecendence,
+            List<string> sidecarFiles)
         {
             var context = new Context(baseFolder, fileEmitter, extensionsToRetrieveInOrderOfPrecendence, sidecarFiles);
 
-            using (var ewh = new EventWaitHandle(false, EventResetMode.ManualReset))
-            {
-                var t = new Thread(() => StartScanning(context, ewh));
-                t.Start();
+            await StartScanning(context);
 
-                ewh.WaitOne();
+            var filesFound = await ProcessEntries(context);
 
-                const int waitTime = 1000;
-
-                long filesFound = 0L;
-                bool completed = t.Join(waitTime);
-                while (!completed)
-                {
-                    filesFound += ProcessEntries(context);
-
-                    completed = t.Join(waitTime);
-                }
-
-                filesFound += ProcessEntries(context);
-
-                return filesFound;
-            }
+            return filesFound;
         }
 
-        private static void StartScanning(Context context, EventWaitHandle ewh)
+        private static Task StartScanning(Context context)
         {
-            ewh.Set();
-            ScanSubFolder(context.BaseFolder, context);
+            return ScanSubFolder(context.BaseFolder, context);
         }
 
-        private static long ProcessEntries(Context context)
+        private static async Task<long> ProcessEntries(Context context)
         {
-            long filesFound = 0L;
-            bool more = true;
+            var filesFound = 0L;
+            var more = true;
             while (more)
             {
                 FileEntry entry;
@@ -56,52 +38,52 @@ namespace Twaddle.Directory.Scanner
                 if (more)
                 {
                     ++filesFound;
-                    context.FileEmitter.FileFound(entry);
+                    await context.FileEmitter.FileFound(entry);
                 }
             }
 
             return filesFound;
         }
 
-        private static void ScanSubFolder(string folder, Context context)
+        private static async Task ScanSubFolder(string folder, Context context)
         {
-            FindSubFolders(folder, context);
+            await FindSubFolders(folder, context);
 
             FindFiles(folder, context);
         }
 
         private static void FindFiles(string folder, Context context)
         {
-            string[] raw = System.IO.Directory.GetFiles(folder, "*");
+            var raw = Alphaleonis.Win32.Filesystem.Directory.GetFiles(folder, "*");
 
 
             var grouped = from record in raw
-                          let extension = Path.GetExtension(record).ToLowerInvariant()
-                          where context.ExtensionsToRetrieveInOrderOfPrecendence.Contains(extension)
-                          group record by Path.GetFileNameWithoutExtension(record).ToLowerInvariant()
-                          into matches
-                          where context.HasRequiredExtensionMatch(matches)
-                          select new
-                              {
-                                  BaseName = matches.Key,
-                                  Items = matches.OrderByDescending(match =>
-                                                                    ExtensionScore(
-                                                                        context.ExtensionsToRetrieveInOrderOfPrecendence,
-                                                                        match))
-                                                 .ThenBy(Path.GetExtension).Select(match => Path.GetFileName(match))
-                              };
+                let extension = Path.GetExtension(record).ToLowerInvariant()
+                where context.ExtensionsToRetrieveInOrderOfPrecendence.Contains(extension)
+                group record by Path.GetFileNameWithoutExtension(record).ToLowerInvariant()
+                into matches
+                where context.HasRequiredExtensionMatch(matches)
+                select new
+                {
+                    BaseName = matches.Key,
+                    Items = matches.OrderByDescending(match =>
+                            ExtensionScore(
+                                context.ExtensionsToRetrieveInOrderOfPrecendence,
+                                match))
+                        .ThenBy(Path.GetExtension).Select(match => Path.GetFileName(match))
+                };
 
             foreach (var fileGroup in grouped)
             {
-                string file = fileGroup.Items.First();
+                var file = fileGroup.Items.First();
 
                 context.FilesToProcess.Enqueue(new FileEntry
-                    {
-                        Folder = folder,
-                        RelativeFolder = folder.Substring(context.BaseFolder.Length + 1),
-                        LocalFileName = file,
-                        AlternateFileNames = fileGroup.Items.Skip(1).ToList()
-                    });
+                {
+                    Folder = folder,
+                    RelativeFolder = folder.Substring(context.BaseFolder.Length + 1),
+                    LocalFileName = file,
+                    AlternateFileNames = fileGroup.Items.Skip(1).ToList()
+                });
             }
         }
 
@@ -113,19 +95,14 @@ namespace Twaddle.Directory.Scanner
                         .ToLowerInvariant());
         }
 
-        private static void FindSubFolders(string folder, Context context)
+        private static Task FindSubFolders(string folder, Context context)
         {
-            foreach (string subFolder in System.IO.Directory.GetDirectories(folder, "*"))
-            {
-                string leaf = subFolder.Substring(folder.Length + 1);
+            var folders = Alphaleonis.Win32.Filesystem.Directory.GetDirectories(folder, "*")
+                .Where(subFolder => !IsSkipFolderName(subFolder.Substring(folder.Length + 1)))
+                .ToArray();
 
-                if (IsSkipFolderName(leaf))
-                {
-                    continue;
-                }
-
-                ScanSubFolder(subFolder, context);
-            }
+            return Task.WhenAll(
+                folders.Select(subFolder => ScanSubFolder(subFolder, context)).ToArray());
         }
 
         private static bool IsSkipFolderName(string folder)
@@ -144,8 +121,8 @@ namespace Twaddle.Directory.Scanner
             private readonly ConcurrentQueue<FileEntry> _filesToProcess = new ConcurrentQueue<FileEntry>();
 
             public Context(string baseFolder, IFileEmitter fileEmitter,
-                           List<string> extensionsToRetrieveInOrderOfPrecendence,
-                           List<string> sidecarExtensions)
+                List<string> extensionsToRetrieveInOrderOfPrecendence,
+                List<string> sidecarExtensions)
             {
                 _baseFolder = baseFolder;
                 _fileEmitter = fileEmitter;
@@ -177,15 +154,11 @@ namespace Twaddle.Directory.Scanner
             {
                 Func<IEnumerable<string>, bool> sidecarProcessor;
                 if (sidecarExtensions.Any())
-                {
                     sidecarProcessor =
                         matches => matches.Any(
                             match => IsNotSidecarExtension(sidecarExtensions, match));
-                }
                 else
-                {
                     sidecarProcessor = matches => true;
-                }
                 return sidecarProcessor;
             }
 

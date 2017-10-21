@@ -1,6 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Security.Cryptography;
+using StorageHelpers;
 
 namespace FileNaming
 {
@@ -8,13 +8,13 @@ namespace FileNaming
     {
         public static string HashFile(string filename)
         {
-            byte[] bytes = File.ReadAllBytes(filename);
+            var bytes = FileHelpers.ReadAllBytes(filename);
             return HashBytes(bytes);
         }
 
         public static string HashBytes(byte[] bytes)
         {
-            using (SHA512 hasher = SHA512.Create())
+            using (var hasher = SHA512.Create())
             {
                 return BitConverter.ToString(hasher.ComputeHash(bytes)).Replace("-", string.Empty).ToLowerInvariant();
             }

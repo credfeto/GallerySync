@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using Alphaleonis.Win32.Filesystem;
 using GraphicsMagick;
 using StorageHelpers;
 
@@ -15,7 +15,7 @@ namespace DeleteImageIfCorrupt
             if (File.Exists(args[0]))
                 try
                 {
-                    var data = File.ReadAllBytes(args[0]);
+                    var data = FileHelpers.ReadAllBytes(args[0]);
 
                     if (IsValidJpegImage(data, args[0]))
                     {

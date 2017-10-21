@@ -1,15 +1,15 @@
-﻿namespace OutputBuilderClient
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using System.Web;
+using OutputBuilderClient.Properties;
+
+namespace OutputBuilderClient
 {
-    using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
-    using System.Globalization;
-    using System.IO;
-    using System.Net;
-    using System.Web;
-
-    using OutputBuilderClient.Properties;
-
     /// <summary>
     ///     Bit.ly's URL Shortener.
     /// </summary>
@@ -25,10 +25,7 @@
         /// </summary>
         private static string Key
         {
-            get
-            {
-                return Settings.Default.BitlyApiKey;
-            }
+            get { return Settings.Default.BitlyApiKey; }
         }
 
         /// <summary>
@@ -36,10 +33,7 @@
         /// </summary>
         private static string Login
         {
-            get
-            {
-                return Settings.Default.BitlyApiUser;
-            }
+            get { return Settings.Default.BitlyApiUser; }
         }
 
         /// <summary>
@@ -51,40 +45,40 @@
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Many possible exceptions")]
-        public static Uri Shorten(Uri url)
+        public static async Task<Uri> Shorten(Uri url)
         {
             Contract.Requires(url != null);
             Contract.Ensures(Contract.Result<Uri>() != null);
 
-            string encodedUrl = HttpUtility.UrlEncode(url.ToString());
-            string urlRequest = string.Format(
+            var encodedUrl = HttpUtility.UrlEncode(url.ToString());
+            var urlRequest = string.Format(
                 CultureInfo.InvariantCulture,
                 "https://api-ssl.bit.ly/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}",
                 Key,
                 Login,
                 encodedUrl);
 
-            var request = (HttpWebRequest)WebRequest.Create(new Uri(urlRequest));
+            var shortnerUrl = new Uri(urlRequest);
+
             try
             {
-                request.ContentType = "application/json";
-                request.Headers.Add("Cache-Control", "no-cache");
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var client = new HttpClient
                 {
-                    using (Stream responseStream = response.GetResponseStream())
-                    {
-                        if (responseStream == null)
-                        {
-                            return url;
-                        }
+                    BaseAddress = new Uri(shortnerUrl.GetLeftPart(UriPartial.Authority)),
+                    Timeout = TimeSpan.FromSeconds(200)
+                })
+                {
+                    client.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("application/json"));
+                    client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
 
-                        using (var responseReader = new StreamReader(responseStream))
-                        {
-                            string shortened = responseReader.ReadToEnd();
+                    var response = await client.GetAsync(shortnerUrl);
+                    if (!response.IsSuccessStatusCode)
+                        return url;
 
-                            return string.IsNullOrEmpty(shortened) ? url : new Uri(shortened);
-                        }
-                    }
+                    var shortened = await response.Content.ReadAsStringAsync();
+
+                    return string.IsNullOrEmpty(shortened) ? url : new Uri(shortened);
                 }
             }
             catch (Exception exception)

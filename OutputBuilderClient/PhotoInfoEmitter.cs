@@ -1,8 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Alphaleonis.Win32.Filesystem;
 using Newtonsoft.Json;
+using StorageHelpers;
 using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
 
@@ -23,16 +25,17 @@ namespace OutputBuilderClient
             get { return _photos.OrderBy(x => x.UrlSafePath).ToArray(); }
         }
 
-        public void FileFound(FileEntry entry)
+        public Task FileFound(FileEntry entry)
         {
             var fullPath = Path.Combine(_basePath, entry.RelativeFolder, entry.LocalFileName);
 
-            var bytes = File.ReadAllBytes(fullPath);
-
+            var bytes = FileHelpers.ReadAllBytes(fullPath);
 
             var photo = JsonConvert.DeserializeObject<Photo>(Encoding.UTF8.GetString(bytes));
 
             _photos.Add(photo);
+
+            return Task.CompletedTask;
         }
     }
 }

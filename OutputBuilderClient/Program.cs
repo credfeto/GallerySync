@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Alphaleonis.Win32.Filesystem;
 using FileNaming;
 using Newtonsoft.Json;
@@ -16,20 +18,20 @@ namespace OutputBuilderClient
 {
     internal class Program
     {
-        private static readonly object Lock = new object();
-
-        private static readonly Dictionary<string, string> ShorternedUrls = new Dictionary<string, string>();
-
-        private static readonly object ShortUrlLock = new object();
+        private static readonly ConcurrentDictionary<string, string> ShorternedUrls =
+            new ConcurrentDictionary<string, string>();
 
         private static readonly ConcurrentDictionary<string, string> _brokenImages =
             new ConcurrentDictionary<string, string>();
 
-        public static bool MetadataVersionRequiresRebuild(Photo targetPhoto)
+        private static readonly SemaphoreSlim _sempahore = new SemaphoreSlim(1);
+        private static readonly SemaphoreSlim _consoleSempahore = new SemaphoreSlim(1);
+
+        public static async Task<bool> MetadataVersionRequiresRebuild(Photo targetPhoto)
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                OutputText(
+                await OutputText(
                     " +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version
                     + " Expected: " + Constants.CurrentMetadataVersion + ")");
                 return true;
@@ -153,11 +155,11 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static bool HaveFilesChanged(Photo sourcePhoto, Photo targetPhoto)
+        private static async Task<bool> HaveFilesChanged(Photo sourcePhoto, Photo targetPhoto)
         {
             if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
             {
-                OutputText(" +++ Metadata update: File count changed");
+                await OutputText(" +++ Metadata update: File count changed");
                 return true;
             }
 
@@ -173,7 +175,7 @@ namespace OutputBuilderClient
                 {
                     if (componentFile.FileSize != found.FileSize)
                     {
-                        OutputText(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
+                        await OutputText(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
                         return true;
                     }
 
@@ -191,13 +193,13 @@ namespace OutputBuilderClient
 
                     if (componentFile.Hash != found.Hash)
                     {
-                        OutputText(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
+                        await OutputText(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
                         return true;
                     }
                 }
                 else
                 {
-                    OutputText(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
+                    await OutputText(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
                     return true;
                 }
             }
@@ -205,8 +207,10 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static void KillDeadItems(HashSet<string> liveItems)
+        private static Task KillDeadItems(HashSet<string> liveItems)
         {
+            return Task.CompletedTask;
+
             // TODO: REIMPLEMENT
 //            using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
 //            {
@@ -261,9 +265,8 @@ namespace OutputBuilderClient
                     if (process.Length != 2)
                         continue;
 
-                    if (!ShorternedUrls.ContainsKey(process[0]))
+                    if (ShorternedUrls.TryAdd(process[0], process[1]))
                     {
-                        ShorternedUrls.Add(process[0], process[1]);
                         Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
                     }
                 }
@@ -275,14 +278,8 @@ namespace OutputBuilderClient
 
         private static void LogShortUrl(string url, string shortUrl)
         {
-            if (ShorternedUrls.ContainsKey(url))
-                return;
-
-            lock (ShortUrlLock)
-            {
-                ShorternedUrls.Add(url, shortUrl);
-            }
-
+            if (!ShorternedUrls.TryAdd(url, shortUrl)) return;
+            
             var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
 
             var text = new[] {string.Format("{0}\t{1}", url, shortUrl)};
@@ -296,6 +293,11 @@ namespace OutputBuilderClient
 
             BoostPriority();
 
+            return AsyncMain(args).GetAwaiter().GetResult();
+        }
+
+        private static async Task<int> AsyncMain(string[] args)
+        {
             if (args.Length == 1)
             {
                 LoadShortUrls();
@@ -308,8 +310,8 @@ namespace OutputBuilderClient
                 }
                 catch (Exception exception)
                 {
-                    OutputText("Error: {0}", exception.Message);
-                    OutputText("Stack Trace: {0}", exception.StackTrace);
+                    Console.WriteLine("Error: {0}", exception.Message);
+                    Console.WriteLine("Stack Trace: {0}", exception.StackTrace);
                     return 1;
                 }
             }
@@ -318,15 +320,15 @@ namespace OutputBuilderClient
             {
                 LoadShortUrls();
 
-                ProcessGallery();
+                await ProcessGallery();
 
                 DumpBrokenImages();
                 return 0;
             }
             catch (Exception exception)
             {
-                OutputText("Error: {0}", exception.Message);
-                OutputText("Stack Trace: {0}", exception.StackTrace);
+                Console.WriteLine("Error: {0}", exception.Message);
+                Console.WriteLine("Stack Trace: {0}", exception.StackTrace);
 
                 DumpBrokenImages();
 
@@ -340,15 +342,15 @@ namespace OutputBuilderClient
                 .Select(item => string.Concat(item.Key, "\t", item.Value)).ToArray();
 
             File.WriteAllLines(Settings.Default.BrokenImagesFile, images, Encoding.UTF8);
-            
+
             Console.WriteLine("Broken Images: {0}", images.Length);
         }
 
-        private static bool MetadataVersionOutOfDate(Photo targetPhoto)
+        private static async Task<bool> MetadataVersionOutOfDate(Photo targetPhoto)
         {
             if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                OutputText(
+                await OutputText(
                     " +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version
                     + " Expected: " + Constants.CurrentMetadataVersion + ")");
                 return true;
@@ -357,52 +359,58 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static bool NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
+        private static async Task<bool> NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
         {
-            return MetadataVersionRequiresRebuild(targetPhoto) || HaveFilesChanged(sourcePhoto, targetPhoto)
+            return await MetadataVersionRequiresRebuild(targetPhoto) || await HaveFilesChanged(sourcePhoto, targetPhoto)
                    || HasMissingResizes(targetPhoto);
         }
 
-        private static void OutputText(string formatString, params object[] parameters)
+        private static async Task OutputText(string formatString, params object[] parameters)
         {
             var text = string.Format(formatString, parameters);
 
-            lock (Lock)
+            await _consoleSempahore.WaitAsync();
+            try
             {
                 Console.WriteLine(text);
             }
-        }
-
-        private static HashSet<string> Process(
-            Photo[] source,
-            Photo[] target)
-        {
+            finally
             {
-                var items = new ConcurrentDictionary<string, bool>();
-
-                var partitioner = Partitioner.Create(source, true);
-
-                var q = partitioner.AsParallel();
-
-                q.ForAll(
-                    sourcePhoto => { ProcessSinglePhoto(target, sourcePhoto, items); });
-
-                return new HashSet<string>(items.Keys);
+                _consoleSempahore.Release();
             }
         }
 
-        private static void ProcessGallery()
+        private static async Task<HashSet<string>> Process(
+            Photo[] source,
+            Photo[] target)
         {
-            var source = LoadEmptyRepository(Settings.Default.RootFolder);
-            var target = LoadRepository(Settings.Default.DatabaseOutputFolder);
+            var items = new ConcurrentDictionary<string, bool>();
+
+            await Task.WhenAll(
+                source.Select(
+                    sourcePhoto => ProcessSinglePhoto(target, sourcePhoto, items)
+                ).ToArray());
 
 
-            var liveItems = Process(source, target);
-
-            KillDeadItems(liveItems);
+            return new HashSet<string>(items.Keys);
         }
 
-        private static Photo[] LoadRepository(string baseFolder)
+        private static async Task ProcessGallery()
+        {
+            var sourceTask = LoadEmptyRepository(Settings.Default.RootFolder);
+            var targetTask = LoadRepository(Settings.Default.DatabaseOutputFolder);
+
+            await Task.WhenAll(sourceTask, targetTask);
+
+            var source = sourceTask.Result;
+            var target = targetTask.Result;
+
+            var liveItems = await Process(source, target);
+
+            await KillDeadItems(liveItems);
+        }
+
+        private static async Task<Photo[]> LoadRepository(string baseFolder)
         {
             Console.WriteLine("Loading Repository from {0}...", baseFolder);
             var scores = new[]
@@ -416,7 +424,7 @@ namespace OutputBuilderClient
 
             if (Directory.Exists(baseFolder))
             {
-                var filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                var filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
                 Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
             }
@@ -424,7 +432,7 @@ namespace OutputBuilderClient
             return emitter.Photos;
         }
 
-        private static Photo[] LoadEmptyRepository(string baseFolder)
+        private static async Task<Photo[]> LoadEmptyRepository(string baseFolder)
         {
             Console.WriteLine("Loading Repository from {0}...", baseFolder);
 
@@ -447,14 +455,15 @@ namespace OutputBuilderClient
                 ".xmp"
             };
 
-            var filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
+            var filesFound =
+                await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
 
             Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
 
             return emitter.Photos;
         }
 
-        private static void ProcessOneFile(
+        private static async Task ProcessOneFile(
             Photo sourcePhoto,
             Photo targetPhoto,
             bool rebuild,
@@ -462,7 +471,7 @@ namespace OutputBuilderClient
             string url,
             string shortUrl)
         {
-            OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
+            await OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
             UpdateFileHashes(targetPhoto, sourcePhoto);
 
@@ -525,13 +534,10 @@ namespace OutputBuilderClient
             );
 
             var txt = JsonConvert.SerializeObject(photo);
-            lock (Lock)
-            {
-                FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
-            }
+            FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
         }
 
-        private static void ProcessSinglePhoto(
+        private static async Task ProcessSinglePhoto(
             Photo[] target,
             Photo sourcePhoto,
             ConcurrentDictionary<string, bool> items)
@@ -544,8 +550,8 @@ namespace OutputBuilderClient
                     target.FirstOrDefault(item =>
                         item.PathHash == sourcePhoto.PathHash);
                 var build = targetPhoto == null;
-                var rebuild = targetPhoto != null && NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
-                var rebuildMetadata = targetPhoto != null && MetadataVersionOutOfDate(targetPhoto);
+                var rebuild = targetPhoto != null && await NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
+                var rebuildMetadata = targetPhoto != null && await MetadataVersionOutOfDate(targetPhoto);
 
                 var url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
                 string shortUrl;
@@ -556,7 +562,7 @@ namespace OutputBuilderClient
 
                     if (ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
                     {
-                        shortUrl = TryGenerateShortUrl(url);
+                        shortUrl = await TryGenerateShortUrl(url);
 
                         if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                         {
@@ -582,27 +588,19 @@ namespace OutputBuilderClient
                     shortUrl = Constants.DefaultShortUrl;
 
                 if (build || rebuild || rebuildMetadata)
-                    ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
+                    await ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
                 else
-                    OutputText("Unchanged: {0}", targetPhoto.UrlSafePath);
+                    await OutputText("Unchanged: {0}", targetPhoto.UrlSafePath);
 
                 items.TryAdd(sourcePhoto.PathHash, true);
             }
             catch (AbortProcessingException exception)
             {
-                OutputText(
-                    "ERROR: Aborting at image {0} due to exception {1}",
-                    sourcePhoto.UrlSafePath,
-                    exception.Message);
-                OutputText("Stack Trace: {0}", exception.StackTrace);
                 LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
                 throw;
             }
             catch (Exception exception)
             {
-                OutputText("ERROR: Skipping image {0} due to exception {1}", sourcePhoto.UrlSafePath,
-                    exception.Message);
-                OutputText("Stack Trace: {0}", exception.StackTrace);
                 LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
             }
         }
@@ -672,21 +670,22 @@ namespace OutputBuilderClient
                    || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
         }
 
-        private static string TryGenerateShortUrl(string url)
+        private static async Task<string> TryGenerateShortUrl(string url)
         {
             string shortUrl;
             if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                 return shortUrl;
 
 
-            lock (Lock)
+            await _sempahore.WaitAsync();
+            try
             {
                 var filename = Settings.Default.ShortNamesFile + ".tracking.json";
 
                 var tracking = new List<ShortenerCount>();
                 if (File.Exists(filename))
                 {
-                    var bytes = File.ReadAllBytes(filename);
+                    var bytes = FileHelpers.ReadAllBytes(filename);
 
                     var items = JsonConvert.DeserializeObject<ShortenerCount[]>(Encoding.UTF8.GetString(bytes));
 
@@ -713,7 +712,7 @@ namespace OutputBuilderClient
 
                     tracking.Add(counter);
 
-                    File.WriteAllBytes(
+                    FileHelpers.WriteAllBytes(
                         filename,
                         Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tracking.ToArray())));
                 }
@@ -726,15 +725,23 @@ namespace OutputBuilderClient
                         ++counter.Impressions;
                         ++counter.TotalImpressionsEver;
 
-                        File.WriteAllBytes(
+                        FileHelpers.WriteAllBytes(
                             filename,
                             Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tracking.ToArray())));
                     }
                 }
 
                 if (counter.Impressions < maxImpressionsPerMonth)
-                    return BitlyUrlShortner.Shorten(new Uri(url)).ToString();
+                {
+                    var shortened = await BitlyUrlShortner.Shorten(new Uri(url));
+
+                    return shortened.ToString();
+                }
                 return url;
+            }
+            finally
+            {
+                _sempahore.Release();
             }
         }
 

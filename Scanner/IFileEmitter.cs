@@ -1,7 +1,9 @@
-﻿namespace Twaddle.Directory.Scanner
+﻿using System.Threading.Tasks;
+
+namespace Twaddle.Directory.Scanner
 {
     public interface IFileEmitter
     {
-        void FileFound(FileEntry entry);
+        Task FileFound(FileEntry entry);
     }
 }

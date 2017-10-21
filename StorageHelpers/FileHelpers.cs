@@ -1,6 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Threading;
+using Alphaleonis.Win32.Filesystem;
+using IOException = System.IO.DirectoryNotFoundException;
 
 namespace StorageHelpers
 {
@@ -29,10 +30,10 @@ namespace StorageHelpers
                 if (File.Exists(fileName))
                     File.Delete(fileName);
             }
-            catch (DirectoryNotFoundException)
+            catch (IOException)
             {
             }
-            catch (IOException)
+            catch (FileReadOnlyException)
             {
             }
             catch (UnauthorizedAccessException)
@@ -114,6 +115,11 @@ namespace StorageHelpers
 
                 ++retries;
             }
+        }
+
+        public static byte[] ReadAllBytes(string filename)
+        {
+            return File.ReadAllBytes(filename);
         }
     }
 }

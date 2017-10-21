@@ -6,20 +6,19 @@
 //   Image converter that uses DCRAW.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.IO;
+using GraphicsMagick;
+using OutputBuilderClient.Properties;
+using StorageHelpers;
+
 namespace OutputBuilderClient.ImageConverters
 {
-    using System;
-    using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
-    using System.Globalization;
-    using System.IO;
-    using StorageHelpers;
-
-    using GraphicsMagick;
-
-    using OutputBuilderClient.Properties;
-
     /// <summary>
     ///     Image converter that uses DCRAW.
     /// </summary>
@@ -54,10 +53,7 @@ namespace OutputBuilderClient.ImageConverters
         /// </value>
         private static string DcRawExecutable
         {
-            get
-            {
-                return Settings.Default.DCRAWExecutable;
-            }
+            get { return Settings.Default.DCRAWExecutable; }
         }
 
         /// <summary>
@@ -75,7 +71,7 @@ namespace OutputBuilderClient.ImageConverters
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
 
-            MagickImage image = LoadImageInternal(fileName);
+            var image = LoadImageInternal(fileName);
             if (image != null)
             {
                 const int rotationDegrees = 0;
@@ -131,21 +127,21 @@ namespace OutputBuilderClient.ImageConverters
 
             //string.Format(CultureInfo.InvariantCulture, "-6 -w -q 3 -c -T \"{0}\"", fileName),
             return new Process
-                       {
-                           StartInfo =
-                               {
-                                   FileName = dcraw,
-                                   Arguments =
-                                       string.Format(
-                                           CultureInfo.InvariantCulture,
-                                           "-6 -w -q 3 -c -T \"{0}\"",
-                                           fileName),
-                                   UseShellExecute = false,
-                                   CreateNoWindow = true,
-                                   RedirectStandardOutput = true,
-                                   RedirectStandardError = true
-                               }
-                       };
+            {
+                StartInfo =
+                {
+                    FileName = dcraw,
+                    Arguments =
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "-6 -w -q 3 -c -T \"{0}\"",
+                            fileName),
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }
+            };
         }
 
         /// <summary>
@@ -161,13 +157,11 @@ namespace OutputBuilderClient.ImageConverters
         {
             Contract.Requires(!string.IsNullOrEmpty(filename));
 
-            string dcraw = DcRawExecutable;
+            var dcraw = DcRawExecutable;
             if (string.IsNullOrEmpty(dcraw))
-            {
                 return null;
-            }
 
-            using (Process process = CreateProcess(dcraw, filename))
+            using (var process = CreateProcess(dcraw, filename))
             {
                 if (!process.Start())
                 {
@@ -180,7 +174,7 @@ namespace OutputBuilderClient.ImageConverters
                     return null;
                 }
 
-                using (Stream stream = process.StandardOutput.BaseStream)
+                using (var stream = process.StandardOutput.BaseStream)
                 {
                     MagickImage image = null;
 
@@ -195,9 +189,7 @@ namespace OutputBuilderClient.ImageConverters
                     catch (Exception)
                     {
                         if (image != null)
-                        {
                             image.Dispose();
-                        }
 
                         throw;
                     }
@@ -227,10 +219,10 @@ namespace OutputBuilderClient.ImageConverters
                 image = new MagickImage();
 
                 image.Warning += (sender, e) =>
-                    {
-                        Console.WriteLine("Image Load Error: {0}", e.Message);
-                        throw e.Exception;
-                    };
+                {
+                    Console.WriteLine("Image Load Error: {0}", e.Message);
+                    throw e.Exception;
+                };
 
                 image.Read(stream);
 
@@ -239,9 +231,7 @@ namespace OutputBuilderClient.ImageConverters
             catch
             {
                 if (image != null)
-                {
                     image.Dispose();
-                }
 
                 throw;
             }

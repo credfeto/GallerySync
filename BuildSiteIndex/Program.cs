@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Formatting;
@@ -11,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Alphaleonis.Win32.Filesystem;
 using BuildSiteIndex.Properties;
 using FileNaming;
 using Newtonsoft.Json;
@@ -88,9 +88,9 @@ namespace BuildSiteIndex
             }
         };
 
-        private static readonly object EntryLock = new object();
-
         private static bool _ignoreExisting;
+
+        private static readonly SemaphoreSlim _entrySemaphore = new SemaphoreSlim(1);
 
         private static int Main(string[] args)
         {
@@ -145,48 +145,44 @@ namespace BuildSiteIndex
         {
             var contents = new Dictionary<string, GalleryEntry>();
 
-            var target = LoadRepository(Settings.Default.DatabaseInputFolder);
+            var target = await LoadRepository(Settings.Default.DatabaseInputFolder);
 
-            AppendRootEntry(contents);
-
+            await AppendRootEntry(contents);
 
             var keywords = new Dictionary<string, KeywordEntry>();
 
-            //using (IDocumentSession inputSession = documentStoreInput.OpenSession())
+            foreach (var sourcePhoto in target)
             {
-                foreach (var sourcePhoto in target)
-                {
-                    var path = EnsureTerminatedPath("/" + AlbumsRoot + "/" + sourcePhoto.UrlSafePath);
-                    var breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + AlbumsTitle + "\\" + sourcePhoto.BasePath);
-                    Console.WriteLine("Item: {0}", path);
+                var path = EnsureTerminatedPath("/" + AlbumsRoot + "/" + sourcePhoto.UrlSafePath);
+                var breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + AlbumsTitle + "\\" + sourcePhoto.BasePath);
+                Console.WriteLine("Item: {0}", path);
 
-                    var pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
-                    var breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+                var pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
+                var breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
 
-                    EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
+                await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
-                    var parentLevel =
-                        EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
+                var parentLevel =
+                    EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
 
-                    var title = ExtractTitle(sourcePhoto);
-                    if (string.IsNullOrWhiteSpace(title))
-                        title = breadcrumbFragments[breadcrumbFragments.Length - 1];
+                var title = ExtractTitle(sourcePhoto);
+                if (string.IsNullOrWhiteSpace(title))
+                    title = breadcrumbFragments[breadcrumbFragments.Length - 1];
 
-                    AppendPhotoEntry(contents, parentLevel, path,
-                        title,
-                        sourcePhoto);
+                await AppendPhotoEntry(contents, parentLevel, path,
+                    title,
+                    sourcePhoto);
 
-                    if (!IsUnderHiddenItem(path))
-                        AppendKeywordsForLaterProcessing(sourcePhoto, keywords);
-                }
+                if (!IsUnderHiddenItem(path))
+                    AppendKeywordsForLaterProcessing(sourcePhoto, keywords);
             }
 
             Console.WriteLine("Found {0} items total", contents.Count);
             Console.WriteLine("Found {0} keyword items total", keywords.Count);
 
-            BuildEvents(contents);
-
-            BuildGalleryItemsForKeywords(keywords, contents);
+            await Task.WhenAll(
+                BuildEvents(contents),
+                BuildGalleryItemsForKeywords(keywords, contents));
 
             AddCoordinatesFromChildren(contents);
             ProcessSiteIndex(contents);
@@ -205,7 +201,7 @@ namespace BuildSiteIndex
 
             foreach (var file in files)
             {
-                var bytes = File.ReadAllBytes(file);
+                var bytes = FileHelpers.ReadAllBytes(file);
 
                 var item = JsonConvert.DeserializeObject<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
 
@@ -215,7 +211,7 @@ namespace BuildSiteIndex
             return loaded;
         }
 
-        private static Photo[] LoadRepository(string baseFolder)
+        private static async Task<Photo[]> LoadRepository(string baseFolder)
         {
             Console.WriteLine("Loading Repository from {0}...", baseFolder);
             var scores = new[]
@@ -229,7 +225,7 @@ namespace BuildSiteIndex
 
             if (Directory.Exists(baseFolder))
             {
-                var filesFound = DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                var filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
                 Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
             }
@@ -237,7 +233,7 @@ namespace BuildSiteIndex
             return emitter.Photos;
         }
 
-        private static void BuildEvents(Dictionary<string, GalleryEntry> contents)
+        private static async Task BuildEvents(Dictionary<string, GalleryEntry> contents)
         {
             foreach (var folder in contents.Values.Where(UnderAlbumsFolder).Where(HasPhotoChildren).ToList())
             {
@@ -292,14 +288,14 @@ namespace BuildSiteIndex
                         var pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
                         var breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
 
-                        EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
+                        await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
                         var parentLevel =
                             EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
 
                         Console.WriteLine("Item: {0}", path);
 
-                        AppendVirtualEntryPhotoForGalleryEntry(contents, parentLevel, path, sourcePhoto.Path,
+                        await AppendVirtualEntryPhotoForGalleryEntry(contents, parentLevel, path, sourcePhoto.Path,
                             sourcePhoto.Title,
                             sourcePhoto);
                     }
@@ -370,7 +366,7 @@ namespace BuildSiteIndex
         }
 
         //[Conditional("SUPPORT_KEYWORDS")]
-        private static void BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
+        private static async Task BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
             Dictionary<string, GalleryEntry> contents)
         {
             RemoveObeseKeywordEntries(keywords);
@@ -416,14 +412,14 @@ namespace BuildSiteIndex
                 var pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
                 var breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
 
-                EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
+                await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
                 var parentLevel =
                     EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
 
                 Console.WriteLine("Item: {0}", path);
 
-                AppendVirtualEntry(contents, parentLevel, path, sourcePhotoFullPath,
+                await AppendVirtualEntry(contents, parentLevel, path, sourcePhotoFullPath,
                     title,
                     sourcePhoto);
             }
@@ -533,7 +529,7 @@ namespace BuildSiteIndex
             if (!_ignoreExisting && File.Exists(outputFilename))
             {
                 Console.WriteLine("Previous Json file exists");
-                var originalBytes = File.ReadAllBytes(outputFilename);
+                var originalBytes = FileHelpers.ReadAllBytes(outputFilename);
                 var decoded = Encoding.UTF8.GetString(originalBytes);
                 if (decoded == json)
                 {
@@ -571,7 +567,7 @@ namespace BuildSiteIndex
             ExtensionMethods.RotateLastGenerations(outputFilename);
 
             var encoded = Encoding.UTF8.GetBytes(json);
-            File.WriteAllBytes(outputFilename, encoded);
+            FileHelpers.WriteAllBytes(outputFilename, encoded);
         }
 
         private static GallerySiteIndex ProduceSiteIndex(Dictionary<string, GalleryEntry> contents)
@@ -957,7 +953,8 @@ namespace BuildSiteIndex
         }
 
 
-        private static void AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path,
+        private static async Task AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel,
+            string path,
             string title, Photo sourcePhoto)
         {
             DateTime dateCreated;
@@ -975,7 +972,7 @@ namespace BuildSiteIndex
             if (IsUnderHiddenItem(path))
                 keywords = new List<string>();
 
-            AppendEntry(contents, parentLevel, path, new GalleryEntry
+            await AppendEntry(contents, parentLevel, path, new GalleryEntry
             {
                 Path = path,
                 OriginalAlbumPath = null,
@@ -995,7 +992,7 @@ namespace BuildSiteIndex
             });
         }
 
-        private static void AppendVirtualEntry(Dictionary<string, GalleryEntry> contents, string parentLevel,
+        private static async Task AppendVirtualEntry(Dictionary<string, GalleryEntry> contents, string parentLevel,
             string path, string originalPath,
             string title, Photo sourcePhoto)
         {
@@ -1011,7 +1008,7 @@ namespace BuildSiteIndex
 
             var keywords = ExtractKeywords(sourcePhoto);
 
-            AppendEntry(contents, parentLevel, path, new GalleryEntry
+            await AppendEntry(contents, parentLevel, path, new GalleryEntry
             {
                 Path = path,
                 OriginalAlbumPath = originalPath,
@@ -1031,7 +1028,7 @@ namespace BuildSiteIndex
             });
         }
 
-        private static void AppendVirtualEntryPhotoForGalleryEntry(Dictionary<string, GalleryEntry> contents,
+        private static async Task AppendVirtualEntryPhotoForGalleryEntry(Dictionary<string, GalleryEntry> contents,
             string parentLevel,
             string path, string originalPath,
             string title, GalleryEntry sourcePhoto)
@@ -1047,7 +1044,7 @@ namespace BuildSiteIndex
 
             var keywords = sourcePhoto.Keywords;
 
-            AppendEntry(contents, parentLevel, path, new GalleryEntry
+            await AppendEntry(contents, parentLevel, path, new GalleryEntry
             {
                 Path = path,
                 OriginalAlbumPath = originalPath,
@@ -1177,7 +1174,7 @@ namespace BuildSiteIndex
             return location;
         }
 
-        private static void EnsureParentFoldersExist(string[] pathFragments, string[] breadcrumbFragments,
+        private static async Task EnsureParentFoldersExist(string[] pathFragments, string[] breadcrumbFragments,
             Dictionary<string, GalleryEntry> contents)
         {
             for (var folderLevel = 1; folderLevel < pathFragments.Length; ++folderLevel)
@@ -1190,7 +1187,7 @@ namespace BuildSiteIndex
                     var parentLevel =
                         EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(folderLevel - 1)));
 
-                    AppendEntry(contents, parentLevel, level, new GalleryEntry
+                    await AppendEntry(contents, parentLevel, level, new GalleryEntry
                     {
                         Path = level,
                         OriginalAlbumPath = null,
@@ -1205,10 +1202,12 @@ namespace BuildSiteIndex
             }
         }
 
-        private static void AppendEntry(Dictionary<string, GalleryEntry> contents, string parentPath, string itemPath,
+        private static async Task AppendEntry(Dictionary<string, GalleryEntry> contents, string parentPath,
+            string itemPath,
             GalleryEntry entry)
         {
-            lock (EntryLock)
+            await _entrySemaphore.WaitAsync();
+            try
             {
                 GalleryEntry parent;
                 if (!contents.TryGetValue(parentPath, out parent))
@@ -1228,11 +1227,14 @@ namespace BuildSiteIndex
 
                 contents.Add(itemPath, entry);
             }
+            finally
+            {
+                _entrySemaphore.Release();
+            }
         }
 
-        private static void AppendRootEntry(Dictionary<string, GalleryEntry> contents)
+        private static async Task AppendRootEntry(Dictionary<string, GalleryEntry> contents)
         {
-            lock (EntryLock)
             {
                 var entry = new GalleryEntry
                 {
@@ -1246,7 +1248,15 @@ namespace BuildSiteIndex
                     DateUpdated = DateTime.MinValue
                 };
 
-                contents.Add("/", entry);
+                await _entrySemaphore.WaitAsync();
+                try
+                {
+                    contents.Add("/", entry);
+                }
+                finally
+                {
+                    _entrySemaphore.Release();
+                }
             }
         }
 
@@ -1256,7 +1266,7 @@ namespace BuildSiteIndex
 
             public bool MaxReached
             {
-                get { return HasMaxBeenReached(itemsUploaded ); }
+                get { return HasMaxBeenReached(itemsUploaded); }
             }
 
             private bool HasMaxBeenReached(int count)
@@ -1267,7 +1277,7 @@ namespace BuildSiteIndex
             public bool Increment()
             {
                 var value = Interlocked.Increment(ref itemsUploaded);
-                
+
                 return HasMaxBeenReached(value);
             }
         }

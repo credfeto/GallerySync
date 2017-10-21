@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,11 +19,11 @@ namespace OutputBuilderClient
             get { return _photos.OrderBy(x => x.UrlSafePath).ToArray(); }
         }
 
-        public void FileFound(FileEntry entry)
+        public async Task FileFound(FileEntry entry)
         {
             var basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
-            var item = CreatePhotoRecord(entry, basePath);
+            var item = await CreatePhotoRecord(entry, basePath);
 
             Store(item);
         }
@@ -34,7 +33,7 @@ namespace OutputBuilderClient
             _photos.Add(photo);
         }
 
-        private static Photo CreatePhotoRecord(FileEntry entry, string basePath)
+        private static async Task<Photo> CreatePhotoRecord(FileEntry entry, string basePath)
         {
             var urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
@@ -56,7 +55,7 @@ namespace OutputBuilderClient
                 Files = componentFiles
             };
 
-            Task.WhenAll(tasks).ContinueWith(t => componentFiles.AddRange(t.Result)).Wait();
+            await Task.WhenAll(tasks).ContinueWith(t => componentFiles.AddRange(t.Result));
 
             //Console.WriteLine("Found: {0}", basePath);
 
@@ -65,10 +64,10 @@ namespace OutputBuilderClient
 
         private static Task<ComponentFile> ReadComponentFile(TaskFactory<ComponentFile> factory, string fileName)
         {
-            return factory.StartNew(() => ReadComponentFIle2(fileName));
+            return factory.StartNew(() => ReadComponentFileAsync(fileName));
         }
 
-        private static ComponentFile ReadComponentFIle2(string fileName)
+        private static ComponentFile ReadComponentFileAsync(string fileName)
         {
             var info = new FileInfo(fileName);
             var extension = info.Extension.ToLowerInvariant();

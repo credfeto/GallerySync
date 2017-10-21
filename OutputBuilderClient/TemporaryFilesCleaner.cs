@@ -7,16 +7,15 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using Alphaleonis.Win32.Filesystem;
 using StorageHelpers;
 
 namespace OutputBuilderClient
 {
-    using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
-    using System.IO;
-    using System.Linq;
-
     /// <summary>
     ///     Removes temporary files of specific mask.
     /// </summary>
@@ -42,16 +41,8 @@ namespace OutputBuilderClient
         {
             Contract.Requires(!string.IsNullOrEmpty(fileMask));
 
-            this._path = Alphaleonis.Win32.Filesystem.Path.GetTempPath();
-            this._fileMask = fileMask;
-        }
-
-        /// <summary>
-        ///     Finalizes an instance of the <see cref="TemporaryFilesCleaner" /> class.
-        /// </summary>
-        ~TemporaryFilesCleaner()
-        {
-            this.Dispose(false);
+            _path = Path.GetTempPath();
+            _fileMask = fileMask;
         }
 
         /// <summary>
@@ -60,11 +51,18 @@ namespace OutputBuilderClient
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        
+        /// <summary>
+        ///     Finalizes an instance of the <see cref="TemporaryFilesCleaner" /> class.
+        /// </summary>
+        ~TemporaryFilesCleaner()
+        {
+            Dispose(false);
+        }
+
 
         /// <summary>
         ///     Releases unmanaged and - optionally - managed resources.
@@ -75,17 +73,13 @@ namespace OutputBuilderClient
         private void Dispose(bool disposing)
         {
             if (!disposing)
-            {
                 return;
-            }
 
-            string[] files = Directory.GetFiles(this._path, this._fileMask);
+            var files = Directory.GetFiles(_path, _fileMask);
             foreach (
-                string fullFileName in files.Select(file => Alphaleonis.Win32.Filesystem.Path.Combine(this._path, file))
-                )
-            {
+                var fullFileName in files.Select(file => Path.Combine(_path, file))
+            )
                 FileHelpers.DeleteFile(fullFileName);
-            }
         }
 
         /// <summary>
@@ -98,8 +92,8 @@ namespace OutputBuilderClient
         [ContractInvariantMethod]
         private void ObjectInvariant()
         {
-            Contract.Invariant(!string.IsNullOrEmpty(this._fileMask));
-            Contract.Invariant(!string.IsNullOrEmpty(this._path));
+            Contract.Invariant(!string.IsNullOrEmpty(_fileMask));
+            Contract.Invariant(!string.IsNullOrEmpty(_path));
         }
     }
 }

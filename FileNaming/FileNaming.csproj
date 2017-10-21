@@ -45,6 +45,12 @@
     <Compile Include="UrlNaming.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj">
+            <Project>{08172B08-5233-4626-BE5B-D4FBCCCAA14B}</Project>
+            <Name>StorageHelpers</Name>
+        </ProjectReference>
+    </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
