@@ -9,6 +9,7 @@ using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using BuildSiteIndex.Properties;
 using FileNaming;
 using Newtonsoft.Json;
@@ -115,7 +116,7 @@ namespace BuildSiteIndex
 
             try
             {
-                ProcessGallery();
+                ProcessGallery().GetAwaiter().GetResult();
 
                 return 0;
             }
@@ -139,7 +140,7 @@ namespace BuildSiteIndex
             }
         }
 
-        private static void ProcessGallery()
+        private static async Task ProcessGallery()
         {
             var contents = new Dictionary<string, GalleryEntry>();
 
@@ -190,7 +191,7 @@ namespace BuildSiteIndex
             ProcessSiteIndex(contents);
 
             var documentStoreInput = LoadQueuedItems();
-            UploadQueuedItems(documentStoreInput);
+            await UploadQueuedItems(documentStoreInput);
 
             //documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
         }
@@ -326,36 +327,32 @@ namespace BuildSiteIndex
             return candiate.ImageSizes != null && candiate.ImageSizes.Any();
         }
 
-        private static void UploadQueuedItems(List<UploadQueueItem> inputSession)
+        private static async Task UploadQueuedItems(List<UploadQueueItem> inputSession)
         {
-            var itemsUploaded = 0;
+            var context = new LoadContext();
 
+            // Only upload creates and updates.
+            foreach (var item in inputSession.Where(item => item.UploadType != UploadType.DeleteItem))
+                if (await PerformUpload(item, context))
+                    return;
 
-            {
-                // Only upload creates and updates.
-                foreach (var item in inputSession.Where(item => item.UploadType != UploadType.DeleteItem))
-                    if (PerformUpload(item, ref itemsUploaded))
+            // ONly do deletes IF there are slots left for uploading
+            if (!context.MaxReached)
+                foreach (var item in inputSession.Where(item => item.UploadType == UploadType.DeleteItem))
+                    if (await PerformUpload(item, context))
                         return;
-
-                // ONly do deletes IF there are slots left for uploading
-                if (itemsUploaded < _maxDailyUploads)
-                    foreach (var item in inputSession.Where(item => item.UploadType == UploadType.DeleteItem))
-                        if (PerformUpload(item, ref itemsUploaded))
-                            return;
-            }
         }
 
-        private static bool PerformUpload(UploadQueueItem item,
-            ref int itemsUploaded)
+        private static async Task<bool> PerformUpload(UploadQueueItem item,
+            LoadContext context)
         {
-            ++itemsUploaded;
-            if (itemsUploaded > _maxDailyUploads)
+            if (context.Increment())
             {
                 Console.WriteLine("********** REACHED MAX DailyUploads **********");
                 return true;
             }
 
-            if (UploadOneItem(item))
+            if (await UploadOneItem(item))
                 RemoveQueuedItem(item);
             return false;
         }
@@ -749,7 +746,7 @@ namespace BuildSiteIndex
             return BuildUploadQueueHash(item.Item);
         }
 
-        private static bool UploadOneItem(UploadQueueItem item)
+        private static async Task<bool> UploadOneItem(UploadQueueItem item)
         {
             var itemToPost = CreateItemToPost(item);
 
@@ -760,13 +757,14 @@ namespace BuildSiteIndex
             var retry = 0;
             do
             {
-                uploaded = UploadItem(itemToPost, progressText, item.UploadType);
+                uploaded = await UploadItem(itemToPost, progressText, item.UploadType);
                 ++retry;
             } while (!uploaded && retry < maxRetries);
             return uploaded;
         }
 
-        private static bool UploadItem(GallerySiteIndex itemToPost, string progressText, UploadType uploadType)
+        private static async Task<bool> UploadItem(GallerySiteIndex itemToPost, string progressText,
+            UploadType uploadType)
         {
             //var handler = new HttpClientHandler
             //{
@@ -795,12 +793,12 @@ namespace BuildSiteIndex
                         Indent = false
                     };
 
-                    var response = client.PostAsync("tasks/sync", itemToPost, formatter).Result;
+                    var response = await client.PostAsync("tasks/sync", itemToPost, formatter);
                     Console.WriteLine("Status: {0}", response.StatusCode);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine(response.Content.ReadAsStringAsync().Result);
+                        Console.WriteLine(await response.Content.ReadAsStringAsync());
                         return true;
                     }
                     return false;
@@ -1248,6 +1246,23 @@ namespace BuildSiteIndex
                 };
 
                 contents.Add("/", entry);
+            }
+        }
+
+        private class LoadContext
+        {
+            private int itemsUploaded;
+
+            public bool MaxReached
+            {
+                get { return itemsUploaded > _maxDailyUploads; }
+            }
+
+            public bool Increment()
+            {
+                ++itemsUploaded;
+
+                return MaxReached;
             }
         }
 
