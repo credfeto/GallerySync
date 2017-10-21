@@ -1,25 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using GraphicsMagick;
 using StorageHelpers;
 
 namespace DeleteImageIfCorrupt
 {
-    class Program
+    internal class Program
     {
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             if (args.Length != 1)
-            {
                 return -1;
-            }
 
             if (File.Exists(args[0]))
-            {
                 try
                 {
                     var data = File.ReadAllBytes(args[0]);
@@ -28,18 +21,14 @@ namespace DeleteImageIfCorrupt
                     {
                         return 0;
                     }
-                    else
-                    {
-                        FileHelpers.DeleteFile(args[0]);
-                        return 2;
-                    }
+                    FileHelpers.DeleteFile(args[0]);
+                    return 2;
                 }
                 catch (Exception)
                 {
                     FileHelpers.DeleteFile(args[0]);
                     return 2;
                 }
-            }
 
             return 0;
         }
