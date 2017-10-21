@@ -9,6 +9,7 @@ using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using BuildSiteIndex.Properties;
 using FileNaming;
@@ -1255,14 +1256,19 @@ namespace BuildSiteIndex
 
             public bool MaxReached
             {
-                get { return itemsUploaded > _maxDailyUploads; }
+                get { return HasMaxBeenReached(itemsUploaded ); }
+            }
+
+            private bool HasMaxBeenReached(int count)
+            {
+                return count > _maxDailyUploads;
             }
 
             public bool Increment()
             {
-                ++itemsUploaded;
-
-                return MaxReached;
+                var value = Interlocked.Increment(ref itemsUploaded);
+                
+                return HasMaxBeenReached(value);
             }
         }
 
