@@ -6,6 +6,9 @@
 //   Removes temporary files of specific mask.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using StorageHelpers;
+
 namespace OutputBuilderClient
 {
     using System;
@@ -61,30 +64,7 @@ namespace OutputBuilderClient
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        ///     Silently removes the file, ignoring any failures.
-        /// </summary>
-        /// <param name="fullFileName">
-        ///     Full name of the Alphaleonis.Win32.Filesystem.File.
-        /// </param>
-        private static void SilentlyRemoveFile(string fullFileName)
-        {
-            Contract.Requires(!string.IsNullOrEmpty(fullFileName));
-
-            try
-            {
-                Alphaleonis.Win32.Filesystem.File.Delete(fullFileName);
-            }
-            catch (DirectoryNotFoundException)
-            {
-            }
-            catch (IOException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
-        }
+        
 
         /// <summary>
         ///     Releases unmanaged and - optionally - managed resources.
@@ -104,7 +84,7 @@ namespace OutputBuilderClient
                 string fullFileName in files.Select(file => Alphaleonis.Win32.Filesystem.Path.Combine(this._path, file))
                 )
             {
-                SilentlyRemoveFile(fullFileName);
+                FileHelpers.DeleteFile(fullFileName);
             }
         }
 

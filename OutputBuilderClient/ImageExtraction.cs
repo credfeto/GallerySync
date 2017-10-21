@@ -1,4 +1,6 @@
-﻿namespace OutputBuilderClient
+﻿using StorageHelpers;
+
+namespace OutputBuilderClient
 {
     using System;
     using System.Collections.Generic;

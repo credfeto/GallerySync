@@ -8,6 +8,7 @@ using Alphaleonis.Win32.Filesystem;
 using FileNaming;
 using Newtonsoft.Json;
 using OutputBuilderClient.Properties;
+using StorageHelpers;
 using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
 

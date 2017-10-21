@@ -110,7 +110,6 @@
     <Compile Include="Constants.cs" />
     <Compile Include="RawFileInfoEmitter.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="FileHelpers.cs" />
     <Compile Include="IImageConverter.cs" />
     <Compile Include="ImageConverters\ImageMagickImageConverter.cs" />
     <Compile Include="ImageConverters\RAWImageConverter.cs" />

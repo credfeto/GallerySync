@@ -14,6 +14,7 @@ namespace OutputBuilderClient.ImageConverters
     using System.Diagnostics.Contracts;
     using System.Globalization;
     using System.IO;
+    using StorageHelpers;
 
     using GraphicsMagick;
 
@@ -107,19 +108,7 @@ namespace OutputBuilderClient.ImageConverters
             }
             finally
             {
-                try
-                {
-                    Alphaleonis.Win32.Filesystem.File.Delete(fileName);
-                }
-                catch (DirectoryNotFoundException)
-                {
-                }
-                catch (IOException)
-                {
-                }
-                catch (UnauthorizedAccessException)
-                {
-                }
+                FileHelpers.DeleteFile(fileName);
             }
         }
 

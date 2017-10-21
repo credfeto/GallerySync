@@ -71,7 +71,7 @@
 
         public static void RotateLastGenerations(string file)
         {
-            Remove(file + ".9");
+            FileHelpers.DeleteFile(file + ".9");
             RotateWithRetry(file + ".8", file + ".9");
             RotateWithRetry(file + ".7", file + ".8");
             RotateWithRetry(file + ".6", file + ".7");
@@ -84,13 +84,7 @@
             RotateWithRetry(file, file + ".1");
         }
 
-        private static void Remove(string filename)
-        {
-            if (File.Exists(filename))
-            {
-                File.Delete(filename);
-            }
-        }
+        
 
         private static bool Rotate(string current, string previous)
         {
@@ -100,7 +94,7 @@
                 return true;
             }
 
-            Remove(previous);
+            FileHelpers.DeleteFile(previous);
 
             try
             {

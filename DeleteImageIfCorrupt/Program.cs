@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GraphicsMagick;
+using StorageHelpers;
 
 namespace DeleteImageIfCorrupt
 {
@@ -29,13 +30,13 @@ namespace DeleteImageIfCorrupt
                     }
                     else
                     {
-                        File.Delete(args[0]);
+                        FileHelpers.DeleteFile(args[0]);
                         return 2;
                     }
                 }
                 catch (Exception)
                 {
-                    File.Delete(args[0]);
+                    FileHelpers.DeleteFile(args[0]);
                     return 2;
                 }
             }

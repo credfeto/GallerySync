@@ -142,19 +142,19 @@ namespace BuildSiteIndex
         {
             var contents = new Dictionary<string, GalleryEntry>();
 
-            var dbInputFolder = Settings.Default.DatabaseInputFolder;
-            var restore = !Directory.Exists(dbInputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
-
-            var documentStoreInput = new EmbeddableDocumentStore
-            {
-                DataDirectory = dbInputFolder,
-                RunInMemory = false
-            };
-
-            documentStoreInput.Initialize();
-
-            if (restore)
-                documentStoreInput.Restore(Settings.Default.DatabaseBackupFolder);
+//            var dbInputFolder = Settings.Default.DatabaseInputFolder;
+//            var restore = !Directory.Exists(dbInputFolder) && Directory.Exists(Settings.Default.DatabaseBackupFolder);
+//
+//            var documentStoreInput = new EmbeddableDocumentStore
+//            {
+//                DataDirectory = dbInputFolder,
+//                RunInMemory = false
+//            };
+//
+//            documentStoreInput.Initialize();
+//
+//            if (restore)
+//                documentStoreInput.Restore(Settings.Default.DatabaseBackupFolder);
 
 
             AppendRootEntry(contents);
@@ -162,7 +162,7 @@ namespace BuildSiteIndex
 
             var keywords = new Dictionary<string, KeywordEntry>();
 
-            using (IDocumentSession inputSession = documentStoreInput.OpenSession())
+            //using (IDocumentSession inputSession = documentStoreInput.OpenSession())
             {
                 foreach (Photo sourcePhoto in inputSession.GetAll<Photo>())
                 {
@@ -199,11 +199,11 @@ namespace BuildSiteIndex
             BuildGalleryItemsForKeywords(keywords, contents);
 
             AddCoordinatesFromChildren(contents);
-            ProcessSiteIndex(contents, documentStoreInput);
+            ProcessSiteIndex(contents);
 
             UploadQueuedItems(documentStoreInput);
 
-            documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
+            //documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
         }
 
         private static void BuildEvents(Dictionary<string, GalleryEntry> contents)
@@ -305,13 +305,13 @@ namespace BuildSiteIndex
             {
                 // Only upload creates and updates.
                 foreach (var item in inputSession.Where(item => item.UploadType != UploadType.DeleteItem))
-                    if (PerformUpload(documentStoreInput, item, ref itemsUploaded))
+                    if (PerformUpload(item, ref itemsUploaded))
                         return;
 
                 // ONly do deletes IF there are slots left for uploading
                 if (itemsUploaded < _maxDailyUploads)
                     foreach (var item in inputSession.Where(item => item.UploadType == UploadType.DeleteItem))
-                        if (PerformUpload(documentStoreInput, item, ref itemsUploaded))
+                        if (PerformUpload(item, ref itemsUploaded))
                             return;
             }
         }
@@ -333,9 +333,16 @@ namespace BuildSiteIndex
 
         private static void RemoveQueuedItem(UploadQueueItem updateItem)
         {
+            
             // TODO: Remove the queued item 
-            //updateSession.Delete(updateItem);
-            //updateSession.SaveChanges();
+            var key = BuildUploadQueueHash(updateItem);
+
+            
+
+
+            var filename = BuildQueueItemFileName(key);
+
+            FileHelpers.DeleteFile(filename);
         }
 
         //[Conditional("SUPPORT_KEYWORDS")]
@@ -523,18 +530,18 @@ namespace BuildSiteIndex
                     var deletedItems = FindDeletedItems(oldData, data);
                     data.deletedItems.AddRange(deletedItems.OrderBy(x => x));
 
-                    QueueUploadChanges(data, oldData, documentStoreInput);
+                    QueueUploadChanges(data, oldData);
 
-                    QueueUploadItemsToDelete(data, deletedItems, documentStoreInput);
+                    QueueUploadItemsToDelete(data, deletedItems);
                 }
                 else
                 {
-                    QueueUploadAllItems(data, documentStoreInput);
+                    QueueUploadAllItems(data);
                 }
             }
             else
             {
-                QueueUploadAllItems(data, documentStoreInput);
+                QueueUploadAllItems(data);
             }
 
             ExtensionMethods.RotateLastGenerations(outputFilename);

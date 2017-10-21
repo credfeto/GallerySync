@@ -1,12 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
-using Alphaleonis.Win32.Filesystem;
-using TagLib;
-using File = Alphaleonis.Win32.Filesystem.File;
 
-namespace OutputBuilderClient
+namespace StorageHelpers
 {
-    internal static class FileHelpers
+    public static class FileHelpers
     {
         public static void WriteAllBytes(string fileName, byte[] bytes)
         {
@@ -24,13 +22,20 @@ namespace OutputBuilderClient
                 Directory.CreateDirectory(path);
         }
 
-        private static void DeleteFile(string fileName)
+        public static void DeleteFile(string fileName)
         {
             try
             {
-                File.Delete(fileName);
+                if (File.Exists(fileName))
+                    File.Delete(fileName);
             }
-            catch
+            catch (DirectoryNotFoundException)
+            {
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
             {
             }
         }
@@ -52,7 +57,7 @@ namespace OutputBuilderClient
         {
             var written = File.ReadAllBytes(path);
             if (bytes.Length != written.Length)
-                throw new CorruptFileException(
+                throw new FileContentException(
                     string.Format(
                         "File {0} does not contain the bytes that were written (size different Src:{1} != Dest:{2})",
                         path,
@@ -61,7 +66,7 @@ namespace OutputBuilderClient
 
             for (var pos = 0; pos < bytes.Length; ++pos)
                 if (bytes[pos] != written[pos])
-                    throw new CorruptFileException(
+                    throw new FileContentException(
                         string.Format(
                             "File {0} does not contain the bytes that were written (different at position {1} Src:{2} != Dest:{3})",
                             path,
