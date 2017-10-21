@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using StorageHelpers;
 
 namespace FileNaming
 {
     public static class Hasher
     {
-        public static string HashFile(string filename)
+        public static async Task<string> HashFile(string filename)
         {
-            var bytes = FileHelpers.ReadAllBytes(filename);
+            var bytes = await FileHelpers.ReadAllBytes(filename);
             return HashBytes(bytes);
         }
 

@@ -25,17 +25,15 @@ namespace OutputBuilderClient
             get { return _photos.OrderBy(x => x.UrlSafePath).ToArray(); }
         }
 
-        public Task FileFound(FileEntry entry)
+        public async Task FileFound(FileEntry entry)
         {
             var fullPath = Path.Combine(_basePath, entry.RelativeFolder, entry.LocalFileName);
 
-            var bytes = FileHelpers.ReadAllBytes(fullPath);
+            var bytes = await FileHelpers.ReadAllBytes(fullPath);
 
             var photo = JsonConvert.DeserializeObject<Photo>(Encoding.UTF8.GetString(bytes));
 
             _photos.Add(photo);
-
-            return Task.CompletedTask;
         }
     }
 }

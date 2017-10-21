@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -185,30 +186,34 @@ namespace BuildSiteIndex
                 BuildGalleryItemsForKeywords(keywords, contents));
 
             AddCoordinatesFromChildren(contents);
-            ProcessSiteIndex(contents);
+            await ProcessSiteIndex(contents);
 
-            var documentStoreInput = LoadQueuedItems();
-            await UploadQueuedItems(documentStoreInput);
-
-            //documentStoreInput.Backup(Settings.Default.DatabaseBackupFolder);
+            var queuedItems = await LoadQueuedItems();
+            await UploadQueuedItems(queuedItems);
         }
 
-        private static List<UploadQueueItem> LoadQueuedItems()
+        private static async Task<List<UploadQueueItem>> LoadQueuedItems()
         {
             var files = Directory.EnumerateFiles(Settings.Default.QueueFolder, "*.queue");
 
-            var loaded = new List<UploadQueueItem>();
+            var loaded = new ConcurrentBag<UploadQueueItem>();
 
-            foreach (var file in files)
-            {
-                var bytes = FileHelpers.ReadAllBytes(file);
+            await Task.WhenAll(
+                files.Select(file => LoadOneQueuedFile(file, loaded))
+            );
 
-                var item = JsonConvert.DeserializeObject<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
+            Console.WriteLine("Found {0} queued items total", loaded.Count);
+            
+            return loaded.ToList();
+        }
 
-                loaded.Add(item);
-            }
+        private static async Task LoadOneQueuedFile(string file, ConcurrentBag<UploadQueueItem> loaded)
+        {
+            var bytes = await FileHelpers.ReadAllBytes(file);
 
-            return loaded;
+            var item = JsonConvert.DeserializeObject<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
+
+            loaded.Add(item);
         }
 
         private static async Task<Photo[]> LoadRepository(string baseFolder)
@@ -519,7 +524,7 @@ namespace BuildSiteIndex
             return !string.IsNullOrWhiteSpace(arg);
         }
 
-        private static void ProcessSiteIndex(Dictionary<string, GalleryEntry> contents)
+        private static async Task ProcessSiteIndex(Dictionary<string, GalleryEntry> contents)
         {
             var data = ProduceSiteIndex(contents);
 
@@ -529,7 +534,7 @@ namespace BuildSiteIndex
             if (!_ignoreExisting && File.Exists(outputFilename))
             {
                 Console.WriteLine("Previous Json file exists");
-                var originalBytes = FileHelpers.ReadAllBytes(outputFilename);
+                var originalBytes = await FileHelpers.ReadAllBytes(outputFilename);
                 var decoded = Encoding.UTF8.GetString(originalBytes);
                 if (decoded == json)
                 {
@@ -567,7 +572,7 @@ namespace BuildSiteIndex
             ExtensionMethods.RotateLastGenerations(outputFilename);
 
             var encoded = Encoding.UTF8.GetBytes(json);
-            FileHelpers.WriteAllBytes(outputFilename, encoded);
+            await FileHelpers.WriteAllBytes(outputFilename, encoded);
         }
 
         private static GallerySiteIndex ProduceSiteIndex(Dictionary<string, GalleryEntry> contents)
@@ -763,13 +768,6 @@ namespace BuildSiteIndex
         private static async Task<bool> UploadItem(GallerySiteIndex itemToPost, string progressText,
             UploadType uploadType)
         {
-            //var handler = new HttpClientHandler
-            //{
-            //    UseDefaultCredentials = false,
-            //    Proxy = new WebProxy("http://localhost:8888", false, new string[] { }),
-            //    UseProxy = true
-            //};
-
             try
             {
                 using (var client = new HttpClient

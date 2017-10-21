@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Alphaleonis.Win32.Filesystem;
 using GraphicsMagick;
 using StorageHelpers;
@@ -9,18 +10,21 @@ namespace DeleteImageIfCorrupt
     {
         private static int Main(string[] args)
         {
+            return AsyncMain(args).GetAwaiter().GetResult();
+        }
+
+        private static async Task<int> AsyncMain(string[] args)
+        {
             if (args.Length != 1)
                 return -1;
 
             if (File.Exists(args[0]))
                 try
                 {
-                    var data = FileHelpers.ReadAllBytes(args[0]);
+                    var data = await FileHelpers.ReadAllBytes(args[0]);
 
                     if (IsValidJpegImage(data, args[0]))
-                    {
                         return 0;
-                    }
                     FileHelpers.DeleteFile(args[0]);
                     return 2;
                 }

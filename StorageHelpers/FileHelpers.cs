@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading;
+using System.Threading.Tasks;
 using Alphaleonis.Win32.Filesystem;
 using IOException = System.IO.DirectoryNotFoundException;
 
@@ -7,13 +7,13 @@ namespace StorageHelpers
 {
     public static class FileHelpers
     {
-        public static void WriteAllBytes(string fileName, byte[] bytes)
+        public static Task WriteAllBytes(string fileName, byte[] bytes)
         {
             const int maxRetries = 5;
 
             EnsureFolderExists(fileName);
 
-            WriteWithRetries(fileName, bytes, maxRetries);
+            return WriteWithRetries(fileName, bytes, maxRetries);
         }
 
         private static void EnsureFolderExists(string fileName)
@@ -54,9 +54,9 @@ namespace StorageHelpers
                 }
         }
 
-        private static void VerifyContent(string path, byte[] bytes)
+        private static async Task VerifyContent(string path, byte[] bytes)
         {
-            var written = File.ReadAllBytes(path);
+            var written = await ReadAllBytes(path);
             if (bytes.Length != written.Length)
                 throw new FileContentException(
                     string.Format(
@@ -76,19 +76,38 @@ namespace StorageHelpers
                             written[pos]));
         }
 
-        private static void WriteContent(string path, byte[] bytes)
+        private static async Task WriteContent(string path, byte[] bytes)
         {
-            WriteNoVerify(path, bytes);
+            if (File.Exists(path))
+            {
+                var existingBytes = await ReadAllBytes(path);
 
-            VerifyContent(path, bytes);
+                if (AreSame(existingBytes, bytes))
+                    return;
+            }
+            await WriteNoVerify(path, bytes);
+
+            await VerifyContent(path, bytes);
         }
 
-        private static void WriteNoVerify(string path, byte[] bytes)
+        private static bool AreSame(byte[] existingBytes, byte[] bytesToWrite)
         {
-            File.WriteAllBytes(path, bytes);
+            if (existingBytes.Length != bytesToWrite.Length)
+                return false;
+
+            for (var pos = 0; pos < existingBytes.Length; ++pos)
+                if (existingBytes[pos] != bytesToWrite[pos])
+                    return false;
+
+            return true;
         }
 
-        private static void WriteWithRetries(string fileName, byte[] data, int maxRetries)
+        private static Task WriteNoVerify(string path, byte[] bytes)
+        {
+            return Task.Run(() => File.WriteAllBytes(path, bytes));
+        }
+
+        private static async Task WriteWithRetries(string fileName, byte[] data, int maxRetries)
         {
             var retries = 0;
             while (retries < maxRetries)
@@ -97,7 +116,7 @@ namespace StorageHelpers
 
                 try
                 {
-                    WriteContent(fileName, data);
+                    await WriteContent(fileName, data);
 
                     return;
                 }
@@ -108,18 +127,21 @@ namespace StorageHelpers
                     Console.WriteLine("Attempt: {0} of {1}", retries + 1, maxRetries);
                     Console.WriteLine("Stack:");
                     Console.WriteLine(exception.StackTrace);
-                    Thread.Sleep(500);
-                    DeleteFile(fileName);
-                    Thread.Sleep(1500);
                 }
+
+                await Task.Delay(500);
+                DeleteFile(fileName);
+                await Task.Delay(1500);
 
                 ++retries;
             }
         }
 
-        public static byte[] ReadAllBytes(string filename)
+        public static Task<byte[]> ReadAllBytes(string filename)
         {
-            return File.ReadAllBytes(filename);
+            return
+                Task.Run(() =>
+                    File.ReadAllBytes(filename));
         }
     }
 }

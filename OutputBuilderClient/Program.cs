@@ -188,7 +188,7 @@ namespace OutputBuilderClient
                             Settings.Default.RootFolder,
                             sourcePhoto.BasePath + componentFile.Extension);
 
-                        found.Hash = Hasher.HashFile(filename);
+                        found.Hash = await Hasher.HashFile(filename);
                     }
 
                     if (componentFile.Hash != found.Hash)
@@ -266,9 +266,7 @@ namespace OutputBuilderClient
                         continue;
 
                     if (ShorternedUrls.TryAdd(process[0], process[1]))
-                    {
                         Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
-                    }
                 }
 
                 Console.WriteLine("Total Known Short Urls: {0}", ShorternedUrls.Count);
@@ -279,7 +277,7 @@ namespace OutputBuilderClient
         private static void LogShortUrl(string url, string shortUrl)
         {
             if (!ShorternedUrls.TryAdd(url, shortUrl)) return;
-            
+
             var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
 
             var text = new[] {string.Format("{0}\t{1}", url, shortUrl)};
@@ -473,7 +471,7 @@ namespace OutputBuilderClient
         {
             await OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
-            UpdateFileHashes(targetPhoto, sourcePhoto);
+            await UpdateFileHashes(targetPhoto, sourcePhoto);
 
             var buildMetadata = targetPhoto == null || rebuild || rebuildMetadata
                                 || targetPhoto != null && targetPhoto.Metadata == null;
@@ -512,17 +510,17 @@ namespace OutputBuilderClient
                 if (buildImages)
                     AddUploadFiles(filesCreated);
 
-                Store(targetPhoto);
+                await Store(targetPhoto);
             }
             else
             {
                 AddUploadFiles(filesCreated);
 
-                Store(sourcePhoto);
+                await Store(sourcePhoto);
             }
         }
 
-        private static void Store(Photo photo)
+        private static Task Store(Photo photo)
         {
             var safeUrl = photo.UrlSafePath.Replace('/', Path.DirectorySeparatorChar);
             safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
@@ -534,7 +532,7 @@ namespace OutputBuilderClient
             );
 
             var txt = JsonConvert.SerializeObject(photo);
-            FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
+            return FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
         }
 
         private static async Task ProcessSinglePhoto(
@@ -685,7 +683,7 @@ namespace OutputBuilderClient
                 var tracking = new List<ShortenerCount>();
                 if (File.Exists(filename))
                 {
-                    var bytes = FileHelpers.ReadAllBytes(filename);
+                    var bytes = await FileHelpers.ReadAllBytes(filename);
 
                     var items = JsonConvert.DeserializeObject<ShortenerCount[]>(Encoding.UTF8.GetString(bytes));
 
@@ -712,7 +710,7 @@ namespace OutputBuilderClient
 
                     tracking.Add(counter);
 
-                    FileHelpers.WriteAllBytes(
+                    await FileHelpers.WriteAllBytes(
                         filename,
                         Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tracking.ToArray())));
                 }
@@ -725,7 +723,7 @@ namespace OutputBuilderClient
                         ++counter.Impressions;
                         ++counter.TotalImpressionsEver;
 
-                        FileHelpers.WriteAllBytes(
+                        await FileHelpers.WriteAllBytes(
                             filename,
                             Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tracking.ToArray())));
                     }
@@ -745,7 +743,7 @@ namespace OutputBuilderClient
             }
         }
 
-        private static void UpdateFileHashes(Photo targetPhoto, Photo sourcePhoto)
+        private static Task UpdateFileHashes(Photo targetPhoto, Photo sourcePhoto)
         {
             if (targetPhoto != null)
                 foreach (var sourceFile in
@@ -758,15 +756,18 @@ namespace OutputBuilderClient
                         sourceFile.Hash = targetFile.Hash;
                 }
 
-            foreach (var file in
-                sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
-            {
-                var filename = Path.Combine(
-                    Settings.Default.RootFolder,
-                    sourcePhoto.BasePath + file.Extension);
+            return Task.WhenAll(
+                sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash))
+                    .Select(file => SetFileHash(sourcePhoto, file)));
+        }
 
-                file.Hash = Hasher.HashFile(filename);
-            }
+        private static async Task SetFileHash(Photo sourcePhoto, ComponentFile file)
+        {
+            var filename = Path.Combine(
+                Settings.Default.RootFolder,
+                sourcePhoto.BasePath + file.Extension);
+
+            file.Hash = await Hasher.HashFile(filename);
         }
 
         private static void UpdateTargetWithSourceProperties(Photo targetPhoto, Photo sourcePhoto)
