@@ -37,8 +37,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-      <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
-          <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -49,9 +49,8 @@
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Spatial, Version=5.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Spatial.5.7.0\lib\net40\System.Spatial.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="System.Spatial, Version=5.8.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>..\packages\System.Spatial.5.8.3\lib\net40\System.Spatial.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -68,7 +67,7 @@
     <Compile Include="KeywordEntry.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="LocationHelpers.cs" />
-      <Compile Include="PhotoInfoEmitter.cs"/>
+    <Compile Include="PhotoInfoEmitter.cs"/>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -96,10 +95,10 @@
       <Project>{7a5f8ccb-3d18-4fb0-aee7-3037b8000ebc}</Project>
       <Name>ObjectModel</Name>
     </ProjectReference>
-      <ProjectReference Include="..\Scanner\Scanner.csproj">
-          <Project>{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}</Project>
-          <Name>Scanner</Name>
-      </ProjectReference>
+    <ProjectReference Include="..\Scanner\Scanner.csproj">
+      <Project>{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}</Project>
+      <Name>Scanner</Name>
+    </ProjectReference>
     <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj">
       <Project>{08172b08-5233-4626-be5b-d4fbcccaa14b}</Project>
       <Name>StorageHelpers</Name>
