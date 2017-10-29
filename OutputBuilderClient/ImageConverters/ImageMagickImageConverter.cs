@@ -6,16 +6,15 @@
 //   Image converter that uses ImageMagick.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System;
+using GraphicsMagick;
+
 namespace OutputBuilderClient.ImageConverters
 {
-    using System;
-
-    using GraphicsMagick;
-
     /// <summary>
     ///     Image converter that uses ImageMagick.
     /// </summary>
-    [SupportedExtension("psd")]
     [SupportedExtension("tga")]
     [SupportedExtension("jpg")]
     [SupportedExtension("jpeg")]
@@ -36,10 +35,10 @@ namespace OutputBuilderClient.ImageConverters
                 image = new MagickImage();
 
                 image.Warning += (sender, e) =>
-                    {
-                        Console.WriteLine("Image Load Error: {0}", e.Message);
-                        throw e.Exception;
-                    };
+                {
+                    Console.WriteLine("Image Load Error: {0}", e.Message);
+                    throw e.Exception;
+                };
 
                 image.Read(fileName);
 
@@ -48,9 +47,7 @@ namespace OutputBuilderClient.ImageConverters
             catch
             {
                 if (image != null)
-                {
                     image.Dispose();
-                }
 
                 throw;
             }

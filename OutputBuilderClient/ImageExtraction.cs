@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using FileNaming;
 using Gma.QrCodeNet.Encoding;
 using Gma.QrCodeNet.Encoding.Windows.Render;
@@ -40,7 +41,7 @@ namespace OutputBuilderClient
             }
         }
 
-        public static List<ImageSize> BuildImages(
+        public static async Task<List<ImageSize>> BuildImages(
             Photo sourcePhoto,
             List<string> filesCreated,
             DateTime creationDate,
@@ -94,7 +95,7 @@ namespace OutputBuilderClient
                                     "In memory image to be saved as: " + resizedFileName))
                                 throw new Exception(string.Format("File {0} produced an invalid image", filename));
 
-                            WriteImage(resizedFileName, resizedBytes, creationDate);
+                            await WriteImage(resizedFileName, resizedBytes, creationDate);
 
                             if (
                                 !ImageHelpers.IsValidJpegImage(
@@ -125,7 +126,7 @@ namespace OutputBuilderClient
                                     sourcePhoto.BasePath,
                                     sourcePhoto.Metadata,
                                     creationDate);
-                                WriteImage(resizedFileName, resizedBytes, creationDate);
+                                await WriteImage(resizedFileName, resizedBytes, creationDate);
 
                                 filesCreated.Add(
                                     HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\"
@@ -236,14 +237,14 @@ namespace OutputBuilderClient
         ///     The data to write to the Alphaleonis.Win32.Filesystem.File.
         /// </param>
         /// <param name="creationDate"></param>
-        public static void WriteImage(string fileName, byte[] data, DateTime creationDate)
+        public static async Task WriteImage(string fileName, byte[] data, DateTime creationDate)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
             Contract.Requires(data != null);
 
             EnsureFolderExistsForFile(fileName);
 
-            FileHelpers.WriteAllBytes(fileName, data);
+            await FileHelpers.WriteAllBytes(fileName, data);
 
             MetadataOutput.SetCreationDate(fileName, creationDate);
         }

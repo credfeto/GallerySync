@@ -555,18 +555,19 @@ namespace BuildSiteIndex
                     var deletedItems = FindDeletedItems(oldData, data);
                     data.deletedItems.AddRange(deletedItems.OrderBy(x => x));
 
-                    QueueUploadChanges(data, oldData);
-
-                    QueueUploadItemsToDelete(data, deletedItems);
+                    await Task.WhenAll(
+                            QueueUploadChanges(data, oldData),
+                            QueueUploadItemsToDelete(data, deletedItems)
+                        );
                 }
                 else
                 {
-                    QueueUploadAllItems(data);
+                    await QueueUploadAllItems(data);
                 }
             }
             else
             {
-                QueueUploadAllItems(data);
+                await QueueUploadAllItems(data);
             }
 
             ExtensionMethods.RotateLastGenerations(outputFilename);
@@ -659,15 +660,19 @@ namespace BuildSiteIndex
             return path.StartsWith("/albums/private/", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static void QueueUploadItemsToDelete(GallerySiteIndex data, List<string> deletedItems)
+        private static Task QueueUploadItemsToDelete(GallerySiteIndex data, List<string> deletedItems)
         {
-            foreach (var path in deletedItems)
-                QueueUploadOneItem(data, new GalleryItem
-                    {
-                        Path = path
-                    },
-                    UploadType.DeleteItem
-                );
+            return Task.WhenAll(
+                deletedItems.Select(
+                    path =>
+                        QueueUploadOneItem(data, new GalleryItem
+                            {
+                                Path = path
+                            },
+                            UploadType.DeleteItem
+                        )
+                )
+            );
         }
 
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
@@ -684,11 +689,9 @@ namespace BuildSiteIndex
             return deletedItems;
         }
 
-        private static void QueueUploadAllItems(GallerySiteIndex data)
+        private static Task QueueUploadAllItems(GallerySiteIndex data)
         {
-            foreach (
-                var item in UploadOrdering(data))
-                QueueUploadOneItem(data, item, UploadType.NewItem);
+            return Task.WhenAll(UploadOrdering(data).Select(item => QueueUploadOneItem(data, item, UploadType.NewItem)));
         }
 
         private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
@@ -703,18 +706,19 @@ namespace BuildSiteIndex
             return candidate.Type == "photo" ? 1 : 2;
         }
 
-        private static void QueueUploadChanges(GallerySiteIndex data, GallerySiteIndex oldData)
+        private static Task QueueUploadChanges(GallerySiteIndex data, GallerySiteIndex oldData)
         {
-            foreach (
-                var item in UploadOrdering(data))
-            {
-                var oldItem = oldData.items.FirstOrDefault(candidate => candidate.Path == item.Path);
-                if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
-                    QueueUploadOneItem(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem);
-            }
+            return Task.WhenAll(UploadOrdering(data).Select(item => QueueOneNewOrModifiedItem(data, oldData, item)));
         }
 
-        public static void QueueUploadOneItem(GallerySiteIndex data, GalleryItem item, UploadType uploadType)
+        private static async Task QueueOneNewOrModifiedItem(GallerySiteIndex data, GallerySiteIndex oldData, GalleryItem item)
+        {
+            var oldItem = oldData.items.FirstOrDefault(candidate => candidate.Path == item.Path);
+            if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
+                await QueueUploadOneItem(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem);
+        }
+
+        private static Task QueueUploadOneItem(GallerySiteIndex data, GalleryItem item, UploadType uploadType)
         {
             var key = BuildUploadQueueHash(item);
 
@@ -730,7 +734,7 @@ namespace BuildSiteIndex
 
             var json = JsonConvert.SerializeObject(queueItem);
 
-            FileHelpers.WriteAllBytes(filename, Encoding.UTF8.GetBytes(json));
+            return FileHelpers.WriteAllBytes(filename, Encoding.UTF8.GetBytes(json));
         }
 
         private static string BuildQueueItemFileName(string key)

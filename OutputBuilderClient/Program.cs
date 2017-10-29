@@ -266,7 +266,9 @@ namespace OutputBuilderClient
                         continue;
 
                     if (ShorternedUrls.TryAdd(process[0], process[1]))
-                        Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
+                    {
+                        //Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
+                    }
                 }
 
                 Console.WriteLine("Total Known Short Urls: {0}", ShorternedUrls.Count);
@@ -289,7 +291,7 @@ namespace OutputBuilderClient
         {
             Console.WriteLine("OutputBuilderClient");
 
-            BoostPriority();
+            //BoostPriority();
 
             return AsyncMain(args).GetAwaiter().GetResult();
         }
@@ -488,7 +490,7 @@ namespace OutputBuilderClient
             if (buildImages)
             {
                 var creationDate = ExtractCreationDate(sourcePhoto.Metadata);
-                sourcePhoto.ImageSizes = ImageExtraction.BuildImages(
+                sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(
                     sourcePhoto,
                     filesCreated,
                     creationDate,
