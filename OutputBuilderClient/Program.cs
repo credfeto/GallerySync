@@ -118,7 +118,7 @@ namespace OutputBuilderClient
 
                 try
                 {
-                    await ReadMetadata(args[0]);
+                    await StandaloneMetadata.ReadMetadata(args[0]);
 
                     return 0;
                 }
@@ -334,55 +334,6 @@ namespace OutputBuilderClient
             {
                 BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
             }
-        }
-
-        private static async Task ReadMetadata(string filename)
-        {
-            var folder = Path.GetDirectoryName(filename);
-            var file = Path.GetFileName(filename);
-            var extension = Path.GetExtension(filename);
-
-            var fileGroup = new List<string>();
-            if (File.Exists(filename.Replace(extension, ".xmp")))
-                fileGroup.Add(file.Replace(extension, ".xmp"));
-
-            var entry = new FileEntry
-            {
-                Folder = folder,
-                RelativeFolder = folder.Substring(Settings.Default.RootFolder.Length + 1),
-                LocalFileName = file,
-                AlternateFileNames = fileGroup
-            };
-
-            var basePath = Path.Combine(
-                entry.RelativeFolder,
-                Path.GetFileNameWithoutExtension(entry.LocalFileName));
-
-            var urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
-
-            var photo = new Photo
-            {
-                BasePath = basePath,
-                UrlSafePath = urlSafePath,
-                PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
-                ImageExtension = Path.GetExtension(entry.LocalFileName),
-                Files =
-                    fileGroup.Select(
-                        x =>
-                            new ComponentFile
-                            {
-                                Extension =
-                                    Path.GetExtension(x)
-                                        .TrimStart('.'),
-                                Hash = string.Empty,
-                                LastModified = new DateTime(2014, 1, 1),
-                                FileSize = 1000
-                            }).ToList()
-            };
-
-            var metadata = MetadataExtraction.ExtractMetadata(photo);
-            foreach (var item in metadata)
-                await ConsoleOutput.Line("{0} = {1}", item.Name, item.Value);
         }
 
         private static async Task<string> TryGenerateShortUrl(string url)
