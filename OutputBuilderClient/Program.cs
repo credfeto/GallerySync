@@ -18,9 +18,6 @@ namespace OutputBuilderClient
 {
     internal class Program
     {
-        private static readonly ConcurrentDictionary<string, string> ShorternedUrls =
-            new ConcurrentDictionary<string, string>();
-
         private static readonly ConcurrentDictionary<string, string> _brokenImages =
             new ConcurrentDictionary<string, string>();
 
@@ -265,20 +262,20 @@ namespace OutputBuilderClient
                     if (process.Length != 2)
                         continue;
 
-                    if (ShorternedUrls.TryAdd(process[0], process[1]))
+                    if (ShortUrls.TryAdd(process[0], process[1]))
                     {
                         //Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
                     }
                 }
 
-                Console.WriteLine("Total Known Short Urls: {0}", ShorternedUrls.Count);
+                Console.WriteLine("Total Known Short Urls: {0}", ShortUrls.Count);
                 Console.WriteLine();
             }
         }
 
         private static void LogShortUrl(string url, string shortUrl)
         {
-            if (!ShorternedUrls.TryAdd(url, shortUrl)) return;
+            if (!ShortUrls.TryAdd(url, shortUrl)) return;
 
             var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
 
@@ -397,8 +394,8 @@ namespace OutputBuilderClient
 
         private static async Task ProcessGallery()
         {
-            var sourceTask = LoadEmptyRepository(Settings.Default.RootFolder);
-            var targetTask = LoadRepository(Settings.Default.DatabaseOutputFolder);
+            var sourceTask = global::OutputBuilderClient.RepositoryLoader.LoadEmptyRepository(Settings.Default.RootFolder);
+            var targetTask = global::OutputBuilderClient.RepositoryLoader.LoadRepository(Settings.Default.DatabaseOutputFolder);
 
             await Task.WhenAll(sourceTask, targetTask);
 
@@ -408,59 +405,6 @@ namespace OutputBuilderClient
             var liveItems = await Process(source, target);
 
             await KillDeadItems(liveItems);
-        }
-
-        private static async Task<Photo[]> LoadRepository(string baseFolder)
-        {
-            Console.WriteLine("Loading Repository from {0}...", baseFolder);
-            var scores = new[]
-            {
-                ".info"
-            };
-
-            var sidecarFiles = new List<string>();
-
-            var emitter = new PhotoInfoEmitter(baseFolder);
-
-            if (Directory.Exists(baseFolder))
-            {
-                var filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
-
-                Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
-            }
-
-            return emitter.Photos;
-        }
-
-        private static async Task<Photo[]> LoadEmptyRepository(string baseFolder)
-        {
-            Console.WriteLine("Loading Repository from {0}...", baseFolder);
-
-            var emitter = new RawFileInfoEmitter();
-
-            var scores = new[]
-            {
-                ".xmp",
-                ".jpg",
-                ".cr2",
-                ".mrw",
-                ".rw2",
-                ".tif",
-                ".tiff",
-                ".psd"
-            };
-
-            var sidecarFiles = new[]
-            {
-                ".xmp"
-            };
-
-            var filesFound =
-                await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
-
-            Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
-
-            return emitter.Photos;
         }
 
         private static async Task ProcessOneFile(
@@ -577,7 +521,7 @@ namespace OutputBuilderClient
                 }
                 else
                 {
-                    if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+                    if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                         Console.WriteLine("* Reusing existing short url: {0}", shortUrl);
                 }
 
@@ -673,11 +617,15 @@ namespace OutputBuilderClient
         private static async Task<string> TryGenerateShortUrl(string url)
         {
             string shortUrl;
-            if (ShorternedUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+            if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                 return shortUrl;
 
 
             await _sempahore.WaitAsync();
+            
+            if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+                return shortUrl;
+            
             try
             {
                 var filename = Settings.Default.ShortNamesFile + ".tracking.json";

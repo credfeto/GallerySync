@@ -109,7 +109,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+      <Compile Include="RepositoryLoader.cs"/>
     <Compile Include="ShortenerCount.cs" />
+      <Compile Include="ShortUrls.cs"/>
     <Compile Include="SupportedExtensionAttribute.cs" />
     <Compile Include="TemporaryFilesCleaner.cs" />
   </ItemGroup>
