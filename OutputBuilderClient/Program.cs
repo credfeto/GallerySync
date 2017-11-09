@@ -300,7 +300,7 @@ namespace OutputBuilderClient
                             ShortUrls.LogShortUrl(url, shortUrl);
 
                             rebuild = true;
-                            Console.WriteLine(
+                            await ConsoleOutput.Line(
                                 " +++ Force rebuild: missing shortcut URL.  New short url: {0}",
                                 shortUrl);
                         }
@@ -309,7 +309,7 @@ namespace OutputBuilderClient
                 else
                 {
                     if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
-                        Console.WriteLine("* Reusing existing short url: {0}", shortUrl);
+                        await ConsoleOutput.Line("* Reusing existing short url: {0}", shortUrl);
                 }
 
                 if (!string.IsNullOrWhiteSpace(shortUrl)

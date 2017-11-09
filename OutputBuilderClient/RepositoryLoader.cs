@@ -12,7 +12,7 @@ namespace OutputBuilderClient
     {
         public static async Task<Photo[]> LoadRepository(string baseFolder)
         {
-            Console.WriteLine("Loading Repository from {0}...", baseFolder);
+            await ConsoleOutput.Line("Loading Repository from {0}...", baseFolder);
             var scores = new[]
             {
                 ".info"
@@ -26,7 +26,7 @@ namespace OutputBuilderClient
             {
                 var filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
-                Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
+                await ConsoleOutput.Line("{0} : Files Found: {1}", baseFolder, filesFound);
             }
 
             return emitter.Photos;
@@ -34,7 +34,7 @@ namespace OutputBuilderClient
 
         public static async Task<Photo[]> LoadEmptyRepository(string baseFolder)
         {
-            Console.WriteLine("Loading Repository from {0}...", baseFolder);
+            await ConsoleOutput.Line("Loading Repository from {0}...", baseFolder);
 
             var emitter = new RawFileInfoEmitter();
 
@@ -58,7 +58,7 @@ namespace OutputBuilderClient
             var filesFound =
                 await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
 
-            Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
+            await ConsoleOutput.Line("{0} : Files Found: {1}", baseFolder, filesFound);
 
             return emitter.Photos;
         }
