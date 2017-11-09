@@ -231,7 +231,7 @@ namespace OutputBuilderClient
         {
             if (args.Length == 1)
             {
-                ShortUrls.LoadShortUrls();
+                ShortUrls.Load();
 
                 try
                 {
@@ -249,7 +249,7 @@ namespace OutputBuilderClient
 
             try
             {
-                ShortUrls.LoadShortUrls();
+                ShortUrls.Load();
 
                 await ProcessGallery();
 

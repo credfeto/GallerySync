@@ -22,7 +22,7 @@ namespace OutputBuilderClient
             return ShorternedUrls.TryGetValue(url, out shortUrl);
         }
 
-        public static void LoadShortUrls()
+        public static void Load()
         {
             var logPath = Settings.Default.ShortNamesFile;
 
