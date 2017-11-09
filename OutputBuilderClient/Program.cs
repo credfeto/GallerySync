@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -90,9 +91,22 @@ namespace OutputBuilderClient
         {
             Console.WriteLine("OutputBuilderClient");
 
-            //BoostPriority();
+            AlterPriority();
 
             return AsyncMain(args).GetAwaiter().GetResult();
+        }
+        
+        private static void AlterPriority()
+        {
+            // TODO: Move to a common Library
+            try
+            {
+                System.Diagnostics.Process.GetCurrentProcess().PriorityClass =
+                    ProcessPriorityClass.BelowNormal;
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private static async Task<int> AsyncMain(string[] args)

@@ -114,7 +114,7 @@ namespace BuildSiteIndex
             }
 
 
-            BoostPriority();
+            AlterPriority();
 
             try
             {
@@ -130,12 +130,13 @@ namespace BuildSiteIndex
             }
         }
 
-        private static void BoostPriority()
+        private static void AlterPriority()
         {
+            // TODO: Move to a common Library
             try
             {
                 Process.GetCurrentProcess().PriorityClass =
-                    ProcessPriorityClass.High;
+                    ProcessPriorityClass.BelowNormal;
             }
             catch (Exception)
             {
