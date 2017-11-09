@@ -18,13 +18,12 @@ namespace OutputBuilderClient
     internal class Program
     {
         private static readonly SemaphoreSlim _sempahore = new SemaphoreSlim(1);
-        private static readonly SemaphoreSlim _consoleSempahore = new SemaphoreSlim(1);
 
         public static async Task<bool> MetadataVersionRequiresRebuild(Photo targetPhoto)
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                await OutputText(
+                await ConsoleOutput.Line(
                     " +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version
                     + " Expected: " + Constants.CurrentMetadataVersion + ")");
                 return true;
@@ -160,22 +159,7 @@ namespace OutputBuilderClient
 
             File.WriteAllLines(Settings.Default.BrokenImagesFile, images, Encoding.UTF8);
 
-            return OutputText("Broken Images: {0}", images.Length);
-        }
-
-        internal static async Task OutputText(string formatString, params object[] parameters)
-        {
-            var text = string.Format(formatString, parameters);
-
-            await _consoleSempahore.WaitAsync();
-            try
-            {
-                Console.WriteLine(text);
-            }
-            finally
-            {
-                _consoleSempahore.Release();
-            }
+            return ConsoleOutput.Line("Broken Images: {0}", images.Length);
         }
 
         private static async Task<HashSet<string>> Process(
@@ -216,7 +200,7 @@ namespace OutputBuilderClient
             string url,
             string shortUrl)
         {
-            await OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
+            await ConsoleOutput.Line(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
             await targetPhoto.UpdateFileHashes(sourcePhoto);
 
@@ -337,7 +321,7 @@ namespace OutputBuilderClient
                 if (build || rebuild || rebuildMetadata)
                     await ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
                 else
-                    await OutputText("Unchanged: {0}", targetPhoto.UrlSafePath);
+                    await ConsoleOutput.Line("Unchanged: {0}", targetPhoto.UrlSafePath);
 
                 items.TryAdd(sourcePhoto.PathHash, true);
             }
@@ -398,7 +382,7 @@ namespace OutputBuilderClient
 
             var metadata = MetadataExtraction.ExtractMetadata(photo);
             foreach (var item in metadata)
-                await OutputText("{0} = {1}", item.Name, item.Value);
+                await ConsoleOutput.Line("{0} = {1}", item.Name, item.Value);
         }
 
         private static async Task<string> TryGenerateShortUrl(string url)

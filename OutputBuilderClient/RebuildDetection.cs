@@ -21,7 +21,7 @@ namespace OutputBuilderClient
         {
             if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                await Program.OutputText(
+                await ConsoleOutput.Line(
                     " +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version
                     + " Expected: " + Constants.CurrentMetadataVersion + ")");
                 return true;
@@ -34,7 +34,7 @@ namespace OutputBuilderClient
         {
             if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
             {
-                await Program.OutputText(" +++ Metadata update: File count changed");
+                await ConsoleOutput.Line(" +++ Metadata update: File count changed");
                 return true;
             }
 
@@ -50,7 +50,7 @@ namespace OutputBuilderClient
                 {
                     if (componentFile.FileSize != found.FileSize)
                     {
-                        await Program.OutputText(" +++ Metadata update: File size changed (File: " + found.Extension +
+                        await ConsoleOutput.Line(" +++ Metadata update: File size changed (File: " + found.Extension +
                                                  ")");
                         return true;
                     }
@@ -69,14 +69,14 @@ namespace OutputBuilderClient
 
                     if (componentFile.Hash != found.Hash)
                     {
-                        await Program.OutputText(" +++ Metadata update: File hash changed (File: " + found.Extension +
+                        await ConsoleOutput.Line(" +++ Metadata update: File hash changed (File: " + found.Extension +
                                                  ")");
                         return true;
                     }
                 }
                 else
                 {
-                    await Program.OutputText(" +++ Metadata update: File missing (File: " + componentFile.Extension +
+                    await ConsoleOutput.Line(" +++ Metadata update: File missing (File: " + componentFile.Extension +
                                              ")");
                     return true;
                 }

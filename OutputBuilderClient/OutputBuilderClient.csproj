@@ -82,6 +82,7 @@
     <Compile Include="AbortProcessingException.cs" />
     <Compile Include="BitlyUrlShortner.cs" />
     <Compile Include="BrokenImages.cs"/>
+    <Compile Include="ConsoleOutput.cs"/>
     <Compile Include="Constants.cs" />
     <Compile Include="ImageConverters\ConverterCommon.cs"/>
     <Compile Include="ImageConverters\PhotoshopImageConverter.cs"/>
