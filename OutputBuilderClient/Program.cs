@@ -17,9 +17,7 @@ namespace OutputBuilderClient
 {
     internal class Program
     {
-        private static readonly ConcurrentDictionary<string, string> _brokenImages =
-            new ConcurrentDictionary<string, string>();
-
+     
         private static readonly SemaphoreSlim _sempahore = new SemaphoreSlim(1);
         private static readonly SemaphoreSlim _consoleSempahore = new SemaphoreSlim(1);
 
@@ -156,8 +154,7 @@ namespace OutputBuilderClient
 
         private static void DumpBrokenImages()
         {
-            var images = _brokenImages.OrderBy(item => item.Key)
-                .Select(item => string.Concat(item.Key, "\t", item.Value)).ToArray();
+            var images = BrokenImages.AllBrokenImages();
 
             File.WriteAllLines(Settings.Default.BrokenImagesFile, images, Encoding.UTF8);
 
@@ -344,18 +341,13 @@ namespace OutputBuilderClient
             }
             catch (AbortProcessingException exception)
             {
-                LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
+                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
                 throw;
             }
             catch (Exception exception)
             {
-                LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
+                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
             }
-        }
-
-        private static void LogBrokenImage(string path, string message)
-        {
-            _brokenImages.TryAdd(path, message);
         }
 
         private static async Task ReadMetadata(string filename)
