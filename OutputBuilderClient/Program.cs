@@ -66,119 +66,6 @@ namespace OutputBuilderClient
             GC.GetTotalMemory(true);
         }
 
-        private static bool HasMissingResizes(Photo photoToProcess)
-        {
-            if (photoToProcess.ImageSizes == null)
-            {
-                Console.WriteLine(" +++ Force rebuild: No image sizes at all!");
-                return true;
-            }
-
-            foreach (var resize in photoToProcess.ImageSizes)
-            {
-                var resizedFileName = Path.Combine(
-                    Settings.Default.ImagesOutputPath,
-                    HashNaming.PathifyHash(photoToProcess.PathHash),
-                    ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
-                if (!File.Exists(resizedFileName))
-                {
-                    Console.WriteLine(
-                        " +++ Force rebuild: Missing image for size {0}x{1} (jpg)",
-                        resize.Width,
-                        resize.Height);
-                    return true;
-                }
-
-                // Moving this to a separate program
-                //try
-                //{
-                //    byte[] bytes = Alphaleonis.Win32.Filesystem.File.ReadAllBytes(resizedFileName);
-
-                //    if (!ImageHelpers.IsValidJpegImage(bytes, "Existing: " + resizedFileName))
-                //    {
-                //        Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,
-                //                          resize.Height);
-                //        return true;
-                //    }
-                //}
-                //catch( Exception exception)
-                //{
-                //    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt - Exception: {2}", resize.Width,
-                //                      resize.Height, exception.Message);
-                //    return true;
-                //}
-                if (resize.Width == Settings.Default.ThumbnailSize)
-                {
-                    resizedFileName = Path.Combine(
-                        Settings.Default.ImagesOutputPath,
-                        HashNaming.PathifyHash(photoToProcess.PathHash),
-                        ImageExtraction.IndividualResizeFileName(photoToProcess, resize, "png"));
-                    if (!File.Exists(resizedFileName))
-                    {
-                        Console.WriteLine(
-                            " +++ Force rebuild: Missing image for size {0}x{1} (png)",
-                            resize.Width,
-                            resize.Height);
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private static async Task<bool> HaveFilesChanged(Photo sourcePhoto, Photo targetPhoto)
-        {
-            if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
-            {
-                await OutputText(" +++ Metadata update: File count changed");
-                return true;
-            }
-
-            foreach (var componentFile in targetPhoto.Files)
-            {
-                var found =
-                    sourcePhoto.Files.FirstOrDefault(
-                        candiate =>
-                            StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension,
-                                componentFile.Extension));
-
-                if (found != null)
-                {
-                    if (componentFile.FileSize != found.FileSize)
-                    {
-                        await OutputText(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
-                        return true;
-                    }
-
-                    if (componentFile.LastModified == found.LastModified)
-                        continue;
-
-                    if (string.IsNullOrWhiteSpace(found.Hash))
-                    {
-                        var filename = Path.Combine(
-                            Settings.Default.RootFolder,
-                            sourcePhoto.BasePath + componentFile.Extension);
-
-                        found.Hash = await Hasher.HashFile(filename);
-                    }
-
-                    if (componentFile.Hash != found.Hash)
-                    {
-                        await OutputText(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
-                        return true;
-                    }
-                }
-                else
-                {
-                    await OutputText(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         private static Task KillDeadItems(HashSet<string> liveItems)
         {
             return Task.CompletedTask;
@@ -235,7 +122,7 @@ namespace OutputBuilderClient
 
                 try
                 {
-                    ReadMetadata(args[0]);
+                    await ReadMetadata(args[0]);
 
                     return 0;
                 }
@@ -277,26 +164,7 @@ namespace OutputBuilderClient
             Console.WriteLine("Broken Images: {0}", images.Length);
         }
 
-        private static async Task<bool> MetadataVersionOutOfDate(Photo targetPhoto)
-        {
-            if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
-            {
-                await OutputText(
-                    " +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version
-                    + " Expected: " + Constants.CurrentMetadataVersion + ")");
-                return true;
-            }
-
-            return false;
-        }
-
-        private static async Task<bool> NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
-        {
-            return await MetadataVersionRequiresRebuild(targetPhoto) || await HaveFilesChanged(sourcePhoto, targetPhoto)
-                   || HasMissingResizes(targetPhoto);
-        }
-
-        private static async Task OutputText(string formatString, params object[] parameters)
+        internal static async Task OutputText(string formatString, params object[] parameters)
         {
             var text = string.Format(formatString, parameters);
 
@@ -428,8 +296,10 @@ namespace OutputBuilderClient
                     target.FirstOrDefault(item =>
                         item.PathHash == sourcePhoto.PathHash);
                 var build = targetPhoto == null;
-                var rebuild = targetPhoto != null && await NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
-                var rebuildMetadata = targetPhoto != null && await MetadataVersionOutOfDate(targetPhoto);
+                var rebuild = targetPhoto != null &&
+                              await RebuildDetection.NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
+                var rebuildMetadata =
+                    targetPhoto != null && await RebuildDetection.MetadataVersionOutOfDate(targetPhoto);
 
                 var url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
                 string shortUrl;
@@ -438,7 +308,7 @@ namespace OutputBuilderClient
                 {
                     shortUrl = targetPhoto.ShortUrl;
 
-                    if (ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
+                    if (ShortUrls.ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
                     {
                         shortUrl = await TryGenerateShortUrl(url);
 
@@ -488,7 +358,7 @@ namespace OutputBuilderClient
             _brokenImages.TryAdd(path, message);
         }
 
-        private static void ReadMetadata(string filename)
+        private static async Task ReadMetadata(string filename)
         {
             var folder = Path.GetDirectoryName(filename);
             var file = Path.GetFileName(filename);
@@ -534,18 +404,7 @@ namespace OutputBuilderClient
 
             var metadata = MetadataExtraction.ExtractMetadata(photo);
             foreach (var item in metadata)
-                Console.WriteLine("{0} = {1}", item.Name, item.Value);
-        }
-
-        private static bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
-        {
-            // ONly want to generate a short URL, IF the photo has already been uploaded AND is public
-            if (sourcePhoto.UrlSafePath.StartsWith("private/", StringComparison.OrdinalIgnoreCase))
-                return false;
-
-            return string.IsNullOrWhiteSpace(shortUrl)
-                   || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url)
-                   || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
+                await OutputText("{0} = {1}", item.Name, item.Value);
         }
 
         private static async Task<string> TryGenerateShortUrl(string url)

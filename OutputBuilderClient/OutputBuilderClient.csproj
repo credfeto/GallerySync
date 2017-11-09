@@ -65,7 +65,7 @@
     <Reference Include="System.Drawing.PSD, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\System.Drawing.PSD.0.1.0\lib\net40\System.Drawing.PSD.dll</HintPath>
     </Reference>
-    <Reference Include="System.Net.Http"/>
+      <Reference Include="System.Net.Http"/>
     <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
@@ -82,9 +82,9 @@
     <Compile Include="AbortProcessingException.cs" />
     <Compile Include="BitlyUrlShortner.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="ImageConverters\ConverterCommon.cs"/>
-    <Compile Include="ImageConverters\PhotoshopImageConverter.cs"/>
-    <Compile Include="MetadataHelpers.cs"/>
+      <Compile Include="ImageConverters\ConverterCommon.cs"/>
+      <Compile Include="ImageConverters\PhotoshopImageConverter.cs"/>
+      <Compile Include="MetadataHelpers.cs"/>
     <Compile Include="RawFileInfoEmitter.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="IImageConverter.cs" />
@@ -110,9 +110,10 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="RepositoryLoader.cs"/>
+      <Compile Include="RebuildDetection.cs"/>
+      <Compile Include="RepositoryLoader.cs"/>
     <Compile Include="ShortenerCount.cs" />
-    <Compile Include="ShortUrls.cs"/>
+      <Compile Include="ShortUrls.cs"/>
     <Compile Include="SupportedExtensionAttribute.cs" />
     <Compile Include="TemporaryFilesCleaner.cs" />
   </ItemGroup>

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using Alphaleonis.Win32.Filesystem;
 using OutputBuilderClient.Properties;
+using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
 {
@@ -61,6 +62,17 @@ namespace OutputBuilderClient
             var text = new[] {String.Format("{0}\t{1}", url, shortUrl)};
 
             File.AppendAllLines(logPath, text);
+        }
+
+        public static bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
+        {
+            // ONly want to generate a short URL, IF the photo has already been uploaded AND is public
+            if (sourcePhoto.UrlSafePath.StartsWith("private/", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return String.IsNullOrWhiteSpace(shortUrl)
+                   || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url)
+                   || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
         }
     }
 }
