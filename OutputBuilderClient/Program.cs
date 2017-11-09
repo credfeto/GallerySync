@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -60,30 +59,6 @@ namespace OutputBuilderClient
 //                    }
 //                }
 //            }
-        }
-
-        private static void BoostPriority()
-        {
-            try
-            {
-                System.Diagnostics.Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        private static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
-        {
-            var dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
-            if (dateTaken == null)
-                return DateTime.MinValue;
-
-            DateTime value;
-            if (DateTime.TryParse(dateTaken.Value, out value))
-                return value;
-
-            return DateTime.MinValue;
         }
 
         private static void ForceGarbageCollection()
@@ -433,7 +408,7 @@ namespace OutputBuilderClient
             var filesCreated = new List<string>();
             if (buildImages)
             {
-                var creationDate = ExtractCreationDate(sourcePhoto.Metadata);
+                var creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
                 sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(
                     sourcePhoto,
                     filesCreated,
