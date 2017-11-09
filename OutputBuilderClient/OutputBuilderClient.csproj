@@ -85,6 +85,7 @@
       <Compile Include="ImageConverters\ConverterCommon.cs"/>
       <Compile Include="ImageConverters\PhotoshopImageConverter.cs"/>
       <Compile Include="MetadataHelpers.cs"/>
+      <Compile Include="PhotoExtensionMethods.cs"/>
     <Compile Include="RawFileInfoEmitter.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="IImageConverter.cs" />

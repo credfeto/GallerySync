@@ -219,7 +219,7 @@ namespace OutputBuilderClient
         {
             await OutputText(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
-            await UpdateFileHashes(targetPhoto, sourcePhoto);
+            await targetPhoto.UpdateFileHashes(sourcePhoto);
 
             var buildMetadata = targetPhoto == null || rebuild || rebuildMetadata
                                 || targetPhoto != null && targetPhoto.Metadata == null;
@@ -252,7 +252,7 @@ namespace OutputBuilderClient
 
             if (targetPhoto != null)
             {
-                UpdateTargetWithSourceProperties(targetPhoto, sourcePhoto);
+                targetPhoto.UpdateTargetWithSourceProperties(sourcePhoto);
                 targetPhoto.Version = Constants.CurrentMetadataVersion;
 
                 if (buildImages)
@@ -484,46 +484,6 @@ namespace OutputBuilderClient
             {
                 _sempahore.Release();
             }
-        }
-
-        private static Task UpdateFileHashes(Photo targetPhoto, Photo sourcePhoto)
-        {
-            if (targetPhoto != null)
-                foreach (var sourceFile in
-                    sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
-                {
-                    var targetFile =
-                        targetPhoto.Files.FirstOrDefault(
-                            s => s.Extension == sourceFile.Extension && !string.IsNullOrWhiteSpace(s.Hash));
-                    if (targetFile != null)
-                        sourceFile.Hash = targetFile.Hash;
-                }
-
-            return Task.WhenAll(
-                sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash))
-                    .Select(file => SetFileHash(sourcePhoto, file)));
-        }
-
-        private static async Task SetFileHash(Photo sourcePhoto, ComponentFile file)
-        {
-            var filename = Path.Combine(
-                Settings.Default.RootFolder,
-                sourcePhoto.BasePath + file.Extension);
-
-            file.Hash = await Hasher.HashFile(filename);
-        }
-
-        private static void UpdateTargetWithSourceProperties(Photo targetPhoto, Photo sourcePhoto)
-        {
-            targetPhoto.Version = sourcePhoto.Version;
-            targetPhoto.UrlSafePath = sourcePhoto.UrlSafePath;
-            targetPhoto.BasePath = sourcePhoto.BasePath;
-            targetPhoto.PathHash = sourcePhoto.PathHash;
-            targetPhoto.ImageExtension = sourcePhoto.ImageExtension;
-            targetPhoto.Files = sourcePhoto.Files;
-            targetPhoto.Metadata = sourcePhoto.Metadata;
-            targetPhoto.ImageSizes = sourcePhoto.ImageSizes;
-            targetPhoto.ShortUrl = sourcePhoto.ShortUrl;
         }
     }
 }
