@@ -218,47 +218,6 @@ namespace OutputBuilderClient
 //            }
         }
 
-        private static void LoadShortUrls()
-        {
-            var logPath = Settings.Default.ShortNamesFile;
-
-            if (File.Exists(logPath))
-            {
-                Console.WriteLine("Loading Existing Short Urls:");
-                var lines = File.ReadAllLines(logPath);
-
-                foreach (var line in lines)
-                {
-                    if (!line.StartsWith(@"http://", StringComparison.OrdinalIgnoreCase)
-                        && !line.StartsWith(@"https://", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    var process = line.Trim().Split('\t');
-                    if (process.Length != 2)
-                        continue;
-
-                    if (ShortUrls.TryAdd(process[0], process[1]))
-                    {
-                        //Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
-                    }
-                }
-
-                Console.WriteLine("Total Known Short Urls: {0}", ShortUrls.Count);
-                Console.WriteLine();
-            }
-        }
-
-        private static void LogShortUrl(string url, string shortUrl)
-        {
-            if (!ShortUrls.TryAdd(url, shortUrl)) return;
-
-            var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
-
-            var text = new[] {string.Format("{0}\t{1}", url, shortUrl)};
-
-            File.AppendAllLines(logPath, text);
-        }
-
         private static int Main(string[] args)
         {
             Console.WriteLine("OutputBuilderClient");
@@ -272,7 +231,7 @@ namespace OutputBuilderClient
         {
             if (args.Length == 1)
             {
-                LoadShortUrls();
+                ShortUrls.LoadShortUrls();
 
                 try
                 {
@@ -290,7 +249,7 @@ namespace OutputBuilderClient
 
             try
             {
-                LoadShortUrls();
+                ShortUrls.LoadShortUrls();
 
                 await ProcessGallery();
 
@@ -369,8 +328,8 @@ namespace OutputBuilderClient
 
         private static async Task ProcessGallery()
         {
-            var sourceTask = global::OutputBuilderClient.RepositoryLoader.LoadEmptyRepository(Settings.Default.RootFolder);
-            var targetTask = global::OutputBuilderClient.RepositoryLoader.LoadRepository(Settings.Default.DatabaseOutputFolder);
+            var sourceTask = RepositoryLoader.LoadEmptyRepository(Settings.Default.RootFolder);
+            var targetTask = RepositoryLoader.LoadRepository(Settings.Default.DatabaseOutputFolder);
 
             await Task.WhenAll(sourceTask, targetTask);
 
@@ -485,7 +444,7 @@ namespace OutputBuilderClient
 
                         if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                         {
-                            LogShortUrl(url, shortUrl);
+                            ShortUrls.LogShortUrl(url, shortUrl);
 
                             rebuild = true;
                             Console.WriteLine(
@@ -597,10 +556,10 @@ namespace OutputBuilderClient
 
 
             await _sempahore.WaitAsync();
-            
+
             if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                 return shortUrl;
-            
+
             try
             {
                 var filename = Settings.Default.ShortNamesFile + ".tracking.json";
