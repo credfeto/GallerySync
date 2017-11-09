@@ -6,11 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Alphaleonis.Win32.Filesystem;
-using FileNaming;
 using Newtonsoft.Json;
 using OutputBuilderClient.Properties;
 using StorageHelpers;
-using Twaddle.Directory.Scanner;
 using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
@@ -18,19 +16,6 @@ namespace OutputBuilderClient
     internal class Program
     {
         private static readonly SemaphoreSlim _sempahore = new SemaphoreSlim(1);
-
-        public static async Task<bool> MetadataVersionRequiresRebuild(Photo targetPhoto)
-        {
-            if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
-            {
-                await ConsoleOutput.Line(
-                    " +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version
-                    + " Expected: " + Constants.CurrentMetadataVersion + ")");
-                return true;
-            }
-
-            return false;
-        }
 
         private static void AddUploadFiles(List<string> filesCreated)
         {
@@ -179,8 +164,8 @@ namespace OutputBuilderClient
 
         private static async Task ProcessGallery()
         {
-            var sourceTask = RepositoryLoader.LoadEmptyRepository(Settings.Default.RootFolder);
-            var targetTask = RepositoryLoader.LoadRepository(Settings.Default.DatabaseOutputFolder);
+            var sourceTask = PhotoMetadataRepository.LoadEmptyRepository(Settings.Default.RootFolder);
+            var targetTask = PhotoMetadataRepository.LoadRepository(Settings.Default.DatabaseOutputFolder);
 
             await Task.WhenAll(sourceTask, targetTask);
 
@@ -241,29 +226,14 @@ namespace OutputBuilderClient
                 if (buildImages)
                     AddUploadFiles(filesCreated);
 
-                await Store(targetPhoto);
+                await PhotoMetadataRepository.Store(targetPhoto);
             }
             else
             {
                 AddUploadFiles(filesCreated);
 
-                await Store(sourcePhoto);
+                await PhotoMetadataRepository.Store(sourcePhoto);
             }
-        }
-
-        private static Task Store(Photo photo)
-        {
-            var safeUrl = photo.UrlSafePath.Replace('/', Path.DirectorySeparatorChar);
-            safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
-            safeUrl += ".info";
-
-            var outputPath = Path.Combine(
-                Settings.Default.DatabaseOutputFolder,
-                safeUrl
-            );
-
-            var txt = JsonConvert.SerializeObject(photo);
-            return FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
         }
 
         private static async Task ProcessSinglePhoto(
@@ -326,6 +296,11 @@ namespace OutputBuilderClient
                 items.TryAdd(sourcePhoto.PathHash, true);
             }
             catch (AbortProcessingException exception)
+            {
+                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
+                throw;
+            }
+            catch (StackOverflowException exception)
             {
                 BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
                 throw;

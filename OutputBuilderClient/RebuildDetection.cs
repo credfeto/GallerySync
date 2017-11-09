@@ -12,7 +12,7 @@ namespace OutputBuilderClient
     {
         public static async Task<bool> NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
         {
-            return await Program.MetadataVersionRequiresRebuild(targetPhoto) ||
+            return await MetadataVersionRequiresRebuild(targetPhoto) ||
                    await HaveFilesChanged(sourcePhoto, targetPhoto)
                    || HasMissingResizes(targetPhoto);
         }
@@ -58,7 +58,7 @@ namespace OutputBuilderClient
                     if (componentFile.LastModified == found.LastModified)
                         continue;
 
-                    if (string.IsNullOrWhiteSpace(found.Hash))
+                    if (String.IsNullOrWhiteSpace(found.Hash))
                     {
                         var filename = Path.Combine(
                             Settings.Default.RootFolder,
@@ -141,6 +141,19 @@ namespace OutputBuilderClient
                         return true;
                     }
                 }
+            }
+
+            return false;
+        }
+
+        public static async Task<bool> MetadataVersionRequiresRebuild(Photo targetPhoto)
+        {
+            if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
+            {
+                await ConsoleOutput.Line(
+                    " +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version
+                    + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                return true;
             }
 
             return false;
