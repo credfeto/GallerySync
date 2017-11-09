@@ -17,7 +17,6 @@ namespace OutputBuilderClient
 {
     internal class Program
     {
-     
         private static readonly SemaphoreSlim _sempahore = new SemaphoreSlim(1);
         private static readonly SemaphoreSlim _consoleSempahore = new SemaphoreSlim(1);
 
@@ -132,33 +131,36 @@ namespace OutputBuilderClient
                 }
             }
 
+            int retval;
             try
             {
                 ShortUrls.Load();
 
                 await ProcessGallery();
 
-                DumpBrokenImages();
-                return 0;
+
+                retval = 0;
             }
             catch (Exception exception)
             {
                 Console.WriteLine("Error: {0}", exception.Message);
                 Console.WriteLine("Stack Trace: {0}", exception.StackTrace);
 
-                DumpBrokenImages();
-
-                return 1;
+                retval = 1;
             }
+
+            await DumpBrokenImages();
+
+            return retval;
         }
 
-        private static void DumpBrokenImages()
+        private static Task DumpBrokenImages()
         {
             var images = BrokenImages.AllBrokenImages();
 
             File.WriteAllLines(Settings.Default.BrokenImagesFile, images, Encoding.UTF8);
 
-            Console.WriteLine("Broken Images: {0}", images.Length);
+            return OutputText("Broken Images: {0}", images.Length);
         }
 
         internal static async Task OutputText(string formatString, params object[] parameters)
