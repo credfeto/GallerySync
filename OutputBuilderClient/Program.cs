@@ -311,17 +311,17 @@ namespace OutputBuilderClient
             }
             catch (AbortProcessingException exception)
             {
-                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
+                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
                 throw;
             }
             catch (StackOverflowException exception)
             {
-                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
+                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
                 throw;
             }
             catch (Exception exception)
             {
-                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception.Message);
+                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
             }
         }
 
