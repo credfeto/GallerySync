@@ -15,7 +15,7 @@ namespace OutputBuilderClient.ImageConverters
         public MagickImage LoadImage(string fileName)
         {
             var psdFile = LoadPsdFile(fileName);
-
+            
             Bitmap bmp = null;
 
             try
@@ -57,6 +57,11 @@ namespace OutputBuilderClient.ImageConverters
         {
             var loader = new PsdFile();
             var psdFile = loader.Load(fileName);
+            if (psdFile == null)
+            {
+                throw new IOException( "PsdFile did not load file.");
+            }
+            
             return psdFile;
         }
     }
