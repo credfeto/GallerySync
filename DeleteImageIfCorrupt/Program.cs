@@ -1,6 +1,6 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
 using GraphicsMagick;
 using StorageHelpers;
 

@@ -16,4 +16,7 @@
   <ItemGroup>
     <Folder Include="Properties"/>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
+  </ItemGroup>
 </Project>

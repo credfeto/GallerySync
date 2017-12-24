@@ -1,4 +1,6 @@
-﻿namespace OutputBuilderClient
+﻿using System.IO;
+
+namespace OutputBuilderClient
 {
     using System;
     using System.Collections.Generic;
@@ -56,7 +58,7 @@
             foreach (ComponentFile extension in
                 sourcePhoto.Files.Where(candidate => !IsXmp(candidate)))
             {
-                string filename = Alphaleonis.Win32.Filesystem.Path.Combine(
+                string filename = Path.Combine(
                     rootFolder,
                     sourcePhoto.BasePath + extension.Extension);
 
@@ -130,7 +132,7 @@
 
         public static void ExtractMetadataFromXmpSideCar(List<PhotoMetadata> metadata, string fileName)
         {
-            string xmp = Alphaleonis.Win32.Filesystem.File.ReadAllText(fileName);
+            string xmp = File.ReadAllText(fileName);
 
             XmpTag tag = null;
             try
@@ -344,7 +346,7 @@
 
             if (xmpFile != null)
             {
-                string sidecarFileName = Alphaleonis.Win32.Filesystem.Path.Combine(
+                string sidecarFileName = Path.Combine(
                     rootFolder,
                     sourcePhoto.BasePath + xmpFile.Extension);
                 ExtractXmpSidecareAlternative(metadata, sidecarFileName);
@@ -356,10 +358,10 @@
             }
             else
             {
-                string xmpFileName = Alphaleonis.Win32.Filesystem.Path.Combine(
+                string xmpFileName = Path.Combine(
                     rootFolder,
                     sourcePhoto.BasePath + ".xmp");
-                if (Alphaleonis.Win32.Filesystem.File.Exists(xmpFileName))
+                if (File.Exists(xmpFileName))
                 {
                     ExtractXmpSidecareAlternative(metadata, xmpFileName);
                     ExtractMetadataFromXmpSideCar(metadata, xmpFileName);

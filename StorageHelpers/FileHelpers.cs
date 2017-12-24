@@ -1,7 +1,6 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
-using IOException = System.IO.DirectoryNotFoundException;
 
 namespace StorageHelpers
 {
@@ -31,9 +30,6 @@ namespace StorageHelpers
                     File.Delete(fileName);
             }
             catch (IOException)
-            {
-            }
-            catch (FileReadOnlyException)
             {
             }
             catch (UnauthorizedAccessException)

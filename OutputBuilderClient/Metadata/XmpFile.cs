@@ -1,12 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="XmpAlphaleonis.Win32.Filesystem.File.cs" company="Twaddle Software">
-//   Copyright (c) Twaddle Software
-// </copyright>
-// <summary>
-//   The XMP Alphaleonis.Win32.Filesystem.File.
-// </summary>
-// --------------------------------------------------------------------------------------------------------------------
-namespace OutputBuilderClient.Metadata
+﻿namespace OutputBuilderClient.Metadata
 {
     using System;
     using System.Collections.Generic;
@@ -18,12 +10,12 @@ namespace OutputBuilderClient.Metadata
     using FileNaming;
 
     /// <summary>
-    ///     The XMP Alphaleonis.Win32.Filesystem.File.
+    ///     The XMP File.
     /// </summary>
     public static class XmpFile
     {
         /// <summary>
-        ///     Extracts the properties from the Alphaleonis.Win32.Filesystem.File.
+        ///     Extracts the properties from the file.
         /// </summary>
         /// <param name="fileName">
         ///     The filename.
@@ -373,7 +365,7 @@ namespace OutputBuilderClient.Metadata
         ///     The path to the node.
         /// </param>
         /// <returns>
-        ///     The node to that Alphaleonis.Win32.Filesystem.Path.
+        ///     The node to that path.
         /// </returns>
         private static XmlElement SelectOrCreateSingleNode(
             XmlDocument document,

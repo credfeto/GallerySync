@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
 using Newtonsoft.Json;
 using StorageHelpers;
 using Twaddle.Directory.Scanner;

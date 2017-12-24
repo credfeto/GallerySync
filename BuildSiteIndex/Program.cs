@@ -11,7 +11,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
 using BuildSiteIndex.Properties;
 using FileNaming;
 using Newtonsoft.Json;

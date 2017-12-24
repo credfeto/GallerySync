@@ -1,4 +1,6 @@
-﻿namespace OutputBuilderClient
+﻿using System.IO;
+
+namespace OutputBuilderClient
 {
     using System;
     using System.Text;
@@ -35,11 +37,11 @@
 
         public static void SetCreationDate(string fileName, DateTime creationDate)
         {
-            if (creationDate != DateTime.MinValue && Alphaleonis.Win32.Filesystem.File.Exists(fileName))
+            if (creationDate != DateTime.MinValue && File.Exists(fileName))
             {
-                Alphaleonis.Win32.Filesystem.File.SetCreationTimeUtc(fileName, creationDate);
-                Alphaleonis.Win32.Filesystem.File.SetLastWriteTimeUtc(fileName, creationDate);
-                Alphaleonis.Win32.Filesystem.File.SetLastAccessTimeUtc(fileName, creationDate);
+                File.SetCreationTimeUtc(fileName, creationDate);
+                File.SetLastWriteTimeUtc(fileName, creationDate);
+                File.SetLastAccessTimeUtc(fileName, creationDate);
             }
         }
 

@@ -85,7 +85,7 @@ namespace OutputBuilderClient.ImageConverters
         /// <summary>
         ///     Converts the bytes using image magick.
         /// </summary>
-        /// <param name="fileName">Name of the Alphaleonis.Win32.Filesystem.File.</param>
+        /// <param name="fileName">Name of the file.</param>
         /// <param name="bytes">The TIFF bytes.</param>
         /// <returns>
         ///     The converted bitmap.
@@ -115,7 +115,7 @@ namespace OutputBuilderClient.ImageConverters
         ///     The filename of the DCRAW executable.
         /// </param>
         /// <param name="fileName">
-        ///     Name of the Alphaleonis.Win32.Filesystem.File.
+        ///     Name of the file.
         /// </param>
         /// <returns>
         ///     The process.

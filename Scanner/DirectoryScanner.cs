@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
 
 namespace Twaddle.Directory.Scanner
 {
@@ -54,8 +54,7 @@ namespace Twaddle.Directory.Scanner
 
         private static void FindFiles(string folder, Context context)
         {
-            var raw = Alphaleonis.Win32.Filesystem.Directory.GetFiles(folder, "*");
-
+            var raw = System.IO.Directory.GetFiles(folder, "*");
 
             var grouped = from record in raw
                 let extension = Path.GetExtension(record).ToLowerInvariant()
@@ -97,7 +96,7 @@ namespace Twaddle.Directory.Scanner
 
         private static Task FindSubFolders(string folder, Context context)
         {
-            var folders = Alphaleonis.Win32.Filesystem.Directory.GetDirectories(folder, "*")
+            var folders = System.IO.Directory.GetDirectories(folder, "*")
                 .Where(subFolder => !IsSkipFolderName(subFolder.Substring(folder.Length + 1)))
                 .ToArray();
 

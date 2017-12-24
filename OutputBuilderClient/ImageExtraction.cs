@@ -16,8 +16,6 @@ using GraphicsMagick;
 using OutputBuilderClient.Properties;
 using StorageHelpers;
 using Twaddle.Gallery.ObjectModel;
-using File = Alphaleonis.Win32.Filesystem.File;
-using Path = Alphaleonis.Win32.Filesystem.Path;
 
 namespace OutputBuilderClient
 {
@@ -231,10 +229,10 @@ namespace OutputBuilderClient
         ///     Writes the image.
         /// </summary>
         /// <param name="fileName">
-        ///     Name of the Alphaleonis.Win32.Filesystem.File.
+        ///     Name of the file.
         /// </param>
         /// <param name="data">
-        ///     The data to write to the Alphaleonis.Win32.Filesystem.File.
+        ///     The data to write to the file.
         /// </param>
         /// <param name="creationDate"></param>
         public static async Task WriteImage(string fileName, byte[] data, DateTime creationDate)
