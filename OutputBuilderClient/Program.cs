@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Alphaleonis.Win32.Filesystem;
+using Images;
 using Newtonsoft.Json;
 using OutputBuilderClient.Properties;
 using StorageHelpers;

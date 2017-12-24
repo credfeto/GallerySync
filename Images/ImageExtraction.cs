@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
@@ -9,15 +8,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FileNaming;
-using Gma.QrCodeNet.Encoding;
-using Gma.QrCodeNet.Encoding.Windows.Render;
-using GraphicsMagick;
-using OutputBuilderClient.Properties;
+using ObjectModel;
+using OutputBuilderClient;
+using SixLabors.ImageSharp.Drawing.Brushes;
+using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 using StorageHelpers;
 
-namespace OutputBuilderClient
+namespace Images
 {
-    internal static class ImageExtraction
+    public static class ImageExtraction
     {
         private static readonly Dictionary<string, IImageConverter> RegisteredConverters = LocateConverters();
 

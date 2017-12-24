@@ -24,5 +24,6 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
+        <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
     </ItemGroup>
 </Project>

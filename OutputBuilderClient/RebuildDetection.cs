@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Alphaleonis.Win32.Filesystem;
 using FileNaming;
+using Images;
 using OutputBuilderClient.Properties;
 using Twaddle.Gallery.ObjectModel;
 
