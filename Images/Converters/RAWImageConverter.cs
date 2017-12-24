@@ -53,7 +53,12 @@ namespace Images.Converters
         /// </value>
         private static string DcRawExecutable
         {
-            get { return Settings.Default.DCRAWExecutable; }
+            get
+            {
+                // TODO; make this config based
+                return "C:\\utils\\imageprocessing\\dcraw.exe";
+                //return Settings.Default.DCRAWExecutable;
+            }
         }
 
         /// <summary>
