@@ -1,158 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BED35732-4FE3-46B5-888D-0C19EFD2030F}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OutputBuilderClient</RootNamespace>
-    <AssemblyName>OutputBuilderClient</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Prefer32Bit>false</Prefer32Bit>
+  <PropertyGroup>
+    <Company>Mark Ridgwell</Company>
+    <Copyright>Mark Ridgwell</Copyright>
+    <Product>Photo Gallery</Product>
+    <NeutralLanguage>en-GB</NeutralLanguage>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <Prefer32Bit>false</Prefer32Bit>
+  <PropertyGroup>
+    <AssemblyTitle>Gallery.OutputBuilderClient</AssemblyTitle>
+    <Description>Photo Gallery Output Builder</Description>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="AlphaFS, Version=2.1.0.0, Culture=neutral, PublicKeyToken=4d31a58f7d7ad5c9">
-      <HintPath>..\packages\AlphaFS.2.1.3\lib\net452\AlphaFS.dll</HintPath>
-    </Reference>
-    <Reference Include="ExifLib, Version=1.7.0.0, Culture=neutral, PublicKeyToken=30284005913968db, processorArchitecture=MSIL">
-      <HintPath>..\packages\ExifLib.1.7.0.0\lib\net45\ExifLib.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Gma.QrCodeNet.Encoding">
-      <HintPath>..\packages\QrCode.Net.0.4.0.0\lib\net45\Gma.QrCodeNet.Encoding.dll</HintPath>
-    </Reference>
-    <Reference Include="GraphicsMagick.NET-AnyCPU, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ee2094eb40f5ea47">
-      <HintPath>..\packages\GraphicsMagick.NET-Q16-AnyCPU.1.3.26.1\lib\net40-client\GraphicsMagick.NET-AnyCPU.dll
-          </HintPath>
-    </Reference>
-    <Reference Include="GraphicsMagick.NET-AnyCPU, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ee2094eb40f5ea47">
-      <HintPath>..\packages\GraphicsMagick.NET-Q16-AnyCPU.1.3.26.1\lib\net40-client\GraphicsMagick.NET-AnyCPU.dll
-          </HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Drawing.PSD, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\System.Drawing.PSD.0.1.0\lib\net40\System.Drawing.PSD.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Http"/>
-    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Transactions" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="taglib-sharp">
-      <HintPath>..\packages\taglib.2.1.0.0\lib\taglib-sharp.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AbortProcessingException.cs" />
-    <Compile Include="BitlyUrlShortner.cs" />
-    <Compile Include="BrokenImages.cs"/>
-    <Compile Include="ConsoleOutput.cs"/>
-    <Compile Include="Constants.cs" />
-    <Compile Include="ImageConverters\ConverterCommon.cs"/>
-    <Compile Include="ImageConverters\PhotoshopImageConverter.cs"/>
-    <Compile Include="MetadataHelpers.cs"/>
-    <Compile Include="PhotoExtensionMethods.cs"/>
-    <Compile Include="RawFileInfoEmitter.cs" />
-    <Compile Include="Extensions.cs" />
-    <Compile Include="IImageConverter.cs" />
-    <Compile Include="ImageConverters\ImageMagickImageConverter.cs" />
-    <Compile Include="ImageConverters\RAWImageConverter.cs" />
-    <Compile Include="ImageExtraction.cs" />
-    <Compile Include="ImageHelpers.cs" />
-    <Compile Include="MetadataExtraction.cs" />
-    <Compile Include="MetadataFormatting.cs" />
-    <Compile Include="MetadataNormalizationFunctions.cs" />
-    <Compile Include="MetadataOutput.cs" />
-    <Compile Include="Metadata\AttributeItemLoader.cs" />
-    <Compile Include="Metadata\ElementItemListLoader.cs" />
-    <Compile Include="Metadata\ElementItemLoader.cs" />
-    <Compile Include="Metadata\IItemLoader.cs" />
-    <Compile Include="Metadata\ItemLoaderBase.cs" />
-    <Compile Include="Metadata\XmpFile.cs" />
-    <Compile Include="PhotoInfoEmitter.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Include="RebuildDetection.cs"/>
-    <Compile Include="PhotoMetadataRepository.cs"/>
-    <Compile Include="ShortenerCount.cs" />
-    <Compile Include="ShortUrls.cs"/>
-    <Compile Include="StandaloneMetadata.cs"/>
-    <Compile Include="SupportedExtensionAttribute.cs" />
-    <Compile Include="TemporaryFilesCleaner.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FileNaming\FileNaming.csproj">
-      <Project>{15f89a2f-bb27-4be5-ac83-6353a7295d36}</Project>
-      <Name>FileNaming</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ObjectModel\ObjectModel.csproj">
-      <Project>{7a5f8ccb-3d18-4fb0-aee7-3037b8000ebc}</Project>
-      <Name>ObjectModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Scanner\Scanner.csproj">
-      <Project>{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}</Project>
-      <Name>Scanner</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj">
-      <Project>{08172b08-5233-4626-be5b-d4fbcccaa14b}</Project>
-      <Name>StorageHelpers</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
