@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using GraphicsMagick;
+using SixLabors.ImageSharp;
 using StorageHelpers;
 
 namespace DeleteImageIfCorrupt
@@ -41,21 +41,12 @@ namespace DeleteImageIfCorrupt
         {
             try
             {
-                using (var image = new MagickImage())
+                using (var image = Image.Load(bytes, out var format ))
                 {
-                    image.Warning += (sender, e) =>
-                    {
-                        Console.WriteLine("Image Validate Error: {0}", context);
-                        Console.WriteLine("Image Validate Error: {0}", e.Message);
-                        throw e.Exception;
-                    };
-
-                    image.Read(bytes);
-
-                    return image.Format == MagickFormat.Jpeg || image.Format == MagickFormat.Jpg;
+                    return format.DefaultMimeType == "image/jpeg";
                 }
             }
-            catch (MagickException exception)
+            catch (Exception exception)
             {
                 Console.WriteLine("Error: {0}", context);
                 Console.WriteLine("Error: {0}", exception);
