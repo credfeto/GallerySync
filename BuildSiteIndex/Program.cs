@@ -755,6 +755,9 @@ namespace BuildSiteIndex
 
         private static async Task<bool> UploadOneItem(UploadQueueItem item)
         {
+            // TODO - move the intialization etc somewhere else.
+            var uh = new Upload.UploadHelper(new Uri(Settings.Default.WebServerBaseAddress));
+            
             var itemToPost = CreateItemToPost(item);
 
             var progressText = item.Path;
@@ -764,7 +767,7 @@ namespace BuildSiteIndex
             var retry = 0;
             do
             {
-                uploaded = await UploadHelper.UploadItem(itemToPost, progressText, item.UploadType);
+                uploaded = await uh.UploadItem(itemToPost, progressText, item.UploadType);
                 ++retry;
             } while (!uploaded && retry < maxRetries);
             return uploaded;

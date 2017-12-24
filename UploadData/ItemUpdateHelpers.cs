@@ -6,7 +6,7 @@ using ObjectModel;
 
 namespace UploadData
 {
-    internal static class ItemUpdateHelpers
+    public static class ItemUpdateHelpers
     {
         public static bool AreSame(GalleryItem oldItem, GalleryItem other)
         {

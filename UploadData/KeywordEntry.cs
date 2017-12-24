@@ -3,7 +3,7 @@ using ObjectModel;
 
 namespace UploadData
 {
-    internal sealed class KeywordEntry
+    public sealed class KeywordEntry
     {
         private readonly string _keyword;
         private readonly List<Photo> _photos;

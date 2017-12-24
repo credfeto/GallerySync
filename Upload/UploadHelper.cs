@@ -3,36 +3,50 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using UploadData;
 
 namespace Upload
 {
-    public static class UploadHelper
+    public sealed class UploadHelper
     {
-        public static async Task<bool> UploadItem(GallerySiteIndex itemToPost, string progressText,
+        private readonly TimeSpan _timeout;
+        private readonly Uri _uploadBaseAddress;
+
+        public UploadHelper(Uri uploadBaseAddress)
+            : this(uploadBaseAddress, TimeSpan.FromSeconds(600))
+        {
+        }
+
+        public UploadHelper(Uri uploadBaseAddress, TimeSpan timeout)
+        {
+            _uploadBaseAddress = uploadBaseAddress ?? throw new ArgumentNullException(nameof(uploadBaseAddress));
+            _timeout = timeout;
+        }
+
+        public async Task<bool> UploadItem(GallerySiteIndex itemToPost, string progressText,
             UploadType uploadType)
         {
             try
             {
                 using (var client = new HttpClient
                 {
-                    BaseAddress = new Uri(Settings.Default.WebServerBaseAddress),
-                    Timeout = TimeSpan.FromSeconds(200)
+                    BaseAddress = _uploadBaseAddress,
+                    Timeout = _timeout
                 })
                 {
                     Console.WriteLine("Uploading ({0}): {1}", MakeUploadTypeText(uploadType), progressText);
 
+                    const string jsonMimeType = @"application/json";
+
                     client.DefaultRequestHeaders.Accept.Add(
-                        new MediaTypeWithQualityHeaderValue("application/json"));
+                        new MediaTypeWithQualityHeaderValue(jsonMimeType));
 
-                    var formatter = new JsonMediaTypeFormatter
-                    {
-                        SerializerSettings = {ContractResolver = new DefaultContractResolver()},
-                        SupportedEncodings = {Encoding.UTF8},
-                        Indent = false
-                    };
+                    var json = JsonConvert.SerializeObject(itemToPost);
 
-                    var response = await client.PostAsync("tasks/sync", itemToPost, formatter);
+                    var content = new StringContent(json, Encoding.UTF8, jsonMimeType);
+
+                    var response = await client.PostAsync("tasks/sync", content);
                     Console.WriteLine("Status: {0}", response.StatusCode);
 
                     if (response.IsSuccessStatusCode)
@@ -49,8 +63,8 @@ namespace Upload
                 return false;
             }
         }
-        
-        
+
+
         private static string MakeUploadTypeText(UploadType uploadType)
         {
             switch (uploadType)

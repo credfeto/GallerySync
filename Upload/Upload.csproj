@@ -19,6 +19,7 @@
         <Folder Include="Properties"/>
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="10.0.3"/>
         <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-dev000605"/>
     </ItemGroup>
     <ItemGroup>

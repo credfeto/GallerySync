@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace UploadData
 {
-    internal static class LocationHelpers
+    public static class LocationHelpers
     {
         public static Location GetCenterFromDegrees(List<Location> locations)
         {
