@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using FileNaming;
 using ObjectModel;
 using OutputBuilderClient;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Brushes;
 using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 using StorageHelpers;
@@ -140,12 +141,12 @@ namespace Images
             return sizes;
         }
 
-        public static string IndividualResizeFileName(Photo sourcePhoto, MagickImage resized)
+        public static string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized)
         {
             return IndividualResizeFileName(sourcePhoto, resized, "jpg");
         }
 
-        public static string IndividualResizeFileName(Photo sourcePhoto, MagickImage resized, string extension)
+        public static string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized, string extension)
         {
             var basePath =
                 UrlNaming.BuildUrlSafePath(
@@ -196,7 +197,7 @@ namespace Images
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Is fallback position where it retries.")]
         public static byte[] SaveImageAsJpegBytes(
-            MagickImage image,
+            Image<Rgba32> image,
             long compressionQuality,
             string url,
             string shortUrl,
@@ -251,7 +252,7 @@ namespace Images
         ///     The image to add the watermark to.
         /// </param>
         /// <param name="url"></param>
-        private static void ApplyWatermark(MagickImage imageToAddWatermarkTo, string url)
+        private static void ApplyWatermark(Image<Rgba32> imageToAddWatermarkTo, string url)
         {
             Contract.Requires(imageToAddWatermarkTo != null);
 
@@ -350,7 +351,7 @@ namespace Images
             return (int) (scaleWidth / (double) originalWidth * originalHeight);
         }
 
-        private static MagickImage EncodeUrl(string url, int height)
+        private static Image<Rgba32> EncodeUrl(string url, int height)
         {
             //url = "https://www.markridgwell.co.uk/";
             var encoder = new QrEncoder(ErrorCorrectionLevel.H);
@@ -507,7 +508,7 @@ namespace Images
         /// <returns>
         ///     The resized image.
         /// </returns>
-        private static MagickImage ResizeImage(MagickImage image, int maximumDimension)
+        private static Image<Rgba32> ResizeImage(Image<Rgba32> image, int maximumDimension)
         {
             Contract.Requires(image != null);
             Contract.Requires(image.Width > 0);
@@ -559,7 +560,7 @@ namespace Images
         /// <returns>
         ///     Block of bytes representing the image.
         /// </returns>
-        private static byte[] SaveImageAsJpegBytesWithOptions(MagickImage image, long compression)
+        private static byte[] SaveImageAsJpegBytesWithOptions(Image<Rgba32> image, long compression)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
@@ -577,7 +578,7 @@ namespace Images
         /// <returns>
         ///     Block of bytes representing the image.
         /// </returns>
-        private static byte[] SaveImageAsJpegBytesWithoutOptions(MagickImage image)
+        private static byte[] SaveImageAsJpegBytesWithoutOptions(Image<Rgba32> image)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
@@ -586,7 +587,7 @@ namespace Images
         }
 
         private static byte[] SaveImageAsPng(
-            MagickImage image,
+            Image<Rgba32> image,
             string url,
             string shortUrl,
             string filePath,
@@ -606,7 +607,7 @@ namespace Images
         }
 
         private static void SetExifMetadata(
-            MagickImage image,
+            Image<Rgba32> image,
             DateTime creationDate,
             string description,
             string copyright,
@@ -638,7 +639,7 @@ namespace Images
         }
 
         private static void SetIptcMetadata(
-            MagickImage image,
+            Image<Rgba32> image,
             string url,
             DateTime creationDate,
             string title,
@@ -714,7 +715,7 @@ namespace Images
         /// <param name="metadata"></param>
         /// <param name="creationDate"></param>
         private static void SetMetadataProperties(
-            MagickImage image,
+            Image<Rgba32> image,
             string url,
             string shortUrl,
             string filePath,
@@ -754,7 +755,7 @@ namespace Images
         /// <param name="image">
         ///     The image.
         /// </param>
-        private static void StripExifProperties(MagickImage image)
+        private static void StripExifProperties(Image<Rgba32> image)
         {
             Contract.Requires(image != null);
 
