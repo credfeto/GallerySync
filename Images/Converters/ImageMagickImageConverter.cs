@@ -8,9 +8,10 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using GraphicsMagick;
+using OutputBuilderClient;
+using SixLabors.ImageSharp;
 
-namespace OutputBuilderClient.ImageConverters
+namespace Images.Converters
 {
     /// <summary>
     ///     Image converter that uses ImageMagick.
@@ -26,21 +27,13 @@ namespace OutputBuilderClient.ImageConverters
     [SupportedExtension("bmp")]
     internal class ImageMagickImageConverter : IImageConverter
     {
-        public MagickImage LoadImage(string fileName)
+        public Image<Rgba32> LoadImage(string fileName)
         {
-            MagickImage image = null;
+            Image<Rgba32> image = null;
 
             try
             {
-                image = new MagickImage();
-
-                image.Warning += (sender, e) =>
-                {
-                    Console.WriteLine("Image Load Error: {0}", e.Message);
-                    throw e.Exception;
-                };
-
-                image.Read(fileName);
+                image = Image.Load(fileName);
 
                 return image;
             }

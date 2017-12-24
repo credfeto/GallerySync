@@ -18,9 +18,8 @@
       <Folder Include="Properties"/>
   </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\Images\Images.csproj"/>
         <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
     </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-dev000605"/>
-    </ItemGroup>
+
 </Project>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace BuildSiteIndex
+namespace UploadData
 {
     [Serializable]
     [DebuggerDisplay("UploadType: {UploadType} Path:{Path}, Version: {Version}")]

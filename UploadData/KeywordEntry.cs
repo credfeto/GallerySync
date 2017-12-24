@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using Twaddle.Gallery.ObjectModel;
+using ObjectModel;
 
-namespace BuildSiteIndex
+namespace UploadData
 {
     internal sealed class KeywordEntry
     {

@@ -15,12 +15,13 @@
     <Description>Photo Gallery Site Index Builder</Description>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
-    <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
-    <ProjectReference Include="..\Scanner\Scanner.csproj"/>
-    <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
+      <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
+      <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
+      <ProjectReference Include="..\Scanner\Scanner.csproj"/>
+      <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
+      <ProjectReference Include="..\Upload\Upload.csproj"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3"/>
+      <PackageReference Include="Newtonsoft.Json" Version="10.0.3"/>
   </ItemGroup>
 </Project>

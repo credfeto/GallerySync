@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Twaddle.Gallery.ObjectModel
+namespace ObjectModel
 {
     [Serializable]
     [DebuggerDisplay("Name: {Name}, Value: {Value}")]

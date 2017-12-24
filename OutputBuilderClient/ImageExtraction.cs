@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +14,6 @@ using Gma.QrCodeNet.Encoding.Windows.Render;
 using GraphicsMagick;
 using OutputBuilderClient.Properties;
 using StorageHelpers;
-using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
 {

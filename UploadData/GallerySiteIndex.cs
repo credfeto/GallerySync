@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BuildSiteIndex
+namespace UploadData
 {
     [Serializable]
     public sealed class GallerySiteIndex

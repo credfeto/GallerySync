@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Twaddle.Directory.Scanner
+namespace Scanner
 {
     public static class DirectoryScanner
     {

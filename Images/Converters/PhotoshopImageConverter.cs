@@ -1,18 +1,17 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
-using System.Drawing.PSD;
-using System.IO;
-using GraphicsMagick;
+﻿using System.IO;
+using OutputBuilderClient;
+using SixLabors.ImageSharp;
 
-namespace OutputBuilderClient.ImageConverters
+namespace Images.Converters
 {
+    /*
     /// <summary>
     ///     Image converter that uses RawPhotoshop.
     /// </summary>
     [SupportedExtension("psd")]
     internal class PhotoshopImageConverter : IImageConverter
     {
-        public MagickImage LoadImage(string fileName)
+        public Image<Rgba32> LoadImage(string fileName)
         {
             var psdFile = LoadPsdFile(fileName);
             
@@ -65,4 +64,5 @@ namespace OutputBuilderClient.ImageConverters
             return psdFile;
         }
     }
+    */
 }

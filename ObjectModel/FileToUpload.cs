@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Twaddle.Gallery.ObjectModel
+namespace ObjectModel
 {
     [Serializable]
     public sealed class FileToUpload

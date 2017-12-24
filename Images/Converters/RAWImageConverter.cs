@@ -13,11 +13,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Threading.Tasks;
-using GraphicsMagick;
-using OutputBuilderClient.Properties;
+using OutputBuilderClient;
+using SixLabors.ImageSharp;
 using StorageHelpers;
 
-namespace OutputBuilderClient.ImageConverters
+namespace Images.Converters
 {
     /// <summary>
     ///     Image converter that uses DCRAW.
@@ -67,7 +67,7 @@ namespace OutputBuilderClient.ImageConverters
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Calling external process which may cause crashes")]
-        public MagickImage LoadImage(string fileName)
+        public Image<Rgba32> LoadImage(string fileName)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
 
@@ -90,7 +90,7 @@ namespace OutputBuilderClient.ImageConverters
         /// <returns>
         ///     The converted bitmap.
         /// </returns>
-        private static async Task<MagickImage> ConvertUsingImageMagick(string fileName, byte[] bytes)
+        private static async Task<Image<Rgba32>> ConvertUsingImageMagick(string fileName, byte[] bytes)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
             Contract.Requires(bytes != null);
@@ -153,7 +153,7 @@ namespace OutputBuilderClient.ImageConverters
         /// <returns>
         ///     The file as an array of bytes.
         /// </returns>
-        private static MagickImage LoadImageInternal(string filename)
+        private static Image<Rgba32> LoadImageInternal(string filename)
         {
             Contract.Requires(!string.IsNullOrEmpty(filename));
 
@@ -176,7 +176,7 @@ namespace OutputBuilderClient.ImageConverters
 
                 using (var stream = process.StandardOutput.BaseStream)
                 {
-                    MagickImage image = null;
+                    Image<Rgba32> image = null;
 
                     try
                     {

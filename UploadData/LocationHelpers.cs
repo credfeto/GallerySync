@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BuildSiteIndex
+namespace UploadData
 {
     internal static class LocationHelpers
     {

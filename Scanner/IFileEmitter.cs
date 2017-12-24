@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Twaddle.Directory.Scanner
+namespace Scanner
 {
     public interface IFileEmitter
     {

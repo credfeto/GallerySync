@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using ObjectModel;
+using Scanner;
 using StorageHelpers;
-using Twaddle.Directory.Scanner;
-using Twaddle.Gallery.ObjectModel;
 
 namespace BuildSiteIndex
 {

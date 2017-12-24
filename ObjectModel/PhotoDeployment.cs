@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Twaddle.Gallery.ObjectModel
+namespace ObjectModel
 {
     [Serializable]
     public class PhotoDeployment

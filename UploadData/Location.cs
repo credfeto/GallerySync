@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BuildSiteIndex
+namespace UploadData
 {
     [Serializable]
     public class Location : IEquatable<Location>

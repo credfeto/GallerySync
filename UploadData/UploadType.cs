@@ -1,4 +1,4 @@
-﻿namespace BuildSiteIndex
+﻿namespace UploadData
 {
     public enum UploadType
     {

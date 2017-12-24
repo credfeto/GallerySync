@@ -6,10 +6,11 @@
 //   Image converter.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-namespace OutputBuilderClient
-{
-    using GraphicsMagick;
 
+using SixLabors.ImageSharp;
+
+namespace Images
+{
     /// <summary>
     ///     Image converter.
     /// </summary>
@@ -24,6 +25,6 @@ namespace OutputBuilderClient
         /// <returns>
         ///     An image, if it could be loaded.
         /// </returns>
-        MagickImage LoadImage(string fileName);
+        Image<Rgba32> LoadImage(string fileName);
     }
 }

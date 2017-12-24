@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using FileNaming;
-using Twaddle.Gallery.ObjectModel;
+using ObjectModel;
 
-namespace BuildSiteIndex
+namespace UploadData
 {
     [Serializable]
     public class GalleryItem : IEquatable<GalleryItem>

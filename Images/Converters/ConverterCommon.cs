@@ -2,9 +2,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.IO;
-using GraphicsMagick;
+using SixLabors.ImageSharp;
 
-namespace OutputBuilderClient.ImageConverters
+namespace Images.Converters
 {
     internal static class ConverterCommon
     {
@@ -19,23 +19,15 @@ namespace OutputBuilderClient.ImageConverters
         /// </returns>
         [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "fileName",
             Justification = "Used for logging")]
-        public static MagickImage OpenBitmapFromStream(Stream stream)
+        public static Image<Rgba32> OpenBitmapFromStream(Stream stream)
         {
             Contract.Requires(stream != null);
 
-            MagickImage image = null;
+            Image<Rgba32> image = null;
 
             try
             {
-                image = new MagickImage();
-
-                image.Warning += (sender, e) =>
-                {
-                    Console.WriteLine("Image Load Error: {0}", e.Message);
-                    throw e.Exception;
-                };
-
-                image.Read(stream);
+                image = Image.Load(stream);
 
                 return image;
             }
