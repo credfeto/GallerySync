@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
+using System.IO;
 using FileNaming;
-using Twaddle.Directory.Scanner;
-using Twaddle.Gallery.ObjectModel;
+using ObjectModel;
+using Scanner;
 
 namespace OutputBuilderClient
 {

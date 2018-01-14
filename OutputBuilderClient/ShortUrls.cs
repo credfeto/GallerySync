@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Alphaleonis.Win32.Filesystem;
+using System.IO;
+using ObjectModel;
 using OutputBuilderClient.Properties;
-using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
 {

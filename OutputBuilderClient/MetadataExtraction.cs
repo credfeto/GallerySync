@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using ObjectModel;
 
 namespace OutputBuilderClient
 {
@@ -6,19 +7,10 @@ namespace OutputBuilderClient
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
-
-    using ExifLib;
-
     using FileNaming;
 
     using OutputBuilderClient.Metadata;
     using OutputBuilderClient.Properties;
-
-    using TagLib;
-    using TagLib.Image;
-    using TagLib.Xmp;
-
-    using Twaddle.Gallery.ObjectModel;
 
     internal static class MetadataExtraction
     {

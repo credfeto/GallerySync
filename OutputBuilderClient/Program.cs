@@ -6,12 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
+using System.IO;
 using Images;
-using Newtonsoft.Json;
+using ObjectModel;
 using OutputBuilderClient.Properties;
 using StorageHelpers;
-using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
 {

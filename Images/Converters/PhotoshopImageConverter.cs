@@ -1,8 +1,4 @@
-﻿using System.IO;
-using OutputBuilderClient;
-using SixLabors.ImageSharp;
-
-namespace Images.Converters
+﻿namespace Images.Converters
 {
     /*
     /// <summary>

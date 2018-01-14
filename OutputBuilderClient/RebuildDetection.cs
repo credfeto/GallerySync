@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
+using System.IO;
 using FileNaming;
 using Images;
+using ObjectModel;
 using OutputBuilderClient.Properties;
-using Twaddle.Gallery.ObjectModel;
 
 namespace OutputBuilderClient
 {

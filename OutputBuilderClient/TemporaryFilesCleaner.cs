@@ -11,7 +11,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Alphaleonis.Win32.Filesystem;
+using System.IO;
 using StorageHelpers;
 
 namespace OutputBuilderClient

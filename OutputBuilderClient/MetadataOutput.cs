@@ -5,8 +5,6 @@ namespace OutputBuilderClient
     using System;
     using System.Text;
 
-    using GraphicsMagick;
-
     internal static class MetadataOutput
     {
         public static void SetCopyright(IptcProfile iptcProfile, string copyright)

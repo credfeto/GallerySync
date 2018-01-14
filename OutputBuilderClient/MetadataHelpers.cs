@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FileNaming;
-using Twaddle.Gallery.ObjectModel;
+using ObjectModel;
 
 namespace OutputBuilderClient
 {

@@ -7,7 +7,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
 using OutputBuilderClient;
 using SixLabors.ImageSharp;
 
