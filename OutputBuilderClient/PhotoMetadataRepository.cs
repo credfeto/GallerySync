@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using Newtonsoft.Json;
 using ObjectModel;
 using OutputBuilderClient.Properties;
 using Scanner;

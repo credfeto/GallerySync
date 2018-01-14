@@ -20,4 +20,7 @@
         <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
         <ProjectReference Include="..\Scanner\Scanner.csproj"/>
     </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="10.0.3"/>
+    </ItemGroup>
 </Project>
