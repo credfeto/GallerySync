@@ -9,8 +9,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using BuildSiteIndex.Properties;
 using FileNaming;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -95,6 +95,15 @@ namespace BuildSiteIndex
         {
             Console.WriteLine("BuildSiteIndex");
 
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json").Build();
+
+            Settings.WebServerBaseAddress = config[@"WebServerBaseAddress"];
+            Settings.QueueFolder = config[@"QueueFolder"];
+            Settings.OutputFolder = config[@"OutputFolder"];
+            Settings.DatabaseInputFolder = config[@"DatabaseInputFolder"];
+            
             if (args != null)
             {
                 if (args.Any(candidate =>
@@ -145,7 +154,7 @@ namespace BuildSiteIndex
         {
             var contents = new Dictionary<string, GalleryEntry>();
 
-            var target = await LoadRepository(Settings.Default.DatabaseInputFolder);
+            var target = await LoadRepository(Settings.DatabaseInputFolder);
 
             await AppendRootEntry(contents);
 
@@ -193,7 +202,7 @@ namespace BuildSiteIndex
 
         private static async Task<List<UploadQueueItem>> LoadQueuedItems()
         {
-            var files = Directory.EnumerateFiles(Settings.Default.QueueFolder, "*.queue");
+            var files = Directory.EnumerateFiles(Settings.QueueFolder, "*.queue");
 
             var loaded = new ConcurrentBag<UploadQueueItem>();
 
@@ -527,7 +536,7 @@ namespace BuildSiteIndex
         {
             var data = ProduceSiteIndex(contents);
 
-            var outputFilename = Path.Combine(Settings.Default.OutputFolder, "site.js");
+            var outputFilename = Path.Combine(Settings.OutputFolder, "site.js");
 
             var json = JsonConvert.SerializeObject(data);
             if (!_ignoreExisting && File.Exists(outputFilename))
@@ -738,7 +747,7 @@ namespace BuildSiteIndex
 
         private static string BuildQueueItemFileName(string key)
         {
-            return Path.Combine(Settings.Default.QueueFolder, key + ".queue");
+            return Path.Combine(Settings.QueueFolder, key + ".queue");
         }
 
         private static string BuildUploadQueueHash(GalleryItem item)
@@ -754,7 +763,7 @@ namespace BuildSiteIndex
         private static async Task<bool> UploadOneItem(UploadQueueItem item)
         {
             // TODO - move the intialization etc somewhere else.
-            var uh = new Upload.UploadHelper(new Uri(Settings.Default.WebServerBaseAddress));
+            var uh = new Upload.UploadHelper(new Uri(Settings.WebServerBaseAddress));
             
             var itemToPost = CreateItemToPost(item);
 
