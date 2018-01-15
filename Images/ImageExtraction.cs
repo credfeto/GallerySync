@@ -9,19 +9,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using FileNaming;
 using ObjectModel;
+using OutputBuilderClient;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Brushes;
 using StorageHelpers;
 
 namespace Images
 {
-    public interface ISettings
-    {
-        int ThumbnailSize { get; }
-        string ImageMaximumDimensions { get; }
-    }
-    
-    
     public static class ImageExtraction
     {
         private static readonly Dictionary<string, IImageConverter> RegisteredConverters = LocateConverters();
@@ -47,19 +41,19 @@ namespace Images
             List<string> filesCreated,
             DateTime creationDate,
             string url,
-            string shortUrl)
+            string shortUrl,
+            ISettings settings)
         {
             var sizes = new List<ImageSize>();
 
             var rawExtension = sourcePhoto.ImageExtension.TrimStart('.').ToUpperInvariant();
 
-            IImageConverter converter;
-            if (RegisteredConverters.TryGetValue(rawExtension, out converter))
+            if (RegisteredConverters.TryGetValue(rawExtension, out var converter))
             {
-                var imageSizes = StandardImageSizesWithThumbnailSize();
+                var imageSizes = StandardImageSizesWithThumbnailSize(settings);
 
                 var filename = Path.Combine(
-                    Settings.Default.RootFolder,
+                    settings.RootFolder,
                     sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
                 using (var sourceBitmap = converter.LoadImage(filename))
@@ -74,13 +68,13 @@ namespace Images
                         {
                             var resizedFileName =
                                 Path.Combine(
-                                    Settings.Default.ImagesOutputPath,
+                                    settings.ImagesOutputPath,
                                     HashNaming.PathifyHash(sourcePhoto.PathHash),
                                     IndividualResizeFileName(sourcePhoto, resized));
 
-                            ApplyWatermark(resized, shortUrl);
+                            ApplyWatermark(resized, shortUrl, settings);
 
-                            var quality = Settings.Default.JpegOutputQuality;
+                            var quality = settings.JpegOutputQuality;
                             var resizedBytes = SaveImageAsJpegBytes(
                                 resized,
                                 quality,
@@ -88,7 +82,8 @@ namespace Images
                                 shortUrl,
                                 sourcePhoto.BasePath,
                                 sourcePhoto.Metadata,
-                                creationDate);
+                                creationDate,
+                                settings);
 
                             if (
                                 !ImageHelpers.IsValidJpegImage(
@@ -114,11 +109,11 @@ namespace Images
                                                                              + IndividualResizeFileName(sourcePhoto,
                                                                                  resized));
 
-                            if (resized.Width == Settings.Default.ThumbnailSize)
+                            if (resized.Width == settings.ThumbnailSize)
                             {
                                 resizedFileName =
                                     Path.Combine(
-                                        Settings.Default.ImagesOutputPath,
+                                        settings.ImagesOutputPath,
                                         HashNaming.PathifyHash(sourcePhoto.PathHash),
                                         IndividualResizeFileName(sourcePhoto, resized, "png"));
                                 resizedBytes = SaveImageAsPng(
@@ -127,7 +122,8 @@ namespace Images
                                     shortUrl,
                                     sourcePhoto.BasePath,
                                     sourcePhoto.Metadata,
-                                    creationDate);
+                                    creationDate,
+                                    settings);
                                 await WriteImage(resizedFileName, resizedBytes, creationDate);
 
                                 filesCreated.Add(
@@ -210,13 +206,14 @@ namespace Images
             string shortUrl,
             string filePath,
             List<PhotoMetadata> metadata,
-            DateTime creationDate)
+            DateTime creationDate,
+            ISettings settings)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate);
+            SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate, settings);
 
             try
             {
@@ -258,13 +255,13 @@ namespace Images
         ///     The image to add the watermark to.
         /// </param>
         /// <param name="url"></param>
-        private static void ApplyWatermark(Image<Rgba32> imageToAddWatermarkTo, string url)
+        private static void ApplyWatermark(Image<Rgba32> imageToAddWatermarkTo, string url, ISettings settings)
         {
             Contract.Requires(imageToAddWatermarkTo != null);
 
             const int spacer = 5;
 
-            var watermarkFilename = Settings.Default.WatermarkImage;
+            var watermarkFilename = settings.WatermarkImage;
             if (string.IsNullOrEmpty(watermarkFilename))
                 return;
 
@@ -397,7 +394,8 @@ namespace Images
             List<PhotoMetadata> metadata,
             string url,
             string shortUrl,
-            DateTime creationDate)
+            DateTime creationDate,
+            ISettings settings)
         {
             var description = string.Empty;
             var desc =
@@ -410,7 +408,7 @@ namespace Images
                 description += ". ";
 
             description += "Source : ";
-            if (StringComparer.InvariantCultureIgnoreCase.Equals(Constants.DefaultShortUrl, shortUrl))
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(settings.DefaultShortUrl, shortUrl))
                 description += url;
             else
                 description += shortUrl;
@@ -598,12 +596,13 @@ namespace Images
             string shortUrl,
             string filePath,
             List<PhotoMetadata> metadata,
-            DateTime creationDate)
+            DateTime creationDate,
+            ISettings settings)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate);
+            SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate, settings);
 
             var qSettings = new QuantizeSettings {Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
             image.Quantize(qSettings);
@@ -652,7 +651,8 @@ namespace Images
             string shortUrl,
             string filePath,
             List<PhotoMetadata> metadata,
-            DateTime creationDate)
+            DateTime creationDate,
+            ISettings settings)
         {
             Contract.Requires(image != null);
 
@@ -662,7 +662,7 @@ namespace Images
             const string licensing = "For licensing information see https://www.markridgwell.co.uk/about/";
             const string program = "https://www.markridgwell.co.uk/";
             var title = ExtractTitle(filePath, metadata);
-            var description = ExtractDescription(metadata, url, shortUrl, creationDate);
+            var description = ExtractDescription(metadata, url, shortUrl, creationDate, settings);
 
             SetExifMetadata(image, creationDate, description, copyright, licensing, credit, program);
         }
