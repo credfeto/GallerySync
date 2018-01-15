@@ -12,6 +12,11 @@ using ObjectModel;
 using OutputBuilderClient;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Brushes;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Quantizers;
 using StorageHelpers;
 
 namespace Images
@@ -519,18 +524,14 @@ namespace Images
             Contract.Requires(image.Height > 0);
             Contract.Requires(maximumDimension > 0);
             Contract.Requires((int) (maximumDimension / (double) image.Width * image.Height) > 0);
-            Contract.Ensures(Contract.Result<MagickImage>() != null);
+            Contract.Ensures(Contract.Result<Image<Rgba32>>() != null);
 
             var yscale = CalculateScaledHeightFromWidth(maximumDimension, image.Width, image.Height);
 
-            MagickImage resized = null;
+            Image<Rgba32> resized = null;
             try
             {
-                resized = image.Clone();
-
-                var geometry = new MagickGeometry(maximumDimension, yscale) {IgnoreAspectRatio = true};
-
-                resized.Resize(geometry);
+                resized = image.Clone(x => x.Resize(maximumDimension, yscale));
 
                 Debug.Assert(resized.Width == maximumDimension);
                 Debug.Assert(resized.Height == yscale);
@@ -539,8 +540,7 @@ namespace Images
             }
             catch
             {
-                if (resized != null)
-                    resized.Dispose();
+                resized?.Dispose();
 
                 throw;
             }
@@ -569,8 +569,21 @@ namespace Images
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            image.Quality = (int) compression;
-            return image.ToByteArray(MagickFormat.Jpeg);
+            using (var ms = new MemoryStream())
+            {
+                var encoder = new JpegEncoder
+                {
+                    IgnoreMetadata = true,
+                    Quality = (int) compression
+                };
+
+                image.SaveAsJpeg(ms, encoder);
+
+                return ms.ToArray();
+            }
+
+//            image.Quality = (int) compression;
+//            return image.ToByteArray(MagickFormat.Jpeg);
         }
 
         /// <summary>
@@ -587,7 +600,20 @@ namespace Images
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            return image.ToByteArray(MagickFormat.Jpeg);
+            using (var ms = new MemoryStream())
+            {
+                var encoder = new JpegEncoder
+                {
+                    IgnoreMetadata = true,
+                    Quality = 75
+                };
+
+                image.SaveAsJpeg(ms, encoder);
+
+                return ms.ToArray();
+            }
+
+            //return image.ToByteArray(MagickFormat.Jpeg);
         }
 
         private static byte[] SaveImageAsPng(
@@ -604,10 +630,28 @@ namespace Images
 
             SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate, settings);
 
-            var qSettings = new QuantizeSettings {Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
-            image.Quantize(qSettings);
+            using (var ms = new MemoryStream())
+            {
+                var encoder = new PngEncoder
+                {
+                    IgnoreMetadata = true,
+                    PaletteSize = 256,
+                    CompressionLevel = 9,
+                    Quantizer = new OctreeQuantizer<Rgb24>(),
+                    PngColorType = PngColorType.Palette
+                };
+                image.SaveAsPng(ms, encoder);
 
-            return image.ToByteArray(MagickFormat.Png8);
+                return ms.ToArray();
+            }
+
+
+//            var qSettings = new QuantizeSettings {Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
+//            image.Quantize(qSettings);
+//
+//            
+//            
+//            return image.ToByteArray(MagickFormat.Png8);
         }
 
         private static void SetExifMetadata(
