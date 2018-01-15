@@ -6,12 +6,13 @@
 //   Supported file extension.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-namespace OutputBuilderClient
-{
-    using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
 
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+
+namespace Images
+{
     /// <summary>
     ///     Supported file extension.
     /// </summary>

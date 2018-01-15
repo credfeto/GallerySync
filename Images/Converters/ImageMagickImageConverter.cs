@@ -7,7 +7,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using OutputBuilderClient;
 using SixLabors.ImageSharp;
 
 namespace Images.Converters

@@ -1,5 +1,10 @@
 ﻿using System.IO;
+using ExifLib;
 using ObjectModel;
+using TagLib;
+using TagLib.Image;
+using TagLib.Xmp;
+using File = System.IO.File;
 
 namespace OutputBuilderClient
 {

@@ -9,14 +9,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using FileNaming;
 using ObjectModel;
-using OutputBuilderClient;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Brushes;
-using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 using StorageHelpers;
 
 namespace Images
 {
+    public interface ISettings
+    {
+        int ThumbnailSize { get; }
+        string ImageMaximumDimensions { get; }
+    }
+    
+    
     public static class ImageExtraction
     {
         private static readonly Dictionary<string, IImageConverter> RegisteredConverters = LocateConverters();
@@ -106,7 +111,8 @@ namespace Images
 
                             filesCreated.Add(
                                 HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\"
-                                + IndividualResizeFileName(sourcePhoto, resized));
+                                                                             + IndividualResizeFileName(sourcePhoto,
+                                                                                 resized));
 
                             if (resized.Width == Settings.Default.ThumbnailSize)
                             {
@@ -126,7 +132,8 @@ namespace Images
 
                                 filesCreated.Add(
                                     HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\"
-                                    + IndividualResizeFileName(sourcePhoto, resized, "png"));
+                                                                                 + IndividualResizeFileName(sourcePhoto,
+                                                                                     resized, "png"));
                             }
 
                             sizes.Add(new ImageSize {Width = resized.Width, Height = resized.Height});
@@ -209,7 +216,6 @@ namespace Images
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            StripExifProperties(image);
             SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate);
 
             try
@@ -597,7 +603,6 @@ namespace Images
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            StripExifProperties(image);
             SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate);
 
             var qSettings = new QuantizeSettings {Colors = 256, Dither = true, ColorSpace = ColorSpace.RGB};
@@ -615,14 +620,8 @@ namespace Images
             string credit,
             string program)
         {
-            Action<ExifProfile> completeExifProfile = p => { };
-            var exifProfile = image.GetExifProfile();
-            if (exifProfile == null)
-            {
-                exifProfile = new ExifProfile();
-
-                completeExifProfile = image.AddProfile;
-            }
+            var exifProfile = image.MetaData.ExifProfile;
+            if (exifProfile == null) return;
 
             MetadataOutput.SetCreationDate(creationDate, exifProfile);
 
@@ -634,73 +633,6 @@ namespace Images
             MetadataOutput.SetPhotographer(exifProfile, credit);
 
             MetadataOutput.SetProgram(exifProfile, program);
-
-            completeExifProfile(exifProfile);
-        }
-
-        private static void SetIptcMetadata(
-            Image<Rgba32> image,
-            string url,
-            DateTime creationDate,
-            string title,
-            string description,
-            string credit,
-            string program,
-            string licensing)
-        {
-            Action<IptcProfile> completeIptcProfile = p => { };
-
-            var iptcProfile = image.GetIptcProfile();
-            if (iptcProfile == null)
-            {
-                iptcProfile = new IptcProfile();
-
-                completeIptcProfile = image.AddProfile;
-            }
-
-            try
-            {
-                SetIptcMetadataInternal(iptcProfile, url, creationDate, title, description, credit, program, licensing);
-            }
-            catch
-            {
-                // Ok some images are crap and don't like the normal way of setting metadata
-                iptcProfile = new IptcProfile();
-                completeIptcProfile = p =>
-                {
-                    image.RemoveProfile(p.Name);
-                    image.AddProfile(p);
-                };
-
-                SetIptcMetadataInternal(iptcProfile, url, creationDate, title, description, credit, program, licensing);
-            }
-
-            completeIptcProfile(iptcProfile);
-        }
-
-        private static void SetIptcMetadataInternal(
-            IptcProfile iptcProfile,
-            string url,
-            DateTime creationDate,
-            string title,
-            string description,
-            string credit,
-            string program,
-            string licensing)
-        {
-            MetadataOutput.SetTitle(title, iptcProfile);
-            MetadataOutput.SetDescription(description, iptcProfile);
-            MetadataOutput.SetCopyright(iptcProfile, CopyrightDeclaration);
-
-            MetadataOutput.SetCredit(iptcProfile, credit);
-
-            MetadataOutput.SetProgram(iptcProfile, program);
-
-            MetadataOutput.SetTransmissionReference(url, iptcProfile);
-
-            MetadataOutput.SetLicensing(iptcProfile, licensing);
-
-            MetadataOutput.SetCreationDate(creationDate, iptcProfile);
         }
 
         /// <summary>
@@ -732,44 +664,17 @@ namespace Images
             var title = ExtractTitle(filePath, metadata);
             var description = ExtractDescription(metadata, url, shortUrl, creationDate);
 
-            image.Format = MagickFormat.Jpeg;
-
-            SetIptcMetadata(image, url, creationDate, title, description, credit, program, licensing);
-
             SetExifMetadata(image, creationDate, description, copyright, licensing, credit, program);
         }
 
-        private static int[] StandardImageSizesWithThumbnailSize()
+        private static int[] StandardImageSizesWithThumbnailSize(ISettings settings)
         {
             return
-                Settings.Default.ImageMaximumDimensions.Split(',')
+                settings.ImageMaximumDimensions.Split(',')
                     .Select(value => Convert.ToInt32(value))
-                    .Concat(new[] {Settings.Default.ThumbnailSize})
+                    .Concat(new[] {settings.ThumbnailSize})
                     .OrderByDescending(x => x)
                     .ToArray();
-        }
-
-        /// <summary>
-        ///     Strips the EXIF properties from the image.
-        /// </summary>
-        /// <param name="image">
-        ///     The image.
-        /// </param>
-        private static void StripExifProperties(Image<Rgba32> image)
-        {
-            Contract.Requires(image != null);
-
-            var ipctProfile = image.GetIptcProfile();
-            if (ipctProfile != null)
-                image.RemoveProfile(ipctProfile.Name);
-
-            var exifProfile = image.GetExifProfile();
-            if (exifProfile != null)
-                image.RemoveProfile(exifProfile.Name);
-
-            var xmpProfile = image.GetXmpProfile();
-            if (xmpProfile != null)
-                image.RemoveProfile(xmpProfile.Name);
         }
     }
 }
