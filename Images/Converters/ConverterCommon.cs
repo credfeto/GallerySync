@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.IO;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Images.Converters
 {

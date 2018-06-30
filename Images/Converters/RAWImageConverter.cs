@@ -14,6 +14,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using StorageHelpers;
 
 namespace Images.Converters

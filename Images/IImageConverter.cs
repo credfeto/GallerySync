@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Images
 {

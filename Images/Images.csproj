@@ -20,8 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ExifLib" Version="1.7.0"/>
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-dev000605"/>
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-dev000605"/>
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0003"/>
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0003"/>
     <PackageReference Include="Taglib-Sharp-NetStandard" Version="1.0.0"/>
   </ItemGroup>
   <ItemGroup>

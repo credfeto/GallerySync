@@ -11,13 +11,16 @@ using FileNaming;
 using ObjectModel;
 using OutputBuilderClient;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Brushes;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Quantizers;
+using SixLabors.ImageSharp.Processing.Drawing;
+using SixLabors.ImageSharp.Processing.Overlays;
+using SixLabors.ImageSharp.Processing.Quantization;
+using SixLabors.ImageSharp.Processing.Transforms;
 using StorageHelpers;
+using Point = SixLabors.Primitives.Point;
 
 namespace Images
 {
@@ -273,16 +276,10 @@ namespace Images
             if (!File.Exists(watermarkFilename))
                 return;
 
-            using (var watermark = new MagickImage())
+            using(Image<Rgba32> watermark = Image.Load( watermarkFilename))
             {
-                //watermark.Warning += (sender, e) =>
-                //{
-                //    Console.WriteLine("Watermark Image Load Error: {0}", e.Message);
-                //    throw e.Exception;
-                //};
-                CompositeOperator compositionOperator;
-                watermark.BackgroundColor = MagickColor.Transparent;
-                watermark.Read(watermarkFilename);
+
+                watermark.Mutate(pc=> { pc.BackgroundColor(Rgba32.Transparent); });
 
                 var width = watermark.Width;
                 var height = watermark.Height;
@@ -291,13 +288,13 @@ namespace Images
                 {
                     if (qr != null)
                     {
-                        qr.BackgroundColor = MagickColor.Transparent;
+                        qr.Mutate(px => px.BackgroundColor(Rgba32.Transparent));
 
                         var qrWidth = qr.Width;
                         var qrHeight = qr.Height;
 
                         var qrXPos = imageToAddWatermarkTo.Width - (qrWidth + spacer);
-                        var qrYpos = imageToAddWatermarkTo.Height - (qrHeight + spacer);
+                        var qrYPos = imageToAddWatermarkTo.Height - (qrHeight + spacer);
 
                         width = watermark.Width + (qrWidth > 0 ? qrWidth + 2 * spacer : 0);
 
@@ -306,8 +303,9 @@ namespace Images
                         if (imageToAddWatermarkTo.Width <= width || imageToAddWatermarkTo.Height <= maxHeight)
                             return;
 
-                        compositionOperator = CompositeOperator.Over;
-                        imageToAddWatermarkTo.Composite(qr, qrXPos, qrYpos, compositionOperator);
+                        imageToAddWatermarkTo.Mutate(
+                            pc => { pc.DrawImage(qr, PixelBlenderMode.Over, 1, new Point(qrXPos, qrYPos)); }
+                        );
                     }
                 }
 
@@ -317,8 +315,9 @@ namespace Images
                 var x = imageToAddWatermarkTo.Width - width;
                 var y = imageToAddWatermarkTo.Height - height;
 
-                compositionOperator = CompositeOperator.Over;
-                imageToAddWatermarkTo.Composite(watermark, x, y, compositionOperator);
+                imageToAddWatermarkTo.Mutate(
+                    pc => { pc.DrawImage(watermark, PixelBlenderMode.Over, 1, new Point(x, y)); }
+                    );
             }
         }
 
@@ -500,7 +499,7 @@ namespace Images
             }
 
             if (!converters.Any())
-                throw new ConfigurationErrorsException("No registered converters!");
+                throw new ApplicationException("No registered converters!");
 
             return converters;
         }
@@ -634,11 +633,10 @@ namespace Images
             {
                 var encoder = new PngEncoder
                 {
-                    IgnoreMetadata = true,
-                    PaletteSize = 256,
                     CompressionLevel = 9,
-                    Quantizer = new OctreeQuantizer<Rgb24>(),
-                    PngColorType = PngColorType.Palette
+                    Quantizer = new WuQuantizer(),
+                    PngColorType = PngColorType.Palette,
+                    
                 };
                 image.SaveAsPng(ms, encoder);
 
