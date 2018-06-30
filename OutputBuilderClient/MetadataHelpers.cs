@@ -6,17 +6,23 @@ using ObjectModel;
 
 namespace OutputBuilderClient
 {
-    static internal class MetadataHelpers
+    internal static class MetadataHelpers
     {
         public static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
         {
-            var dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
+            PhotoMetadata dateTaken = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.DateTaken);
+
             if (dateTaken == null)
+            {
                 return DateTime.MinValue;
+            }
 
             DateTime value;
+
             if (DateTime.TryParse(dateTaken.Value, out value))
+            {
                 return value;
+            }
 
             return DateTime.MinValue;
         }

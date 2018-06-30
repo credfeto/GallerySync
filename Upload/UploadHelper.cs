@@ -14,69 +14,62 @@ namespace Upload
         private readonly Uri _uploadBaseAddress;
 
         public UploadHelper(Uri uploadBaseAddress)
-            : this(uploadBaseAddress, TimeSpan.FromSeconds(600))
+            : this(uploadBaseAddress, TimeSpan.FromSeconds(value: 600))
         {
         }
 
         public UploadHelper(Uri uploadBaseAddress, TimeSpan timeout)
         {
-            _uploadBaseAddress = uploadBaseAddress ?? throw new ArgumentNullException(nameof(uploadBaseAddress));
-            _timeout = timeout;
+            this._uploadBaseAddress = uploadBaseAddress ?? throw new ArgumentNullException(nameof(uploadBaseAddress));
+            this._timeout = timeout;
         }
 
-        public async Task<bool> UploadItem(GallerySiteIndex itemToPost, string progressText,
-            UploadType uploadType)
+        public async Task<bool> UploadItem(GallerySiteIndex itemToPost, string progressText, UploadType uploadType)
         {
             try
             {
-                using (var client = new HttpClient
+                using (HttpClient client = new HttpClient {BaseAddress = this._uploadBaseAddress, Timeout = this._timeout})
                 {
-                    BaseAddress = _uploadBaseAddress,
-                    Timeout = _timeout
-                })
-                {
-                    Console.WriteLine("Uploading ({0}): {1}", MakeUploadTypeText(uploadType), progressText);
+                    Console.WriteLine(format: "Uploading ({0}): {1}", MakeUploadTypeText(uploadType), progressText);
 
                     const string jsonMimeType = @"application/json";
 
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new MediaTypeWithQualityHeaderValue(jsonMimeType));
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(jsonMimeType));
 
-                    var json = JsonConvert.SerializeObject(itemToPost);
+                    string json = JsonConvert.SerializeObject(itemToPost);
 
-                    var content = new StringContent(json, Encoding.UTF8, jsonMimeType);
+                    StringContent content = new StringContent(json, Encoding.UTF8, jsonMimeType);
 
-                    var response = await client.PostAsync("tasks/sync", content);
-                    Console.WriteLine("Status: {0}", response.StatusCode);
+                    HttpResponseMessage response = await client.PostAsync(requestUri: "tasks/sync", content);
+                    Console.WriteLine(format: "Status: {0}", response.StatusCode);
 
                     if (response.IsSuccessStatusCode)
                     {
                         Console.WriteLine(await response.Content.ReadAsStringAsync());
+
                         return true;
                     }
+
                     return false;
                 }
             }
             catch (Exception exception)
             {
-                Console.WriteLine("Error: {0}", exception.Message);
+                Console.WriteLine(format: "Error: {0}", exception.Message);
+
                 return false;
             }
         }
-
 
         private static string MakeUploadTypeText(UploadType uploadType)
         {
             switch (uploadType)
             {
-                case UploadType.NewItem:
-                    return "New";
+                case UploadType.NewItem: return "New";
 
-                case UploadType.DeleteItem:
-                    return "Delete";
+                case UploadType.DeleteItem: return "Delete";
 
-                default:
-                    return "Existing";
+                default: return "Existing";
             }
         }
     }

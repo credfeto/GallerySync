@@ -6,6 +6,7 @@ namespace ObjectModel
     public sealed class FileToUpload
     {
         public string FileName { get; set; }
+
         public bool Completed { get; set; }
     }
 }

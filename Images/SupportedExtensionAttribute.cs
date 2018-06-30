@@ -48,6 +48,7 @@ namespace Images
             get
             {
                 Contract.Ensures(!string.IsNullOrEmpty(Contract.Result<string>()));
+
                 return this._extension;
             }
         }
@@ -55,10 +56,8 @@ namespace Images
         /// <summary>
         ///     The object invariant.
         /// </summary>
-        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
-            Justification = "Required for Code Contracts")]
-        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic",
-            Justification = "Required for Code Contracts")]
+        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1811:AvoidUncalledPrivateCode", Justification = "Required for Code Contracts")]
+        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1822:MarkMembersAsStatic", Justification = "Required for Code Contracts")]
         [ContractInvariantMethod]
         private void ObjectInvariant()
         {

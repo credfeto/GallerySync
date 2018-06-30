@@ -20,23 +20,27 @@ namespace StorageHelpers
             RotateWithRetry(file, file + ".1");
         }
 
-
         private static bool Rotate(string current, string previous)
         {
-            Console.WriteLine("Moving {0} to {1}", current, previous);
+            Console.WriteLine(format: "Moving {0} to {1}", current, previous);
+
             if (!File.Exists(current))
+            {
                 return true;
+            }
 
             FileHelpers.DeleteFile(previous);
 
             try
             {
                 File.Move(current, previous);
+
                 return true;
             }
             catch (Exception exception)
             {
-                Console.WriteLine("ERROR: Failed to move file (FAST): {0}", exception.Message);
+                Console.WriteLine(format: "ERROR: Failed to move file (FAST): {0}", exception.Message);
+
                 return SlowMove(current, previous);
             }
         }
@@ -45,9 +49,13 @@ namespace StorageHelpers
         {
             const int maxRetries = 5;
 
-            for (var retry = 0; retry < maxRetries; ++retry)
+            for (int retry = 0; retry < maxRetries; ++retry)
+            {
                 if (Rotate(current, previous))
+                {
                     return;
+                }
+            }
         }
 
         private static bool SlowMove(string current, string previous)
@@ -56,11 +64,13 @@ namespace StorageHelpers
             {
                 File.Copy(current, previous);
                 FileHelpers.DeleteFile(current);
+
                 return true;
             }
             catch (Exception exception)
             {
-                Console.WriteLine("ERROR: Failed to move file (SLOW): {0}", exception.Message);
+                Console.WriteLine(format: "ERROR: Failed to move file (SLOW): {0}", exception.Message);
+
                 return false;
             }
         }

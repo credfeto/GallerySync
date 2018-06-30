@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.IO;
 using Newtonsoft.Json;
 using ObjectModel;
 using Scanner;
@@ -17,23 +17,27 @@ namespace OutputBuilderClient
 
         public PhotoInfoEmitter(string basePath)
         {
-            _basePath = basePath;
+            this._basePath = basePath;
         }
 
         public Photo[] Photos
         {
-            get { return _photos.OrderBy(x => x.UrlSafePath).ToArray(); }
+            get
+            {
+                return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
+                    .ToArray();
+            }
         }
 
         public async Task FileFound(FileEntry entry)
         {
-            var fullPath = Path.Combine(_basePath, entry.RelativeFolder, entry.LocalFileName);
+            string fullPath = Path.Combine(this._basePath, entry.RelativeFolder, entry.LocalFileName);
 
-            var bytes = await FileHelpers.ReadAllBytes(fullPath);
+            byte[] bytes = await FileHelpers.ReadAllBytes(fullPath);
 
-            var photo = JsonConvert.DeserializeObject<Photo>(Encoding.UTF8.GetString(bytes));
+            Photo photo = JsonConvert.DeserializeObject<Photo>(Encoding.UTF8.GetString(bytes));
 
-            _photos.Add(photo);
+            this._photos.Add(photo);
         }
     }
 }

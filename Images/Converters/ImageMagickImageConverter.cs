@@ -15,15 +15,15 @@ namespace Images.Converters
     /// <summary>
     ///     Image converter that uses ImageMagick.
     /// </summary>
-    [SupportedExtension("tga")]
-    [SupportedExtension("jpg")]
-    [SupportedExtension("jpeg")]
-    [SupportedExtension("jpe")]
-    [SupportedExtension("gif")]
-    [SupportedExtension("tif")]
-    [SupportedExtension("tiff")]
-    [SupportedExtension("png")]
-    [SupportedExtension("bmp")]
+    [SupportedExtension(extension: "tga")]
+    [SupportedExtension(extension: "jpg")]
+    [SupportedExtension(extension: "jpeg")]
+    [SupportedExtension(extension: "jpe")]
+    [SupportedExtension(extension: "gif")]
+    [SupportedExtension(extension: "tif")]
+    [SupportedExtension(extension: "tiff")]
+    [SupportedExtension(extension: "png")]
+    [SupportedExtension(extension: "bmp")]
     internal class ImageMagickImageConverter : IImageConverter
     {
         public Image<Rgba32> LoadImage(string fileName)
@@ -39,7 +39,9 @@ namespace Images.Converters
             catch
             {
                 if (image != null)
+                {
                     image.Dispose();
+                }
 
                 throw;
             }

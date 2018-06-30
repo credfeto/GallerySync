@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -22,22 +23,22 @@ namespace Images.Converters
     /// <summary>
     ///     Image converter that uses DCRAW.
     /// </summary>
-    [SupportedExtension("arw")]
-    [SupportedExtension("cf2")]
-    [SupportedExtension("cr2")]
-    [SupportedExtension("crw")]
-    [SupportedExtension("dng")]
-    [SupportedExtension("erf")]
-    [SupportedExtension("mef")]
-    [SupportedExtension("mrw")]
-    [SupportedExtension("nef")]
-    [SupportedExtension("orf")]
-    [SupportedExtension("pef")]
-    [SupportedExtension("raf")]
-    [SupportedExtension("raw")]
-    [SupportedExtension("rw2")]
-    [SupportedExtension("sr2")]
-    [SupportedExtension("x3f")]
+    [SupportedExtension(extension: "arw")]
+    [SupportedExtension(extension: "cf2")]
+    [SupportedExtension(extension: "cr2")]
+    [SupportedExtension(extension: "crw")]
+    [SupportedExtension(extension: "dng")]
+    [SupportedExtension(extension: "erf")]
+    [SupportedExtension(extension: "mef")]
+    [SupportedExtension(extension: "mrw")]
+    [SupportedExtension(extension: "nef")]
+    [SupportedExtension(extension: "orf")]
+    [SupportedExtension(extension: "pef")]
+    [SupportedExtension(extension: "raf")]
+    [SupportedExtension(extension: "raw")]
+    [SupportedExtension(extension: "rw2")]
+    [SupportedExtension(extension: "sr2")]
+    [SupportedExtension(extension: "x3f")]
     internal sealed class RawImageConverter : IImageConverter
     {
         /// <summary>
@@ -51,15 +52,7 @@ namespace Images.Converters
         /// <value>
         ///     The DCRaw executable.
         /// </value>
-        private static string DcRawExecutable
-        {
-            get
-            {
-                // TODO; make this config based
-                return "C:\\utils\\imageprocessing\\dcraw.exe";
-                //return Settings.Default.DCRAWExecutable;
-            }
-        }
+        private static string DcRawExecutable => "C:\\utils\\imageprocessing\\dcraw.exe";
 
         /// <summary>
         ///     Loads the image.
@@ -70,13 +63,13 @@ namespace Images.Converters
         /// <returns>
         ///     An image, if it could be loaded.
         /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Calling external process which may cause crashes")]
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Calling external process which may cause crashes")]
         public Image<Rgba32> LoadImage(string fileName)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
 
-            var image = LoadImageInternal(fileName);
+            Image<Rgba32> image = LoadImageInternal(fileName);
+
             if (image != null)
             {
                 const int rotationDegrees = 0;
@@ -132,21 +125,17 @@ namespace Images.Converters
 
             //string.Format(CultureInfo.InvariantCulture, "-6 -w -q 3 -c -T \"{0}\"", fileName),
             return new Process
-            {
-                StartInfo =
-                {
-                    FileName = dcraw,
-                    Arguments =
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            "-6 -w -q 3 -c -T \"{0}\"",
-                            fileName),
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                }
-            };
+                   {
+                       StartInfo =
+                       {
+                           FileName = dcraw,
+                           Arguments = string.Format(CultureInfo.InvariantCulture, format: "-6 -w -q 3 -c -T \"{0}\"", fileName),
+                           UseShellExecute = false,
+                           CreateNoWindow = true,
+                           RedirectStandardOutput = true,
+                           RedirectStandardError = true
+                       }
+                   };
         }
 
         /// <summary>
@@ -162,24 +151,23 @@ namespace Images.Converters
         {
             Contract.Requires(!string.IsNullOrEmpty(filename));
 
-            var dcraw = DcRawExecutable;
-            if (string.IsNullOrEmpty(dcraw))
-                return null;
+            string dcraw = DcRawExecutable;
 
-            using (var process = CreateProcess(dcraw, filename))
+            if (string.IsNullOrEmpty(dcraw))
+            {
+                return null;
+            }
+
+            using (Process process = CreateProcess(dcraw, filename))
             {
                 if (!process.Start())
                 {
-                    Debug.WriteLine(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            "Executing : {0} {1}",
-                            process.StartInfo.FileName,
-                            process.StartInfo.Arguments));
+                    Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, format: "Executing : {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments));
+
                     return null;
                 }
 
-                using (var stream = process.StandardOutput.BaseStream)
+                using (Stream stream = process.StandardOutput.BaseStream)
                 {
                     Image<Rgba32> image = null;
 
@@ -194,7 +182,9 @@ namespace Images.Converters
                     catch (Exception)
                     {
                         if (image != null)
+                        {
                             image.Dispose();
+                        }
 
                         throw;
                     }

@@ -23,7 +23,7 @@ namespace UploadData
 
         private static Location CenterFromDegreesCollection(IEnumerable<Location> locations)
         {
-            var tracker = new LocationNormalizer();
+            LocationNormalizer tracker = new LocationNormalizer();
 
             foreach (Location position in locations)
             {
@@ -44,51 +44,46 @@ namespace UploadData
             {
                 get
                 {
-                    if (_count == 0)
+                    if (this._count == 0)
                     {
                         return null;
                     }
 
-
-                    var x2 = (double) (_x/_count);
-                    var y2 = (double) (_y/_count);
-                    var z2 = (double) (_z/_count);
+                    double x2 = (double) (this._x / this._count);
+                    double y2 = (double) (this._y / this._count);
+                    double z2 = (double) (this._z / this._count);
 
                     double lon2 = Math.Atan2(y2, x2);
-                    double hyp = Math.Sqrt((x2*x2) + (y2*y2));
+                    double hyp = Math.Sqrt(x2 * x2 + y2 * y2);
                     double lat2 = Math.Atan2(z2, hyp);
 
-                    return new Location
-                        {
-                            Latitude = RadiansToDegrees(lat2),
-                            Longitude = RadiansToDegrees(lon2)
-                        };
+                    return new Location {Latitude = RadiansToDegrees(lat2), Longitude = RadiansToDegrees(lon2)};
                 }
             }
 
             public void AddLocation(Location position)
             {
-                ++_count;
+                ++this._count;
                 double latRad = DegreesToRadians(position.Latitude);
                 double lngRad = DegreesToRadians(position.Longitude);
 
-                var a = (decimal) (Math.Cos(latRad)*Math.Cos(lngRad));
-                var b = (decimal) (Math.Cos(latRad)*Math.Sin(lngRad));
-                var c = (decimal) (Math.Sin(latRad));
+                decimal a = (decimal) (Math.Cos(latRad) * Math.Cos(lngRad));
+                decimal b = (decimal) (Math.Cos(latRad) * Math.Sin(lngRad));
+                decimal c = (decimal) Math.Sin(latRad);
 
-                _x += a;
-                _y += b;
-                _z += c;
+                this._x += a;
+                this._y += b;
+                this._z += c;
             }
 
             private static double DegreesToRadians(double angle)
             {
-                return (Math.PI/180)*angle;
+                return Math.PI / 180 * angle;
             }
 
             private static double RadiansToDegrees(double angle)
             {
-                return angle*(180.0/Math.PI);
+                return angle * (180.0 / Math.PI);
             }
         }
     }

@@ -6,13 +6,14 @@
 //   The element item list loader.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Text;
+using System.Xml;
+
 namespace OutputBuilderClient.Metadata
 {
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
-    using System.Text;
-    using System.Xml;
-
     /// <summary>
     ///     The element item list loader.
     /// </summary>
@@ -79,22 +80,25 @@ namespace OutputBuilderClient.Metadata
             Contract.Requires(nameSpaceManager != null);
 
             XmlNodeList imageNodes = document.SelectNodes(this._pathToItem, nameSpaceManager);
+
             if (imageNodes == null)
             {
                 return string.Empty;
             }
 
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
+
             foreach (XmlElement imageNode in imageNodes)
             {
                 if (!string.IsNullOrWhiteSpace(imageNode.Value))
                 {
                     if (sb.Length != 0)
                     {
-                        sb.Append(";");
+                        sb.Append(value: ";");
                     }
 
                     sb.Append(imageNode.Value.Trim());
+
                     continue;
                 }
 
@@ -102,11 +106,10 @@ namespace OutputBuilderClient.Metadata
                 {
                     if (sb.Length != 0)
                     {
-                        sb.Append(";");
+                        sb.Append(value: ";");
                     }
 
                     sb.Append(imageNode.InnerText.Trim());
-                    continue;
                 }
             }
 
@@ -117,10 +120,8 @@ namespace OutputBuilderClient.Metadata
         ///     The object invariant.
         /// </summary>
         [ContractInvariantMethod]
-        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
-            Justification = "Invoked by Code Contracts")]
-        [SuppressMessage("SubMain.CodeItRight.Rules.Performance", "PE00004:RemoveUnusedPrivateMethods",
-            Justification = "Invoked by Code Contracts")]
+        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1811:AvoidUncalledPrivateCode", Justification = "Invoked by Code Contracts")]
+        [SuppressMessage(category: "SubMain.CodeItRight.Rules.Performance", checkId: "PE00004:RemoveUnusedPrivateMethods", Justification = "Invoked by Code Contracts")]
         private void ObjectInvariant()
         {
             Contract.Invariant(!string.IsNullOrEmpty(this._property));

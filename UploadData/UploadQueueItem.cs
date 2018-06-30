@@ -4,13 +4,10 @@ using System.Diagnostics;
 namespace UploadData
 {
     [Serializable]
-    [DebuggerDisplay("UploadType: {UploadType} Path:{Path}, Version: {Version}")]
+    [DebuggerDisplay(value: "UploadType: {UploadType} Path:{Path}, Version: {Version}")]
     public class UploadQueueItem
     {
-        public string Path
-        {
-            get { return Item.Path; }
-        }
+        public string Path => this.Item.Path;
 
         public GalleryItem Item { get; set; }
 

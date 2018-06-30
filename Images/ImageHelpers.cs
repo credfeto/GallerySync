@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Transforms;
 
 namespace Images
 {
@@ -11,15 +14,16 @@ namespace Images
         {
             try
             {
-                using (Image.Load(bytes, out var format))
+                using (Image.Load(bytes, out IImageFormat format))
                 {
                     return format.DefaultMimeType == "image/jpeg";
                 }
             }
             catch (Exception exception)
             {
-                Console.WriteLine("Error: {0}", context);
-                Console.WriteLine("Error: {0}", exception);
+                Console.WriteLine(format: "Error: {0}", context);
+                Console.WriteLine(format: "Error: {0}", exception);
+
                 return false;
             }
         }
@@ -46,21 +50,26 @@ namespace Images
             switch (degrees)
             {
                 case 0: // No need to rotate
+
                     return;
 
                 case 90: // Rotate 90 degrees clockwise
                     image.Mutate(ctx => ctx.Rotate(90));
+
                     return;
 
                 case 180: // Rotate upside down
                     image.Mutate(ctx => ctx.Rotate(180));
+
                     return;
 
                 case 270: // Rotate 90 degrees anti-clockwise
                     image.Mutate(ctx => ctx.Rotate(270));
+
                     return;
 
                 default: // unknown - so can't rotate;
+
                     return;
             }
         }

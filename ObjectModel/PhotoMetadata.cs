@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace ObjectModel
 {
     [Serializable]
-    [DebuggerDisplay("Name: {Name}, Value: {Value}")]
+    [DebuggerDisplay(value: "Name: {Name}, Value: {Value}")]
     public class PhotoMetadata : IEquatable<PhotoMetadata>
     {
         public string Name { get; set; }
@@ -13,25 +13,44 @@ namespace ObjectModel
 
         public bool Equals(PhotoMetadata other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(objA: null, other))
+            {
+                return false;
+            }
 
-            return Name == other.Name && Value == other.Value;
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return this.Name == other.Name && this.Value == other.Value;
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((PhotoMetadata) obj);
+            if (ReferenceEquals(objA: null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+
+            return this.Equals((PhotoMetadata) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((Name != null ? Name.GetHashCode() : 0)*397) ^ (Value != null ? Value.GetHashCode() : 0);
+                return ((this.Name != null ? this.Name.GetHashCode() : 0) * 397) ^ (this.Value != null ? this.Value.GetHashCode() : 0);
             }
         }
 

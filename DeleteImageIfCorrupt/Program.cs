@@ -2,6 +2,8 @@
 using System.IO;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.PixelFormats;
 using StorageHelpers;
 
 namespace DeleteImageIfCorrupt
@@ -10,29 +12,40 @@ namespace DeleteImageIfCorrupt
     {
         private static int Main(string[] args)
         {
-            return AsyncMain(args).GetAwaiter().GetResult();
+            return AsyncMain(args)
+                .GetAwaiter()
+                .GetResult();
         }
 
         private static async Task<int> AsyncMain(string[] args)
         {
             if (args.Length != 1)
+            {
                 return -1;
+            }
 
             if (File.Exists(args[0]))
+            {
                 try
                 {
-                    var data = await FileHelpers.ReadAllBytes(args[0]);
+                    byte[] data = await FileHelpers.ReadAllBytes(args[0]);
 
                     if (IsValidJpegImage(data, args[0]))
+                    {
                         return 0;
+                    }
+
                     FileHelpers.DeleteFile(args[0]);
+
                     return 2;
                 }
                 catch (Exception)
                 {
                     FileHelpers.DeleteFile(args[0]);
+
                     return 2;
                 }
+            }
 
             return 0;
         }
@@ -41,15 +54,16 @@ namespace DeleteImageIfCorrupt
         {
             try
             {
-                using (var image = Image.Load(bytes, out var format ))
+                using (Image<Rgba32> image = Image.Load(bytes, out IImageFormat format))
                 {
                     return format.DefaultMimeType == "image/jpeg";
                 }
             }
             catch (Exception exception)
             {
-                Console.WriteLine("Error: {0}", context);
-                Console.WriteLine("Error: {0}", exception);
+                Console.WriteLine(format: "Error: {0}", context);
+                Console.WriteLine(format: "Error: {0}", exception);
+
                 return false;
             }
         }

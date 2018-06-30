@@ -15,7 +15,9 @@ namespace Images
         public static void SetCreationDate(DateTime creationDate, ExifProfile exifProfile)
         {
             if (creationDate != DateTime.MinValue)
-                exifProfile.SetValue(ExifTag.DateTime, creationDate.Date.ToString("yyyy-MM-dd"));
+            {
+                exifProfile.SetValue(ExifTag.DateTime, creationDate.Date.ToString(format: "yyyy-MM-dd"));
+            }
         }
 
         public static void SetCreationDate(string fileName, DateTime creationDate)
@@ -30,7 +32,10 @@ namespace Images
 
         public static void SetDescription(string description, ExifProfile exifProfile)
         {
-            if (!string.IsNullOrWhiteSpace(description)) exifProfile.SetValue(ExifTag.ImageDescription, description);
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                exifProfile.SetValue(ExifTag.ImageDescription, description);
+            }
         }
 
         public static void SetLicensing(ExifProfile exifProfile, string licensing)

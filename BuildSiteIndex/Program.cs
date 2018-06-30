@@ -17,122 +17,115 @@ using Newtonsoft.Json.Serialization;
 using ObjectModel;
 using Scanner;
 using StorageHelpers;
+using Upload;
 using UploadData;
 
 namespace BuildSiteIndex
 {
     internal class Program
     {
-        private const string AlbumsRoot = "albums";
-        private const string AlbumsTitle = "Albums";
+        private const string ALBUMS_ROOT = "albums";
+        private const string ALBUMS_TITLE = "Albums";
 
-        private const string KeywordsRoot = "keywords";
-        private const string KeywordsTitle = "Keywords";
+        private const string KEYWORDS_ROOT = "keywords";
+        private const string KEYWORDS_TITLE = "Keywords";
 
-        private const string EventsRoot = "events";
-        private const string EventsTitle = "Events";
+        private const string EVENTS_ROOT = "events";
+        private const string EVENTS_TITLE = "Events";
 
-        private const int GalleryJsonVersion = 1;
+        private const int GALLERY_JSON_VERSION = 1;
 
-        private const int MaxPhotosPerKeyword = 1000;
+        private const int MAX_PHOTOS_PER_KEYWORD = 1000;
         private static int _maxDailyUploads = 8000;
 
-        private static readonly EventDesc[] _events =
+        private static readonly EventDesc[] Events =
         {
             new EventDesc
             {
                 Name = "Linkfest",
-
-                PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(linkfest-harlow)-",
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
-                Description =
-                    "[Linkfest](http://www.linkfestharlow.co.uk/), a free music festival in Harlow Town Park at the bandstand."
+                PathMatch =
+                    new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(linkfest-harlow)-",
+                              RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                Description = "[Linkfest](http://www.linkfestharlow.co.uk/), a free music festival in Harlow Town Park at the bandstand."
             },
-
             new EventDesc
             {
                 Name = "Barleylands - Essex Country Show",
-
-                PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(barleylands-essex-country-show)-",
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
-                Description =
-                    "[Essex Country show](http://www.barleylands.co.uk/essex-country-show) at Barleylands, Billericay."
+                PathMatch =
+                    new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(barleylands-essex-country-show)-",
+                              RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                Description = "[Essex Country show](http://www.barleylands.co.uk/essex-country-show) at Barleylands, Billericay."
             },
-
             new EventDesc
             {
                 Name = "Moreton Boxing Day Tug Of War",
-
-                PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(moreton-boxing-day-tug-of-war)-",
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(moreton-boxing-day-tug-of-war)-",
+                                      RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = "The annual tug-of war over the Cripsey Brook at Moreton, Essex."
             },
-
             new EventDesc
             {
                 Name = "Greenwich Tall Ships Festival",
-
-                PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(greenwich-tall-ships-festival)-",
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(greenwich-tall-ships-festival)-",
+                                      RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = ""
             },
-
             new EventDesc
             {
                 Name = "Rock School - Lets Rock The Park",
-
-                PathMatch = new Regex(@"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(rock-school-lets-rock-the-park)-",
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(rock-school-lets-rock-the-park)-",
+                                      RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = ""
             }
         };
 
         private static bool _ignoreExisting;
 
-        private static readonly SemaphoreSlim _entrySemaphore = new SemaphoreSlim(1);
+        private static readonly SemaphoreSlim _entrySemaphore = new SemaphoreSlim(initialCount: 1);
 
         private static int Main(string[] args)
         {
-            Console.WriteLine("BuildSiteIndex");
+            Console.WriteLine(value: "BuildSiteIndex");
 
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json").Build();
+            IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(path: "appsettings.json")
+                .Build();
 
-            Settings.WebServerBaseAddress = config[@"WebServerBaseAddress"];
-            Settings.QueueFolder = config[@"QueueFolder"];
-            Settings.OutputFolder = config[@"OutputFolder"];
-            Settings.DatabaseInputFolder = config[@"DatabaseInputFolder"];
-            
+            Settings.WebServerBaseAddress = config[key: @"WebServerBaseAddress"];
+            Settings.QueueFolder = config[key: @"QueueFolder"];
+            Settings.OutputFolder = config[key: @"OutputFolder"];
+            Settings.DatabaseInputFolder = config[key: @"DatabaseInputFolder"];
+
             if (args != null)
             {
-                if (args.Any(candidate =>
-                    StringComparer.InvariantCultureIgnoreCase.Equals(candidate, "IgnoreExisting")))
+                if (args.Any(predicate: candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, y: "IgnoreExisting")))
                 {
-                    Console.WriteLine("******* Ignoring existing items *******");
+                    Console.WriteLine(value: "******* Ignoring existing items *******");
                     _ignoreExisting = true;
                 }
 
-                if (args.Any(candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, "NoLimit")))
+                if (args.Any(predicate: candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, y: "NoLimit")))
                 {
-                    Console.WriteLine("******* Ignoring Upload limit *******");
+                    Console.WriteLine(value: "******* Ignoring Upload limit *******");
                     _maxDailyUploads = int.MaxValue;
                 }
             }
-
 
             AlterPriority();
 
             try
             {
-                ProcessGallery().GetAwaiter().GetResult();
+                ProcessGallery()
+                    .GetAwaiter()
+                    .GetResult();
 
                 return 0;
             }
             catch (Exception exception)
             {
-                Console.WriteLine("Error: {0}", exception.Message);
-                Console.WriteLine("Stack Trace: {0}", exception.StackTrace);
+                Console.WriteLine(format: "Error: {0}", exception.Message);
+                Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
+
                 return 1;
             }
         }
@@ -142,8 +135,8 @@ namespace BuildSiteIndex
             // TODO: Move to a common Library
             try
             {
-                Process.GetCurrentProcess().PriorityClass =
-                    ProcessPriorityClass.BelowNormal;
+                Process.GetCurrentProcess()
+                    .PriorityClass = ProcessPriorityClass.BelowNormal;
             }
             catch (Exception)
             {
@@ -152,95 +145,94 @@ namespace BuildSiteIndex
 
         private static async Task ProcessGallery()
         {
-            var contents = new Dictionary<string, GalleryEntry>();
+            Dictionary<string, GalleryEntry> contents = new Dictionary<string, GalleryEntry>();
 
-            var target = await LoadRepository(Settings.DatabaseInputFolder);
+            Photo[] target = await LoadRepository(Settings.DatabaseInputFolder);
 
             await AppendRootEntry(contents);
 
-            var keywords = new Dictionary<string, KeywordEntry>();
+            Dictionary<string, KeywordEntry> keywords = new Dictionary<string, KeywordEntry>();
 
-            foreach (var sourcePhoto in target)
+            foreach (Photo sourcePhoto in target)
             {
-                var path = EnsureTerminatedPath("/" + AlbumsRoot + "/" + sourcePhoto.UrlSafePath);
-                var breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + AlbumsTitle + "\\" + sourcePhoto.BasePath);
-                Console.WriteLine("Item: {0}", path);
+                string path = EnsureTerminatedPath("/" + ALBUMS_ROOT + "/" + sourcePhoto.UrlSafePath);
+                string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + ALBUMS_TITLE + "\\" + sourcePhoto.BasePath);
+                Console.WriteLine(format: "Item: {0}", path);
 
-                var pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
-                var breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+                string[] pathFragments = path.Split(separator: '/')
+                    .Where(IsNotEmpty)
+                    .ToArray();
+                string[] breadcrumbFragments = breadcrumbs.Split(separator: '\\')
+                    .Where(IsNotEmpty)
+                    .ToArray();
 
                 await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
-                var parentLevel =
-                    EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
+                string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
-                var title = ExtractTitle(sourcePhoto);
+                string title = ExtractTitle(sourcePhoto);
+
                 if (string.IsNullOrWhiteSpace(title))
+                {
                     title = breadcrumbFragments[breadcrumbFragments.Length - 1];
+                }
 
-                await AppendPhotoEntry(contents, parentLevel, path,
-                    title,
-                    sourcePhoto);
+                await AppendPhotoEntry(contents, parentLevel, path, title, sourcePhoto);
 
                 if (!IsUnderHiddenItem(path))
+                {
                     AppendKeywordsForLaterProcessing(sourcePhoto, keywords);
+                }
             }
 
-            Console.WriteLine("Found {0} items total", contents.Count);
-            Console.WriteLine("Found {0} keyword items total", keywords.Count);
+            Console.WriteLine(format: "Found {0} items total", contents.Count);
+            Console.WriteLine(format: "Found {0} keyword items total", keywords.Count);
 
-            await Task.WhenAll(
-                BuildEvents(contents),
-                BuildGalleryItemsForKeywords(keywords, contents));
+            await Task.WhenAll(BuildEvents(contents), BuildGalleryItemsForKeywords(keywords, contents));
 
             AddCoordinatesFromChildren(contents);
             await ProcessSiteIndex(contents);
 
-            var queuedItems = await LoadQueuedItems();
+            List<UploadQueueItem> queuedItems = await LoadQueuedItems();
             await UploadQueuedItems(queuedItems);
         }
 
         private static async Task<List<UploadQueueItem>> LoadQueuedItems()
         {
-            var files = Directory.EnumerateFiles(Settings.QueueFolder, "*.queue");
+            IEnumerable<string> files = Directory.EnumerateFiles(Settings.QueueFolder, searchPattern: "*.queue");
 
-            var loaded = new ConcurrentBag<UploadQueueItem>();
+            ConcurrentBag<UploadQueueItem> loaded = new ConcurrentBag<UploadQueueItem>();
 
-            await Task.WhenAll(
-                files.Select(file => LoadOneQueuedFile(file, loaded))
-            );
+            await Task.WhenAll(files.Select(selector: file => LoadOneQueuedFile(file, loaded)));
 
-            Console.WriteLine("Found {0} queued items total", loaded.Count);
-            
+            Console.WriteLine(format: "Found {0} queued items total", loaded.Count);
+
             return loaded.ToList();
         }
 
         private static async Task LoadOneQueuedFile(string file, ConcurrentBag<UploadQueueItem> loaded)
         {
-            var bytes = await FileHelpers.ReadAllBytes(file);
+            byte[] bytes = await FileHelpers.ReadAllBytes(file);
 
-            var item = JsonConvert.DeserializeObject<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
+            UploadQueueItem item = JsonConvert.DeserializeObject<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
 
             loaded.Add(item);
         }
 
         private static async Task<Photo[]> LoadRepository(string baseFolder)
         {
-            Console.WriteLine("Loading Repository from {0}...", baseFolder);
-            var scores = new[]
-            {
-                ".info"
-            };
+            Console.WriteLine(format: "Loading Repository from {0}...", baseFolder);
+            string[] scores = {".info"};
 
-            var sidecarFiles = new List<string>();
+            List<string> sidecarFiles = new List<string>();
 
-            var emitter = new PhotoInfoEmitter(baseFolder);
+            PhotoInfoEmitter emitter = new PhotoInfoEmitter(baseFolder);
 
             if (Directory.Exists(baseFolder))
             {
-                var filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                long filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
-                Console.WriteLine("{0} : Files Found: {1}", baseFolder, filesFound);
+                Console.WriteLine(format: "{0} : Files Found: {1}", baseFolder, filesFound);
             }
 
             return emitter.Photos;
@@ -248,69 +240,74 @@ namespace BuildSiteIndex
 
         private static async Task BuildEvents(Dictionary<string, GalleryEntry> contents)
         {
-            foreach (var folder in contents.Values.Where(UnderAlbumsFolder).Where(HasPhotoChildren).ToList())
+            foreach (GalleryEntry folder in contents.Values.Where(UnderAlbumsFolder)
+                .Where(HasPhotoChildren)
+                .ToList())
             {
                 if (IsUnderHiddenItem(folder.Path))
+                {
                     continue;
+                }
 
                 EventDesc found = null;
-                foreach (var eventEntry in _events)
+
+                foreach (EventDesc eventEntry in Events)
+                {
                     if (eventEntry.PathMatch.IsMatch(folder.Path))
                     {
                         found = eventEntry;
+
                         break;
                     }
+                }
 
                 if (found != null)
                 {
-                    Console.WriteLine("Found {0} in {1}", found.Name, folder.Path);
+                    Console.WriteLine(format: "Found {0} in {1}", found.Name, folder.Path);
 
-                    var pathMatch = found.PathMatch.Match(folder.Path);
+                    Match pathMatch = found.PathMatch.Match(folder.Path);
 
-                    var year = pathMatch.Groups[2];
-                    var month = pathMatch.Groups[3];
-                    var day = pathMatch.Groups[4];
-                    var title = pathMatch.Groups[5];
+                    Group year = pathMatch.Groups[groupnum: 2];
+                    Group month = pathMatch.Groups[groupnum: 3];
+                    Group day = pathMatch.Groups[groupnum: 4];
+                    Group title = pathMatch.Groups[groupnum: 5];
 
-                    var pathStart = pathMatch.Groups[0];
+                    Group pathStart = pathMatch.Groups[groupnum: 0];
 
-                    var pathRest = folder.Path.Substring(pathStart.Length).Trim().TrimEnd('/');
+                    string pathRest = folder.Path.Substring(pathStart.Length)
+                        .Trim()
+                        .TrimEnd(trimChar: '/');
+
                     if (string.IsNullOrWhiteSpace(pathRest))
-                        pathRest = title.ToString().Trim();
-
-                    var date = year + "-" + month + "-" + day;
-                    var titleDate = (date + " MTR").ReformatTitle(DateFormat.LongDate).Replace(" - MTR", string.Empty);
-
-
-                    foreach (var sourcePhoto in folder.Children.Where(IsImage))
                     {
-                        var path =
-                            EnsureTerminatedPath(
-                                UrlNaming.BuildUrlSafePath(
-                                    "/" + EventsRoot + "/" + found.Name + "/" +
-                                    year + "/" + date + "/" +
-                                    pathRest + "/" +
-                                    sourcePhoto.Title));
-                        var breadcrumbs =
-                            EnsureTerminatedBreadcrumbs("\\" + EventsTitle + "\\" + found.Name + "\\" + year + "\\" +
-                                                        titleDate + "\\" +
-                                                        folder.Title.Replace(titleDate + " - ", string.Empty) + "\\" +
-                                                        sourcePhoto.Title);
+                        pathRest = title.ToString()
+                            .Trim();
+                    }
 
+                    string date = year + "-" + month + "-" + day;
+                    string titleDate = (date + " MTR").ReformatTitle(DateFormat.LongDate)
+                        .Replace(oldValue: " - MTR", string.Empty);
 
-                        var pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
-                        var breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+                    foreach (GalleryEntry sourcePhoto in folder.Children.Where(IsImage))
+                    {
+                        string path = EnsureTerminatedPath(UrlNaming.BuildUrlSafePath("/" + EVENTS_ROOT + "/" + found.Name + "/" + year + "/" + date + "/" + pathRest + "/" + sourcePhoto.Title));
+                        string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + EVENTS_TITLE + "\\" + found.Name + "\\" + year + "\\" + titleDate + "\\" +
+                                                                         folder.Title.Replace(titleDate + " - ", string.Empty) + "\\" + sourcePhoto.Title);
+
+                        string[] pathFragments = path.Split(separator: '/')
+                            .Where(IsNotEmpty)
+                            .ToArray();
+                        string[] breadcrumbFragments = breadcrumbs.Split(separator: '\\')
+                            .Where(IsNotEmpty)
+                            .ToArray();
 
                         await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
-                        var parentLevel =
-                            EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
+                        string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
-                        Console.WriteLine("Item: {0}", path);
+                        Console.WriteLine(format: "Item: {0}", path);
 
-                        await AppendVirtualEntryPhotoForGalleryEntry(contents, parentLevel, path, sourcePhoto.Path,
-                            sourcePhoto.Title,
-                            sourcePhoto);
+                        await AppendVirtualEntryPhotoForGalleryEntry(contents, parentLevel, path, sourcePhoto.Path, sourcePhoto.Title, sourcePhoto);
                     }
                 }
             }
@@ -323,13 +320,12 @@ namespace BuildSiteIndex
 
         private static bool HasPhotoChildren(GalleryEntry item)
         {
-            return HasChildren(item) &&
-                   item.Children.Any(IsImage);
+            return HasChildren(item) && item.Children.Any(IsImage);
         }
 
         private static bool UnderAlbumsFolder(GalleryEntry item)
         {
-            return item.Path.StartsWith("/albums/", StringComparison.OrdinalIgnoreCase);
+            return item.Path.StartsWith(value: "/albums/", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsImage(GalleryEntry candiate)
@@ -339,133 +335,140 @@ namespace BuildSiteIndex
 
         private static async Task UploadQueuedItems(List<UploadQueueItem> inputSession)
         {
-            var context = new LoadContext();
+            LoadContext context = new LoadContext();
 
             // Only upload creates and updates.
-            foreach (var item in inputSession.Where(item => item.UploadType != UploadType.DeleteItem))
+            foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType != UploadType.DeleteItem))
+            {
                 if (await PerformUpload(item, context))
+                {
                     return;
+                }
+            }
 
             // ONly do deletes IF there are slots left for uploading
             if (!context.MaxReached)
-                foreach (var item in inputSession.Where(item => item.UploadType == UploadType.DeleteItem))
+            {
+                foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType == UploadType.DeleteItem))
+                {
                     if (await PerformUpload(item, context))
+                    {
                         return;
+                    }
+                }
+            }
         }
 
-        private static async Task<bool> PerformUpload(UploadQueueItem item,
-            LoadContext context)
+        private static async Task<bool> PerformUpload(UploadQueueItem item, LoadContext context)
         {
             if (context.Increment())
             {
-                Console.WriteLine("********** REACHED MAX DailyUploads **********");
+                Console.WriteLine(value: "********** REACHED MAX DailyUploads **********");
+
                 return true;
             }
 
             if (await UploadOneItem(item))
+            {
                 RemoveQueuedItem(item);
+            }
+
             return false;
         }
 
         private static void RemoveQueuedItem(UploadQueueItem updateItem)
         {
-            // TODO: Remove the queued item 
-            var key = BuildUploadQueueHash(updateItem);
+            // TODO: Remove the queued item
+            string key = BuildUploadQueueHash(updateItem);
 
-
-            var filename = BuildQueueItemFileName(key);
+            string filename = BuildQueueItemFileName(key);
 
             FileHelpers.DeleteFile(filename);
         }
 
         //[Conditional("SUPPORT_KEYWORDS")]
-        private static async Task BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords,
-            Dictionary<string, GalleryEntry> contents)
+        private static async Task BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords, Dictionary<string, GalleryEntry> contents)
         {
             RemoveObeseKeywordEntries(keywords);
 
-            foreach (var keyword in keywords.Values)
-            foreach (var sourcePhoto in keyword.Photos)
+            foreach (KeywordEntry keyword in keywords.Values)
+            foreach (Photo sourcePhoto in keyword.Photos)
             {
-                var sourcePhotoFullPath = EnsureTerminatedPath("/" + AlbumsRoot + "/" + sourcePhoto.UrlSafePath);
-                var sourcePhotoBreadcrumbs =
-                    EnsureTerminatedBreadcrumbs("\\" + AlbumsTitle + "\\" + sourcePhoto.BasePath);
-                var sourcePhotoPathFragments = sourcePhotoFullPath.Split('/').Where(IsNotEmpty).ToArray();
-                var sourcePhotoBreadcrumbFragments =
-                    sourcePhotoBreadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+                string sourcePhotoFullPath = EnsureTerminatedPath("/" + ALBUMS_ROOT + "/" + sourcePhoto.UrlSafePath);
+                string sourcePhotoBreadcrumbs = EnsureTerminatedBreadcrumbs("\\" + ALBUMS_TITLE + "\\" + sourcePhoto.BasePath);
+                string[] sourcePhotoPathFragments = sourcePhotoFullPath.Split(separator: '/')
+                    .Where(IsNotEmpty)
+                    .ToArray();
+                string[] sourcePhotoBreadcrumbFragments = sourcePhotoBreadcrumbs.Split(separator: '\\')
+                    .Where(IsNotEmpty)
+                    .ToArray();
 
+                string keywordLower = UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant())
+                    .TrimEnd("/".ToArray())
+                    .TrimStart("-".ToArray())
+                    .TrimEnd("-".ToArray());
 
-                var keywordLower =
-                    UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant())
-                        .TrimEnd("/".ToArray())
-                        .TrimStart("-".ToArray())
-                        .TrimEnd("-".ToArray());
+                string firstKeywordCharLower = keywordLower.Substring(startIndex: 0, length: 1)
+                    .ToLowerInvariant();
+                string firstKeywordCharUpper = keywordLower.Substring(startIndex: 0, length: 1)
+                    .ToUpperInvariant();
 
-                var firstKeywordCharLower = keywordLower.Substring(0, 1).ToLowerInvariant();
-                var firstKeywordCharUpper = keywordLower.Substring(0, 1).ToUpperInvariant();
+                string path = EnsureTerminatedPath("/" + KEYWORDS_ROOT + "/" + firstKeywordCharLower + "/" + keywordLower + "/" + sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] + "-" +
+                                                   sourcePhotoPathFragments.Last());
 
-                var path =
-                    EnsureTerminatedPath("/" + KeywordsRoot + "/" + firstKeywordCharLower + "/" + keywordLower + "/" +
-                                         sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] + "-" +
-                                         sourcePhotoPathFragments.Last());
+                string title = sourcePhotoBreadcrumbFragments.Last();
+                string parentTitle = sourcePhotoBreadcrumbFragments[sourcePhotoBreadcrumbFragments.Length - 2]
+                    .ExtractDate(DateFormat.LongDate);
 
-                var title = sourcePhotoBreadcrumbFragments.Last();
-                var parentTitle =
-                    sourcePhotoBreadcrumbFragments[sourcePhotoBreadcrumbFragments.Length - 2].ExtractDate(
-                        DateFormat.LongDate);
                 if (!string.IsNullOrWhiteSpace(parentTitle))
+                {
                     title += " (" + parentTitle + ")";
+                }
 
-                var breadcrumbs =
-                    EnsureTerminatedBreadcrumbs("\\" + KeywordsTitle + "\\" + firstKeywordCharUpper + "\\" +
-                                                keyword.Keyword + "\\" +
-                                                title);
+                string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + KEYWORDS_TITLE + "\\" + firstKeywordCharUpper + "\\" + keyword.Keyword + "\\" + title);
 
-
-                var pathFragments = path.Split('/').Where(IsNotEmpty).ToArray();
-                var breadcrumbFragments = breadcrumbs.Split('\\').Where(IsNotEmpty).ToArray();
+                string[] pathFragments = path.Split(separator: '/')
+                    .Where(IsNotEmpty)
+                    .ToArray();
+                string[] breadcrumbFragments = breadcrumbs.Split(separator: '\\')
+                    .Where(IsNotEmpty)
+                    .ToArray();
 
                 await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
-                var parentLevel =
-                    EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(pathFragments.Length - 1)));
+                string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
-                Console.WriteLine("Item: {0}", path);
+                Console.WriteLine(format: "Item: {0}", path);
 
-                await AppendVirtualEntry(contents, parentLevel, path, sourcePhotoFullPath,
-                    title,
-                    sourcePhoto);
+                await AppendVirtualEntry(contents, parentLevel, path, sourcePhotoFullPath, title, sourcePhoto);
             }
         }
 
         private static void RemoveObeseKeywordEntries(Dictionary<string, KeywordEntry> keywords)
         {
-            foreach (var keywordEntry in keywords.Where(entry => entry.Value.Photos.Count > MaxPhotosPerKeyword)
+            foreach (KeyValuePair<string, KeywordEntry> keywordEntry in keywords.Where(predicate: entry => entry.Value.Photos.Count > MAX_PHOTOS_PER_KEYWORD)
                 .ToList())
             {
-                Console.WriteLine("Removing over-sized probably generic keyword '{0}'", keywordEntry.Value.Keyword);
+                Console.WriteLine(format: "Removing over-sized probably generic keyword '{0}'", keywordEntry.Value.Keyword);
                 keywords.Remove(keywordEntry.Key);
             }
         }
 
-        private static void AppendKeywordsForLaterProcessing(Photo sourcePhoto,
-            Dictionary<string, KeywordEntry> keywords)
+        private static void AppendKeywordsForLaterProcessing(Photo sourcePhoto, Dictionary<string, KeywordEntry> keywords)
         {
-            var keywordMetadata =
-                sourcePhoto.Metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.Keywords);
-            if (keywordMetadata != null)
-                foreach (
-                    var keyword in
-                    keywordMetadata.Value.Replace(';', ',').Split(',')
-                        .Where(candidate => !string.IsNullOrWhiteSpace(candidate)))
-                {
-                    var safe =
-                        UrlNaming.BuildUrlSafePath(keyword.ToLowerInvariant())
-                            .TrimStart("-".ToArray())
-                            .TrimEnd("-".ToArray());
+            PhotoMetadata keywordMetadata = sourcePhoto.Metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.Keywords);
 
-                    KeywordEntry entry;
-                    if (!keywords.TryGetValue(safe, out entry))
+            if (keywordMetadata != null)
+            {
+                foreach (string keyword in keywordMetadata.Value.Replace(oldChar: ';', newChar: ',')
+                    .Split(separator: ',')
+                    .Where(predicate: candidate => !string.IsNullOrWhiteSpace(candidate)))
+                {
+                    string safe = UrlNaming.BuildUrlSafePath(keyword.ToLowerInvariant())
+                        .TrimStart("-".ToArray())
+                        .TrimEnd("-".ToArray());
+
+                    if (!keywords.TryGetValue(safe, out KeywordEntry entry))
                     {
                         entry = new KeywordEntry(keyword);
                         keywords.Add(safe, entry);
@@ -473,57 +476,75 @@ namespace BuildSiteIndex
 
                     entry.Photos.Add(sourcePhoto);
                 }
+            }
         }
 
         private static GalleryEntry FindParentAlbumPath(Dictionary<string, GalleryEntry> contents, Photo parentRecord)
         {
-            var path = parentRecord.BasePath;
+            string path = parentRecord.BasePath;
 
             GalleryEntry item;
+
             if (!contents.TryGetValue(path, out item) || item == null)
+            {
                 return null;
+            }
 
             return item;
         }
 
         private static void AddCoordinatesFromChildren(Dictionary<string, GalleryEntry> contents)
         {
-            foreach (var entry in contents.Values.Where(candidate => candidate.Location == null))
+            foreach (GalleryEntry entry in contents.Values.Where(predicate: candidate => candidate.Location == null))
+            {
                 if (entry.Children != null && entry.Children.Any())
                 {
-                    var locations = new List<Location>();
+                    List<Location> locations = new List<Location>();
 
                     AppendChildLocations(entry, locations);
 
-                    var location = LocationHelpers.GetCenterFromDegrees(locations);
+                    Location location = LocationHelpers.GetCenterFromDegrees(locations);
+
                     if (location != null)
+                    {
                         entry.Location = location;
+                    }
                 }
+            }
         }
 
         private static void AppendChildLocations(GalleryEntry entry, List<Location> locations)
         {
-            foreach (var child in entry.Children)
+            foreach (GalleryEntry child in entry.Children)
+            {
                 if (child.Children != null && child.Children.Any())
+                {
                     AppendChildLocations(child, locations);
+                }
                 else if (child.Location != null)
+                {
                     locations.Add(child.Location);
+                }
+            }
         }
 
         private static string EnsureTerminatedPath(string path)
         {
-            return EnsureEndsWithSpecificTerminator(path, "/");
+            return EnsureEndsWithSpecificTerminator(path, terminator: "/");
         }
 
         private static string EnsureTerminatedBreadcrumbs(string path)
         {
-            return EnsureEndsWithSpecificTerminator(path, "\\");
+            return EnsureEndsWithSpecificTerminator(path, terminator: "\\");
         }
 
         private static string EnsureEndsWithSpecificTerminator(string path, string terminator)
         {
             if (!path.EndsWith(terminator, StringComparison.Ordinal))
+            {
                 return path + terminator;
+            }
+
             return path;
         }
 
@@ -534,22 +555,27 @@ namespace BuildSiteIndex
 
         private static async Task ProcessSiteIndex(Dictionary<string, GalleryEntry> contents)
         {
-            var data = ProduceSiteIndex(contents);
+            GallerySiteIndex data = ProduceSiteIndex(contents);
 
-            var outputFilename = Path.Combine(Settings.OutputFolder, "site.js");
+            string outputFilename = Path.Combine(Settings.OutputFolder, path2: "site.js");
 
-            var json = JsonConvert.SerializeObject(data);
+            string json = JsonConvert.SerializeObject(data);
+
             if (!_ignoreExisting && File.Exists(outputFilename))
             {
-                Console.WriteLine("Previous Json file exists");
-                var originalBytes = await FileHelpers.ReadAllBytes(outputFilename);
-                var decoded = Encoding.UTF8.GetString(originalBytes);
+                Console.WriteLine(value: "Previous Json file exists");
+                byte[] originalBytes = await FileHelpers.ReadAllBytes(outputFilename);
+                string decoded = Encoding.UTF8.GetString(originalBytes);
+
                 if (decoded == json)
                 {
-                    Console.WriteLine("No changes since last run");
+                    Console.WriteLine(value: "No changes since last run");
+
                     return;
                 }
+
                 GallerySiteIndex oldData = null;
+
                 try
                 {
                     oldData = JsonConvert.DeserializeObject<GallerySiteIndex>(decoded);
@@ -560,13 +586,10 @@ namespace BuildSiteIndex
 
                 if (oldData != null)
                 {
-                    var deletedItems = FindDeletedItems(oldData, data);
-                    data.deletedItems.AddRange(deletedItems.OrderBy(x => x));
+                    List<string> deletedItems = FindDeletedItems(oldData, data);
+                    data.deletedItems.AddRange(deletedItems.OrderBy(keySelector: x => x));
 
-                    await Task.WhenAll(
-                            QueueUploadChanges(data, oldData),
-                            QueueUploadItemsToDelete(data, deletedItems)
-                        );
+                    await Task.WhenAll(QueueUploadChanges(data, oldData), QueueUploadItemsToDelete(data, deletedItems));
                 }
                 else
                 {
@@ -580,67 +603,65 @@ namespace BuildSiteIndex
 
             ExtensionMethods.RotateLastGenerations(outputFilename);
 
-            var encoded = Encoding.UTF8.GetBytes(json);
+            byte[] encoded = Encoding.UTF8.GetBytes(json);
             await FileHelpers.WriteAllBytes(outputFilename, encoded);
         }
 
         private static GallerySiteIndex ProduceSiteIndex(Dictionary<string, GalleryEntry> contents)
         {
             return new GallerySiteIndex
-            {
-                version = GalleryJsonVersion,
-                items = (from parentRecord in contents.Values
-                    orderby parentRecord.Path
-                    let siblings = GetSiblings(contents, parentRecord)
-                    let firstItem =
-                        GetFirstItem(siblings, parentRecord)
-                    let lastItem =
-                        GetLastItem(siblings, parentRecord)
-                    let previousItem =
-                        GetPreviousItem(siblings, parentRecord, firstItem)
-                    let nextItem =
-                        GetNextItem(siblings, parentRecord, lastItem)
-                    select new GalleryItem
-                    {
-                        Path = parentRecord.Path,
-                        OriginalAlbumPath = parentRecord.OriginalAlbumPath,
-                        Title = parentRecord.Title,
-                        Description = parentRecord.Description,
-                        DateCreated = parentRecord.DateCreated,
-                        DateUpdated = parentRecord.DateUpdated,
-                        Location = parentRecord.Location,
-                        Type = parentRecord.Children.Any() ? "folder" : "photo",
-                        ImageSizes = parentRecord.ImageSizes ?? new List<ImageSize>(),
-                        Metadata = parentRecord.Metadata ?? new List<PhotoMetadata>(),
-                        Keywords = parentRecord.Keywords ?? new List<string>(),
-                        First = firstItem,
-                        Previous = previousItem,
-                        Next = nextItem,
-                        Last = lastItem,
-                        Children = (from childRecord in parentRecord.Children
-                            where !IsHiddenItem(childRecord)
-                            orderby childRecord.Path
-                            select CreateGalleryChildItem(childRecord)).ToList(),
-                        Breadcrumbs = ExtractItemPreadcrumbs(contents, parentRecord)
-                    }).ToList(),
-                deletedItems = new List<string>()
-            };
+                   {
+                       version = GALLERY_JSON_VERSION,
+                       items = (from parentRecord in contents.Values
+                                orderby parentRecord.Path
+                                let siblings = GetSiblings(contents, parentRecord)
+                                let firstItem = GetFirstItem(siblings, parentRecord)
+                                let lastItem = GetLastItem(siblings, parentRecord)
+                                let previousItem = GetPreviousItem(siblings, parentRecord, firstItem)
+                                let nextItem = GetNextItem(siblings, parentRecord, lastItem)
+                                select new GalleryItem
+                                       {
+                                           Path = parentRecord.Path,
+                                           OriginalAlbumPath = parentRecord.OriginalAlbumPath,
+                                           Title = parentRecord.Title,
+                                           Description = parentRecord.Description,
+                                           DateCreated = parentRecord.DateCreated,
+                                           DateUpdated = parentRecord.DateUpdated,
+                                           Location = parentRecord.Location,
+                                           Type = parentRecord.Children.Any() ? "folder" : "photo",
+                                           ImageSizes = parentRecord.ImageSizes ?? new List<ImageSize>(),
+                                           Metadata = parentRecord.Metadata ?? new List<PhotoMetadata>(),
+                                           Keywords = parentRecord.Keywords ?? new List<string>(),
+                                           First = firstItem,
+                                           Previous = previousItem,
+                                           Next = nextItem,
+                                           Last = lastItem,
+                                           Children = (from childRecord in parentRecord.Children
+                                                       where !IsHiddenItem(childRecord)
+                                                       orderby childRecord.Path
+                                                       select CreateGalleryChildItem(childRecord)).ToList(),
+                                           Breadcrumbs = ExtractItemPreadcrumbs(contents, parentRecord)
+                                       }).ToList(),
+                       deletedItems = new List<string>()
+                   };
         }
 
-        private static List<GalleryChildItem> ExtractItemPreadcrumbs(Dictionary<string, GalleryEntry> contents,
-            GalleryEntry parentRecord)
+        private static List<GalleryChildItem> ExtractItemPreadcrumbs(Dictionary<string, GalleryEntry> contents, GalleryEntry parentRecord)
         {
-            var items = new List<GalleryChildItem>();
+            List<GalleryChildItem> items = new List<GalleryChildItem>();
 
-            var breadcrumbFragments = parentRecord.Path.Split('/').Where(IsNotEmpty).ToArray();
+            string[] breadcrumbFragments = parentRecord.Path.Split(separator: '/')
+                .Where(IsNotEmpty)
+                .ToArray();
 
-            for (var folderLevel = 1; folderLevel < breadcrumbFragments.Length; ++folderLevel)
+            for (int folderLevel = 1; folderLevel < breadcrumbFragments.Length; ++folderLevel)
             {
-                var level = EnsureTerminatedPath("/" + string.Join("/", breadcrumbFragments.Take(folderLevel)));
+                string level = EnsureTerminatedPath("/" + string.Join(separator: "/", breadcrumbFragments.Take(folderLevel)));
 
-                GalleryEntry item;
-                if (!contents.TryGetValue(level, out item) || item == null)
+                if (!contents.TryGetValue(level, out GalleryEntry item) || item == null)
+                {
                     return new List<GalleryChildItem>();
+                }
 
                 items.Add(CreateGalleryChildItem(item));
             }
@@ -665,47 +686,48 @@ namespace BuildSiteIndex
 
         private static bool IsUnderHiddenItem(string path)
         {
-            return path.StartsWith("/albums/private/", StringComparison.OrdinalIgnoreCase);
+            return path.StartsWith(value: "/albums/private/", StringComparison.OrdinalIgnoreCase);
         }
 
         private static Task QueueUploadItemsToDelete(GallerySiteIndex data, List<string> deletedItems)
         {
-            return Task.WhenAll(
-                deletedItems.Select(
-                    path =>
-                        QueueUploadOneItem(data, new GalleryItem
-                            {
-                                Path = path
-                            },
-                            UploadType.DeleteItem
-                        )
-                )
-            );
+            return Task.WhenAll(deletedItems.Select(selector: path => QueueUploadOneItem(data, new GalleryItem {Path = path}, UploadType.DeleteItem)));
         }
 
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
         {
-            var oldItems = oldData.items.Select(r => r.Path).ToList();
-            var newItems = data.items.Select(r => r.Path).ToList();
+            List<string> oldItems = oldData.items.Select(selector: r => r.Path)
+                .ToList();
+            List<string> newItems = data.items.Select(selector: r => r.Path)
+                .ToList();
 
-            var deletedItems = oldItems.Where(oldItem => !newItems.Contains(oldItem)).ToList();
+            List<string> deletedItems = oldItems.Where(predicate: oldItem => !newItems.Contains(oldItem))
+                .ToList();
 
             if (oldData.deletedItems != null)
-                foreach (var oldDeletedItem in oldData.deletedItems)
+            {
+                foreach (string oldDeletedItem in oldData.deletedItems)
+                {
                     if (!newItems.Contains(oldDeletedItem) && !deletedItems.Contains(oldDeletedItem))
+                    {
                         deletedItems.Add(oldDeletedItem);
+                    }
+                }
+            }
+
             return deletedItems;
         }
 
         private static Task QueueUploadAllItems(GallerySiteIndex data)
         {
-            return Task.WhenAll(UploadOrdering(data).Select(item => QueueUploadOneItem(data, item, UploadType.NewItem)));
+            return Task.WhenAll(UploadOrdering(data)
+                                    .Select(selector: item => QueueUploadOneItem(data, item, UploadType.NewItem)));
         }
 
         private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
         {
             return data.items.OrderBy(StrictTypeOrdering)
-                .OrderBy(candidate => candidate.Path);
+                .OrderBy(keySelector: candidate => candidate.Path);
         }
 
         private static int StrictTypeOrdering(GalleryItem candidate)
@@ -716,31 +738,29 @@ namespace BuildSiteIndex
 
         private static Task QueueUploadChanges(GallerySiteIndex data, GallerySiteIndex oldData)
         {
-            return Task.WhenAll(UploadOrdering(data).Select(item => QueueOneNewOrModifiedItem(data, oldData, item)));
+            return Task.WhenAll(UploadOrdering(data)
+                                    .Select(selector: item => QueueOneNewOrModifiedItem(data, oldData, item)));
         }
 
         private static async Task QueueOneNewOrModifiedItem(GallerySiteIndex data, GallerySiteIndex oldData, GalleryItem item)
         {
-            var oldItem = oldData.items.FirstOrDefault(candidate => candidate.Path == item.Path);
+            GalleryItem oldItem = oldData.items.FirstOrDefault(predicate: candidate => candidate.Path == item.Path);
+
             if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
+            {
                 await QueueUploadOneItem(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem);
+            }
         }
 
         private static Task QueueUploadOneItem(GallerySiteIndex data, GalleryItem item, UploadType uploadType)
         {
-            var key = BuildUploadQueueHash(item);
+            string key = BuildUploadQueueHash(item);
 
-            var queueItem = new UploadQueueItem
-            {
-                Version = data.version,
-                Item = item,
-                UploadType = uploadType
-            };
+            UploadQueueItem queueItem = new UploadQueueItem {Version = data.version, Item = item, UploadType = uploadType};
 
+            string filename = BuildQueueItemFileName(key);
 
-            var filename = BuildQueueItemFileName(key);
-
-            var json = JsonConvert.SerializeObject(queueItem);
+            string json = JsonConvert.SerializeObject(queueItem);
 
             return FileHelpers.WriteAllBytes(filename, Encoding.UTF8.GetBytes(json));
         }
@@ -763,67 +783,65 @@ namespace BuildSiteIndex
         private static async Task<bool> UploadOneItem(UploadQueueItem item)
         {
             // TODO - move the intialization etc somewhere else.
-            var uh = new Upload.UploadHelper(new Uri(Settings.WebServerBaseAddress));
-            
-            var itemToPost = CreateItemToPost(item);
+            UploadHelper uh = new UploadHelper(new Uri(Settings.WebServerBaseAddress));
 
-            var progressText = item.Path;
+            GallerySiteIndex itemToPost = CreateItemToPost(item);
+
+            string progressText = item.Path;
 
             const int maxRetries = 5;
-            var uploaded = false;
-            var retry = 0;
+            bool uploaded = false;
+            int retry = 0;
+
             do
             {
                 uploaded = await uh.UploadItem(itemToPost, progressText, item.UploadType);
                 ++retry;
             } while (!uploaded && retry < maxRetries);
+
             return uploaded;
         }
 
-        
-
-
         private static GallerySiteIndex CreateItemToPost(UploadQueueItem item)
         {
-            var itemToPost = new GallerySiteIndex
-            {
-                version = item.Version,
-                items = new List<GalleryItem>(),
-                deletedItems = new List<string>()
-            };
+            GallerySiteIndex itemToPost = new GallerySiteIndex {version = item.Version, items = new List<GalleryItem>(), deletedItems = new List<string>()};
 
             if (item.UploadType == UploadType.DeleteItem)
+            {
                 itemToPost.deletedItems.Add(item.Item.Path);
+            }
             else
+            {
                 itemToPost.items.Add(item.Item);
+            }
 
             return itemToPost;
         }
 
-        private static GalleryChildItem GetNextItem(List<GalleryEntry> siblings, GalleryEntry parentRecord,
-            GalleryChildItem lastItem)
+        private static GalleryChildItem GetNextItem(List<GalleryEntry> siblings, GalleryEntry parentRecord, GalleryChildItem lastItem)
         {
-            var candidate = siblings.SkipWhile(x => x != parentRecord)
-                .Skip(1)
+            GalleryChildItem candidate = siblings.SkipWhile(predicate: x => x != parentRecord)
+                .Skip(count: 1)
                 .Select(CreateGalleryChildItem)
-                .FirstOrDefault(item => !IsHiddenItem(item));
+                .FirstOrDefault(predicate: item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, lastItem);
         }
 
-        private static GalleryChildItem SkipKnownItem(GalleryChildItem candidate,
-            GalleryChildItem itemToIgnoreIfMataches)
+        private static GalleryChildItem SkipKnownItem(GalleryChildItem candidate, GalleryChildItem itemToIgnoreIfMataches)
         {
             if (candidate != null && candidate.Path == itemToIgnoreIfMataches.Path)
+            {
                 return null;
+            }
 
             return candidate;
         }
 
         private static GalleryChildItem GetFirstItem(List<GalleryEntry> siblings, GalleryEntry parentRecord)
         {
-            var candidate = siblings
-                .Select(CreateGalleryChildItem).FirstOrDefault(item => !IsHiddenItem(item));
+            GalleryChildItem candidate = siblings.Select(CreateGalleryChildItem)
+                .FirstOrDefault(predicate: item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, parentRecord);
         }
@@ -831,7 +849,9 @@ namespace BuildSiteIndex
         private static GalleryChildItem SkipKnownItem(GalleryChildItem candidate, GalleryEntry itemToIgnoreIfMataches)
         {
             if (candidate != null && candidate.Path == itemToIgnoreIfMataches.Path)
+            {
                 return null;
+            }
 
             return candidate;
         }
@@ -839,33 +859,32 @@ namespace BuildSiteIndex
         private static GalleryChildItem CreateGalleryChildItem(GalleryEntry firstRecord)
         {
             return new GalleryChildItem
-            {
-                Path = firstRecord.Path,
-                OriginalAlbumPath = firstRecord.OriginalAlbumPath,
-                Title = firstRecord.Title,
-                Description = firstRecord.Description,
-                DateCreated = firstRecord.DateCreated,
-                DateUpdated = firstRecord.DateUpdated,
-                Location = firstRecord.Location,
-                Type = firstRecord.Children.Any() ? "folder" : "photo",
-                ImageSizes = firstRecord.ImageSizes ?? new List<ImageSize>()
-            };
+                   {
+                       Path = firstRecord.Path,
+                       OriginalAlbumPath = firstRecord.OriginalAlbumPath,
+                       Title = firstRecord.Title,
+                       Description = firstRecord.Description,
+                       DateCreated = firstRecord.DateCreated,
+                       DateUpdated = firstRecord.DateUpdated,
+                       Location = firstRecord.Location,
+                       Type = firstRecord.Children.Any() ? "folder" : "photo",
+                       ImageSizes = firstRecord.ImageSizes ?? new List<ImageSize>()
+                   };
         }
 
         private static GalleryChildItem GetLastItem(List<GalleryEntry> siblings, GalleryEntry parentRecord)
         {
-            var candidate = siblings
-                .Select(CreateGalleryChildItem).LastOrDefault(item => !IsHiddenItem(item));
+            GalleryChildItem candidate = siblings.Select(CreateGalleryChildItem)
+                .LastOrDefault(predicate: item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, parentRecord);
         }
 
-        private static GalleryChildItem GetPreviousItem(List<GalleryEntry> siblings, GalleryEntry parentRecord,
-            GalleryChildItem firstItem)
+        private static GalleryChildItem GetPreviousItem(List<GalleryEntry> siblings, GalleryEntry parentRecord, GalleryChildItem firstItem)
         {
-            var candidate = siblings.TakeWhile(x => x != parentRecord)
+            GalleryChildItem candidate = siblings.TakeWhile(predicate: x => x != parentRecord)
                 .Select(CreateGalleryChildItem)
-                .LastOrDefault(item => !IsHiddenItem(item));
+                .LastOrDefault(predicate: item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, firstItem);
         }
@@ -874,161 +893,182 @@ namespace BuildSiteIndex
         {
             // Actually yield "the previous two" as well as the current one - this
             // is easier to implement than "previous and next" but they're equivalent
-            using (var iterator = source.GetEnumerator())
+            using (IEnumerator<T> iterator = source.GetEnumerator())
             {
                 if (!iterator.MoveNext())
+                {
                     yield break;
-                var lastButOne = iterator.Current;
+                }
+
+                T lastButOne = iterator.Current;
+
                 if (!iterator.MoveNext())
+                {
                     yield break;
-                var previous = iterator.Current;
+                }
+
+                T previous = iterator.Current;
+
                 while (iterator.MoveNext())
                 {
-                    var current = iterator.Current;
+                    T current = iterator.Current;
+
                     yield return Tuple.Create(lastButOne, previous, current);
+
                     lastButOne = previous;
                     previous = current;
                 }
             }
         }
 
-
         private static List<GalleryEntry> GetSiblings(Dictionary<string, GalleryEntry> contents, GalleryEntry entry)
         {
             if (entry.Path.Length == 1)
+            {
                 return new List<GalleryEntry>();
+            }
 
-            var parentPathIndex = entry.Path.LastIndexOf('/', entry.Path.Length - 2);
+            int parentPathIndex = entry.Path.LastIndexOf(value: '/', entry.Path.Length - 2);
+
             if (parentPathIndex == -1)
+            {
                 return new List<GalleryEntry>();
+            }
 
-            var parentPath = entry.Path.Substring(0, parentPathIndex + 1);
+            string parentPath = entry.Path.Substring(startIndex: 0, parentPathIndex + 1);
 
-            GalleryEntry parentItem;
-            if (contents.TryGetValue(parentPath, out parentItem) && parentItem != null)
-                return new List<GalleryEntry>(parentItem.Children.OrderBy(item => item.Path));
+            if (contents.TryGetValue(parentPath, out GalleryEntry parentItem) && parentItem != null)
+            {
+                return new List<GalleryEntry>(parentItem.Children.OrderBy(keySelector: item => item.Path));
+            }
 
             return new List<GalleryEntry>();
         }
 
-
-        private static async Task AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel,
-            string path,
-            string title, Photo sourcePhoto)
+        private static async Task AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path, string title, Photo sourcePhoto)
         {
-            DateTime dateCreated;
-            DateTime dateUpdated;
-            ExtractDates(sourcePhoto, out dateCreated, out dateUpdated);
+            ExtractDates(sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
 
-            var description = ExtractDescription(sourcePhoto);
+            string description = ExtractDescription(sourcePhoto);
 
-            var location = ExtractLocation(sourcePhoto);
+            Location location = ExtractLocation(sourcePhoto);
 
-            var rating = ExtractRating(sourcePhoto);
+            int rating = ExtractRating(sourcePhoto);
 
-            var keywords = ExtractKeywords(sourcePhoto);
+            List<string> keywords = ExtractKeywords(sourcePhoto);
 
             if (IsUnderHiddenItem(path))
-                keywords = new List<string>();
-
-            await AppendEntry(contents, parentLevel, path, new GalleryEntry
             {
-                Path = path,
-                OriginalAlbumPath = null,
-                Title = title,
-                Description = description,
-                Children = new List<GalleryEntry>(),
-                Location = location,
-                ImageSizes = sourcePhoto.ImageSizes,
-                Rating = rating,
-                Metadata =
-                    sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                        .OrderBy(item => item.Name.ToLowerInvariant())
-                        .ToList(),
-                Keywords = keywords,
-                DateCreated = dateCreated,
-                DateUpdated = dateUpdated
-            });
+                keywords = new List<string>();
+            }
+
+            await AppendEntry(contents,
+                              parentLevel,
+                              path,
+                              new GalleryEntry
+                              {
+                                  Path = path,
+                                  OriginalAlbumPath = null,
+                                  Title = title,
+                                  Description = description,
+                                  Children = new List<GalleryEntry>(),
+                                  Location = location,
+                                  ImageSizes = sourcePhoto.ImageSizes,
+                                  Rating = rating,
+                                  Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                                      .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                      .ToList(),
+                                  Keywords = keywords,
+                                  DateCreated = dateCreated,
+                                  DateUpdated = dateUpdated
+                              });
         }
 
-        private static async Task AppendVirtualEntry(Dictionary<string, GalleryEntry> contents, string parentLevel,
-            string path, string originalPath,
-            string title, Photo sourcePhoto)
+        private static async Task AppendVirtualEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path, string originalPath, string title, Photo sourcePhoto)
         {
-            DateTime dateCreated;
-            DateTime dateUpdated;
-            ExtractDates(sourcePhoto, out dateCreated, out dateUpdated);
+            ExtractDates(sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
 
-            var description = ExtractDescription(sourcePhoto);
+            string description = ExtractDescription(sourcePhoto);
 
-            var location = ExtractLocation(sourcePhoto);
+            Location location = ExtractLocation(sourcePhoto);
 
-            var rating = ExtractRating(sourcePhoto);
+            int rating = ExtractRating(sourcePhoto);
 
-            var keywords = ExtractKeywords(sourcePhoto);
+            List<string> keywords = ExtractKeywords(sourcePhoto);
 
-            await AppendEntry(contents, parentLevel, path, new GalleryEntry
-            {
-                Path = path,
-                OriginalAlbumPath = originalPath,
-                Title = title,
-                Description = description,
-                Children = new List<GalleryEntry>(),
-                Location = location,
-                ImageSizes = sourcePhoto.ImageSizes,
-                Rating = rating,
-                Metadata =
-                    sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                        .OrderBy(item => item.Name.ToLowerInvariant())
-                        .ToList(),
-                Keywords = keywords,
-                DateCreated = dateCreated,
-                DateUpdated = dateUpdated
-            });
+            await AppendEntry(contents,
+                              parentLevel,
+                              path,
+                              new GalleryEntry
+                              {
+                                  Path = path,
+                                  OriginalAlbumPath = originalPath,
+                                  Title = title,
+                                  Description = description,
+                                  Children = new List<GalleryEntry>(),
+                                  Location = location,
+                                  ImageSizes = sourcePhoto.ImageSizes,
+                                  Rating = rating,
+                                  Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                                      .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                      .ToList(),
+                                  Keywords = keywords,
+                                  DateCreated = dateCreated,
+                                  DateUpdated = dateUpdated
+                              });
         }
 
         private static async Task AppendVirtualEntryPhotoForGalleryEntry(Dictionary<string, GalleryEntry> contents,
-            string parentLevel,
-            string path, string originalPath,
-            string title, GalleryEntry sourcePhoto)
+                                                                         string parentLevel,
+                                                                         string path,
+                                                                         string originalPath,
+                                                                         string title,
+                                                                         GalleryEntry sourcePhoto)
         {
-            var dateCreated = sourcePhoto.DateCreated;
-            var dateUpdated = sourcePhoto.DateUpdated;
+            DateTime dateCreated = sourcePhoto.DateCreated;
+            DateTime dateUpdated = sourcePhoto.DateUpdated;
 
-            var description = sourcePhoto.Description;
+            string description = sourcePhoto.Description;
 
-            var location = sourcePhoto.Location;
+            Location location = sourcePhoto.Location;
 
-            var rating = sourcePhoto.Rating;
+            int rating = sourcePhoto.Rating;
 
-            var keywords = sourcePhoto.Keywords;
+            List<string> keywords = sourcePhoto.Keywords;
 
-            await AppendEntry(contents, parentLevel, path, new GalleryEntry
-            {
-                Path = path,
-                OriginalAlbumPath = originalPath,
-                Title = title,
-                Description = description,
-                Children = new List<GalleryEntry>(),
-                Location = location,
-                ImageSizes = sourcePhoto.ImageSizes,
-                Rating = rating,
-                Metadata =
-                    sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                        .OrderBy(item => item.Name.ToLowerInvariant())
-                        .ToList(),
-                Keywords = keywords,
-                DateCreated = dateCreated,
-                DateUpdated = dateUpdated
-            });
+            await AppendEntry(contents,
+                              parentLevel,
+                              path,
+                              new GalleryEntry
+                              {
+                                  Path = path,
+                                  OriginalAlbumPath = originalPath,
+                                  Title = title,
+                                  Description = description,
+                                  Children = new List<GalleryEntry>(),
+                                  Location = location,
+                                  ImageSizes = sourcePhoto.ImageSizes,
+                                  Rating = rating,
+                                  Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                                      .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                      .ToList(),
+                                  Keywords = keywords,
+                                  DateCreated = dateCreated,
+                                  DateUpdated = dateUpdated
+                              });
         }
 
         private static List<string> ExtractKeywords(Photo sourcePhoto)
         {
-            var kwd = sourcePhoto.Metadata.FirstOrDefault(
-                item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Keywords));
+            PhotoMetadata kwd = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Keywords));
+
             if (kwd != null)
-                return kwd.Value.Replace(';', ',').Split(',').Where(IsValidKeywordName).ToList();
+            {
+                return kwd.Value.Replace(oldChar: ';', newChar: ',')
+                    .Split(separator: ',')
+                    .Where(IsValidKeywordName)
+                    .ToList();
+            }
 
             return new List<string>();
         }
@@ -1040,7 +1080,7 @@ namespace BuildSiteIndex
 
         private static bool IsPublishableMetadata(PhotoMetadata metadata)
         {
-            var notPublishable = new[]
+            string[] notPublishable =
             {
                 MetadataNames.Title,
                 MetadataNames.DateTaken,
@@ -1051,137 +1091,144 @@ namespace BuildSiteIndex
                 MetadataNames.Comment
             };
 
-            return notPublishable.All(item => !StringComparer.InvariantCultureIgnoreCase.Equals(item, metadata.Name));
+            return notPublishable.All(predicate: item => !StringComparer.InvariantCultureIgnoreCase.Equals(item, metadata.Name));
         }
 
         private static int ExtractRating(Photo sourcePhoto)
         {
-            var rating = 1;
-            var rat = sourcePhoto.Metadata.FirstOrDefault(
-                item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Rating));
+            int rating = 1;
+            PhotoMetadata rat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Rating));
+
             if (rat != null)
+            {
                 if (!int.TryParse(rat.Value, out rating) || rating < 1 || rating > 5)
+                {
                     rating = 1;
+                }
+            }
+
             return rating;
         }
 
         private static void ExtractDates(Photo sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated)
         {
-            dateCreated = sourcePhoto.Files.Min(file => file.LastModified);
-            dateUpdated = sourcePhoto.Files.Max(file => file.LastModified);
+            dateCreated = sourcePhoto.Files.Min(selector: file => file.LastModified);
+            dateUpdated = sourcePhoto.Files.Max(selector: file => file.LastModified);
 
-            var taken =
-                sourcePhoto.Metadata.FirstOrDefault(
-                    item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.DateTaken));
+            PhotoMetadata taken = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.DateTaken));
+
             if (taken != null)
             {
                 // Extract the date from the value;
-                DateTime when;
-                if (DateTime.TryParse(taken.Value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces,
-                    out when))
+
+                if (DateTime.TryParse(taken.Value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out DateTime when))
                 {
                     if (when < dateCreated)
+                    {
                         dateCreated = when;
+                    }
 
                     if (when > dateUpdated)
+                    {
                         dateUpdated = when;
+                    }
                 }
             }
         }
 
         private static string ExtractTitle(Photo sourcePhoto)
         {
-            var description = string.Empty;
-            var desc =
-                sourcePhoto.Metadata.FirstOrDefault(
-                    item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Title));
+            string description = string.Empty;
+            PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Title));
+
             if (desc != null)
+            {
                 description = desc.Value;
+            }
 
             return description;
         }
 
         private static string ExtractDescription(Photo sourcePhoto)
         {
-            var description = string.Empty;
-            var desc =
-                sourcePhoto.Metadata.FirstOrDefault(
-                    item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
+            string description = string.Empty;
+            PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
+
             if (desc != null)
+            {
                 description = desc.Value;
+            }
+
             return description;
         }
 
         private static Location ExtractLocation(Photo sourcePhoto)
         {
             Location location = null;
-            var lat = sourcePhoto.Metadata.FirstOrDefault(
-                item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Latitude));
-            var lng = sourcePhoto.Metadata.FirstOrDefault(
-                item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Longitude));
+            PhotoMetadata lat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Latitude));
+            PhotoMetadata lng = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Longitude));
+
             if (lat != null && lng != null)
             {
-                double latitude;
-                double longitude;
-                if (double.TryParse(lat.Value, out latitude) && double.TryParse(lng.Value, out longitude))
-                    location = new Location
-                    {
-                        Latitude = latitude,
-                        Longitude = longitude
-                    };
+                if (double.TryParse(lat.Value, out double latitude) && double.TryParse(lng.Value, out double longitude))
+                {
+                    location = new Location {Latitude = latitude, Longitude = longitude};
+                }
             }
+
             return location;
         }
 
-        private static async Task EnsureParentFoldersExist(string[] pathFragments, string[] breadcrumbFragments,
-            Dictionary<string, GalleryEntry> contents)
+        private static async Task EnsureParentFoldersExist(string[] pathFragments, string[] breadcrumbFragments, Dictionary<string, GalleryEntry> contents)
         {
-            for (var folderLevel = 1; folderLevel < pathFragments.Length; ++folderLevel)
+            for (int folderLevel = 1; folderLevel < pathFragments.Length; ++folderLevel)
             {
-                var level = EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(folderLevel)));
+                string level = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(folderLevel)));
 
-                GalleryEntry item;
-                if (!contents.TryGetValue(level, out item))
+                if (!contents.TryGetValue(level, out GalleryEntry _))
                 {
-                    var parentLevel =
-                        EnsureTerminatedPath("/" + string.Join("/", pathFragments.Take(folderLevel - 1)));
+                    string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(folderLevel - 1)));
 
-                    await AppendEntry(contents, parentLevel, level, new GalleryEntry
-                    {
-                        Path = level,
-                        OriginalAlbumPath = null,
-                        Title = breadcrumbFragments[folderLevel - 1].ReformatTitle(DateFormat.LongDate),
-                        Description = string.Empty,
-                        Location = null,
-                        Children = new List<GalleryEntry>(),
-                        DateCreated = DateTime.MaxValue,
-                        DateUpdated = DateTime.MinValue
-                    });
+                    await AppendEntry(contents,
+                                      parentLevel,
+                                      level,
+                                      new GalleryEntry
+                                      {
+                                          Path = level,
+                                          OriginalAlbumPath = null,
+                                          Title = breadcrumbFragments[folderLevel - 1]
+                                              .ReformatTitle(DateFormat.LongDate),
+                                          Description = string.Empty,
+                                          Location = null,
+                                          Children = new List<GalleryEntry>(),
+                                          DateCreated = DateTime.MaxValue,
+                                          DateUpdated = DateTime.MinValue
+                                      });
                 }
             }
         }
 
-        private static async Task AppendEntry(Dictionary<string, GalleryEntry> contents, string parentPath,
-            string itemPath,
-            GalleryEntry entry)
+        private static async Task AppendEntry(Dictionary<string, GalleryEntry> contents, string parentPath, string itemPath, GalleryEntry entry)
         {
             await _entrySemaphore.WaitAsync();
+
             try
             {
-                GalleryEntry parent;
-                if (!contents.TryGetValue(parentPath, out parent))
+                if (!contents.TryGetValue(parentPath, out GalleryEntry parent))
+                {
                     throw new ApplicationException("Could not find: " + parentPath);
+                }
 
-                GalleryEntry current;
-                if (contents.TryGetValue(itemPath, out current))
+                if (contents.TryGetValue(itemPath, out GalleryEntry _))
                 {
                     // This shouldn't ever happen, but wth, it does!
-                    Console.WriteLine("ERROR: DUPLICATE PATH: {0}", itemPath);
+                    Console.WriteLine(format: "ERROR: DUPLICATE PATH: {0}", itemPath);
+
                     return;
                 }
 
-                Console.WriteLine(" * Path: {0}", itemPath);
-                Console.WriteLine("   + Title: {0}", entry.Title);
+                Console.WriteLine(format: " * Path: {0}", itemPath);
+                Console.WriteLine(format: "   + Title: {0}", entry.Title);
                 parent.Children.Add(entry);
 
                 contents.Add(itemPath, entry);
@@ -1195,22 +1242,23 @@ namespace BuildSiteIndex
         private static async Task AppendRootEntry(Dictionary<string, GalleryEntry> contents)
         {
             {
-                var entry = new GalleryEntry
-                {
-                    Path = "/",
-                    OriginalAlbumPath = null,
-                    Title = "Mark Ridgwell Photography",
-                    Description = "Photos taken by Mark Ridgwell.",
-                    Location = null,
-                    Children = new List<GalleryEntry>(),
-                    DateCreated = DateTime.MaxValue,
-                    DateUpdated = DateTime.MinValue
-                };
+                GalleryEntry entry = new GalleryEntry
+                                     {
+                                         Path = "/",
+                                         OriginalAlbumPath = null,
+                                         Title = "Mark Ridgwell Photography",
+                                         Description = "Photos taken by Mark Ridgwell.",
+                                         Location = null,
+                                         Children = new List<GalleryEntry>(),
+                                         DateCreated = DateTime.MaxValue,
+                                         DateUpdated = DateTime.MinValue
+                                     };
 
                 await _entrySemaphore.WaitAsync();
+
                 try
                 {
-                    contents.Add("/", entry);
+                    contents.Add(key: "/", entry);
                 }
                 finally
                 {
@@ -1223,10 +1271,7 @@ namespace BuildSiteIndex
         {
             private int itemsUploaded;
 
-            public bool MaxReached
-            {
-                get { return HasMaxBeenReached(itemsUploaded); }
-            }
+            public bool MaxReached => this.HasMaxBeenReached(this.itemsUploaded);
 
             private bool HasMaxBeenReached(int count)
             {
@@ -1235,9 +1280,9 @@ namespace BuildSiteIndex
 
             public bool Increment()
             {
-                var value = Interlocked.Increment(ref itemsUploaded);
+                int value = Interlocked.Increment(ref this.itemsUploaded);
 
-                return HasMaxBeenReached(value);
+                return this.HasMaxBeenReached(value);
             }
         }
 
@@ -1257,11 +1302,13 @@ namespace BuildSiteIndex
 
             protected override JsonContract CreateContract(Type objectType)
             {
-                var contract = base.CreateContract(objectType);
+                JsonContract contract = base.CreateContract(objectType);
 
                 // this will only be called once and then cached
                 if (objectType == typeof(DateTime) || objectType == typeof(DateTimeOffset))
+                {
                     contract.Converter = new JavaScriptDateTimeConverter();
+                }
 
                 return contract;
             }

@@ -1,21 +1,21 @@
-﻿namespace OutputBuilderClient
-{
-    using System;
+﻿using System;
 
+namespace OutputBuilderClient
+{
     internal static class MetadataFormatting
     {
         public static string FormatAperture(double d)
         {
-            var sz = string.Empty;
+            string sz = string.Empty;
 
             if (d != 0.0)
             {
-                var dd = MetadataNormalizationFunctions.ClosestFStop(d);
+                double dd = MetadataNormalizationFunctions.ClosestFStop(d);
 
                 if (!double.IsInfinity(dd) && dd > 0)
                 {
                     //sprintf_s(sz, len, "f/%.01f", dd);
-                    sz = string.Format("f/{0:0.0#}", dd);
+                    sz = string.Format(format: "f/{0:0.0#}", dd);
                 }
             }
             else
@@ -46,13 +46,13 @@
                         else
                         {
                             // sprintf_s(sz, len, "1/%ds", ExpRound(1.0 / d));
-                            sz = string.Format("1/{0}s", n);
+                            sz = string.Format(format: "1/{0}s", n);
                         }
                     }
                     else
                     {
                         //sprintf_s(sz, len, "%ds", ExpRound(d));
-                        sz = string.Format("{0}s", ExpRound(d));
+                        sz = string.Format(format: "{0}s", ExpRound(d));
                     }
                 }
                 else
@@ -60,12 +60,12 @@
                     if (d < 1.0)
                     {
                         // sprintf_s(sz, len, "1/%ds", Core::Round(1.0 / d));
-                        sz = string.Format("1/{0}s", Round(1.0 / d));
+                        sz = string.Format(format: "1/{0}s", Round(1.0 / d));
                     }
                     else
                     {
                         //sprintf_s(sz, len, "%ds", Core::Round(d));
-                        sz = string.Format("{0}s", Round(d));
+                        sz = string.Format(format: "{0}s", Round(d));
                     }
                 }
             }
@@ -76,19 +76,19 @@
         public static string FormatFNumber(double d)
         {
             // sprintf_s(sz, len, "f/%.01f", d)
-            return string.Format("f/{0:0.#}", d);
+            return string.Format(format: "f/{0:0.#}", d);
         }
 
         public static string FormatFocalLength(double d, int filmEquivalent = 0)
         {
-            var sz = string.Empty;
+            string sz = string.Empty;
 
             if (d != 0.0)
             {
                 if (filmEquivalent != 0)
                 {
                     // sprintf_s(sz, len, "%.1fmm (%dmm film eq)", d, filmEquivalent);
-                    sz = string.Format("{0:0.#}mm ({1}mm film eq)", d, filmEquivalent);
+                    sz = string.Format(format: "{0:0.#}mm ({1}mm film eq)", d, filmEquivalent);
                 }
                 else
                 {
@@ -107,36 +107,50 @@
         private static int ExpRound(double d)
         {
             int n = Round(d);
-            if (n >= 950) return Round(n, 1000);
-            if (n >= 95) return Round(n, 100);
-            if (n >= 5) return Round(n, 10);
+
+            if (n >= 950)
+            {
+                return Round(n, y: 1000);
+            }
+
+            if (n >= 95)
+            {
+                return Round(n, y: 100);
+            }
+
+            if (n >= 5)
+            {
+                return Round(n, y: 10);
+            }
+
             return n;
         }
 
         private static int Round(double d)
         {
-            if (double.IsNaN(d)) return 0;
+            if (double.IsNaN(d))
+            {
+                return 0;
+            }
 
             double f = Math.Floor(d);
 
-            if ((d - f) >= 0.5)
+            if (d - f >= 0.5)
             {
-                return (int)(d >= 0.0 ? Math.Ceiling(d) : f);
+                return (int) (d >= 0.0 ? Math.Ceiling(d) : f);
             }
-            else
-            {
-                return (int)(d < 0.0 ? Math.Ceiling(d) : f);
-            }
+
+            return (int) (d < 0.0 ? Math.Ceiling(d) : f);
         }
 
         private static int Round(int x, int y)
         {
-            return ((x + (y / 2)) / y) * y;
+            return (x + y / 2) / y * y;
         }
 
         private static long Round(long x, long y)
         {
-            return ((x + (y / 2)) / y) * y;
+            return (x + y / 2) / y * y;
         }
     }
 }

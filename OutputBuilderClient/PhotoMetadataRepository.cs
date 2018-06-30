@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.IO;
 using Newtonsoft.Json;
 using ObjectModel;
 using OutputBuilderClient.Properties;
@@ -15,21 +15,18 @@ namespace OutputBuilderClient
     {
         public static async Task<Photo[]> LoadRepository(string baseFolder)
         {
-            await ConsoleOutput.Line("Loading Repository from {0}...", baseFolder);
-            var scores = new[]
-            {
-                ".info"
-            };
+            await ConsoleOutput.Line(formatString: "Loading Repository from {0}...", baseFolder);
+            string[] scores = {".info"};
 
-            var sidecarFiles = new List<string>();
+            List<string> sidecarFiles = new List<string>();
 
-            var emitter = new PhotoInfoEmitter(baseFolder);
+            PhotoInfoEmitter emitter = new PhotoInfoEmitter(baseFolder);
 
             if (Directory.Exists(baseFolder))
             {
-                var filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                long filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
-                await ConsoleOutput.Line("{0} : Files Found: {1}", baseFolder, filesFound);
+                await ConsoleOutput.Line(formatString: "{0} : Files Found: {1}", baseFolder, filesFound);
             }
 
             return emitter.Photos;
@@ -37,47 +34,31 @@ namespace OutputBuilderClient
 
         public static async Task<Photo[]> LoadEmptyRepository(string baseFolder)
         {
-            await ConsoleOutput.Line("Loading Repository from {0}...", baseFolder);
+            await ConsoleOutput.Line(formatString: "Loading Repository from {0}...", baseFolder);
 
-            var emitter = new RawFileInfoEmitter();
+            RawFileInfoEmitter emitter = new RawFileInfoEmitter();
 
-            var scores = new[]
-            {
-                ".xmp",
-                ".jpg",
-                ".cr2",
-                ".mrw",
-                ".rw2",
-                ".tif",
-                ".tiff",
-                ".psd"
-            };
+            string[] scores = {".xmp", ".jpg", ".cr2", ".mrw", ".rw2", ".tif", ".tiff", ".psd"};
 
-            var sidecarFiles = new[]
-            {
-                ".xmp"
-            };
+            string[] sidecarFiles = {".xmp"};
 
-            var filesFound =
-                await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
+            long filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
 
-            await ConsoleOutput.Line("{0} : Files Found: {1}", baseFolder, filesFound);
+            await ConsoleOutput.Line(formatString: "{0} : Files Found: {1}", baseFolder, filesFound);
 
             return emitter.Photos;
         }
 
         public static Task Store(Photo photo)
         {
-            var safeUrl = photo.UrlSafePath.Replace('/', Path.DirectorySeparatorChar);
+            string safeUrl = photo.UrlSafePath.Replace(oldChar: '/', Path.DirectorySeparatorChar);
             safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
             safeUrl += ".info";
 
-            var outputPath = Path.Combine(
-                Settings.Default.DatabaseOutputFolder,
-                safeUrl
-            );
+            string outputPath = Path.Combine(Settings.Default.DatabaseOutputFolder, safeUrl);
 
-            var txt = JsonConvert.SerializeObject(photo);
+            string txt = JsonConvert.SerializeObject(photo);
+
             return FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
         }
     }

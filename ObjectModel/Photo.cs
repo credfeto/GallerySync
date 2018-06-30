@@ -5,7 +5,7 @@ using System.Diagnostics;
 namespace ObjectModel
 {
     [Serializable]
-    [DebuggerDisplay("BasePath: {BasePath}, Image:{ImageExtension} Hash:{PathHash}")]
+    [DebuggerDisplay(value: "BasePath: {BasePath}, Image:{ImageExtension} Hash:{PathHash}")]
     public class Photo
     {
         public int Version { get; set; }

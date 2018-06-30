@@ -32,48 +32,61 @@ namespace UploadData
 
         public List<string> Keywords { get; set; }
 
-
         public bool Equals(GalleryEntry other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(objA: null, other))
+            {
+                return false;
+            }
 
-            return Path == other.Path &&
-                   OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() &&
-                   Title == other.Title &&
-                   Description == other.Description &&
-                   DateCreated == other.DateCreated && DateUpdated == other.DateUpdated &&
-                   Location == other.Location && Rating == other.Rating &&
-                   ItemUpdateHelpers.CollectionEquals(ImageSizes, other.ImageSizes) &&
-                   ItemUpdateHelpers.CollectionEquals(Children, other.Children) &&
-                   ItemUpdateHelpers.CollectionEquals(Metadata, other.Metadata) &&
-                   ItemUpdateHelpers.CollectionEquals(Keywords, other.Keywords);
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title && this.Description == other.Description &&
+                   this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location && this.Rating == other.Rating &&
+                   ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes) && ItemUpdateHelpers.CollectionEquals(this.Children, other.Children) &&
+                   ItemUpdateHelpers.CollectionEquals(this.Metadata, other.Metadata) && ItemUpdateHelpers.CollectionEquals(this.Keywords, other.Keywords);
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((GalleryEntry) obj);
+            if (ReferenceEquals(objA: null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+
+            return this.Equals((GalleryEntry) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                int hashCode = (Path != null ? Path.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (OriginalAlbumPath != null ? OriginalAlbumPath.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Title != null ? Title.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Children != null ? Children.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Description != null ? Description.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ DateCreated.GetHashCode();
-                hashCode = (hashCode*397) ^ DateUpdated.GetHashCode();
-                hashCode = (hashCode*397) ^ (Location != null ? Location.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (ImageSizes != null ? ImageSizes.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ Rating;
-                hashCode = (hashCode*397) ^ (Metadata != null ? Metadata.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Keywords != null ? Keywords.GetHashCode() : 0);
+                int hashCode = this.Path != null ? this.Path.GetHashCode() : 0;
+                hashCode = (hashCode * 397) ^ (this.OriginalAlbumPath != null ? this.OriginalAlbumPath.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (this.Title != null ? this.Title.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (this.Children != null ? this.Children.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (this.Description != null ? this.Description.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ this.DateCreated.GetHashCode();
+                hashCode = (hashCode * 397) ^ this.DateUpdated.GetHashCode();
+                hashCode = (hashCode * 397) ^ (this.Location != null ? this.Location.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (this.ImageSizes != null ? this.ImageSizes.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ this.Rating;
+                hashCode = (hashCode * 397) ^ (this.Metadata != null ? this.Metadata.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (this.Keywords != null ? this.Keywords.GetHashCode() : 0);
+
                 return hashCode;
             }
         }

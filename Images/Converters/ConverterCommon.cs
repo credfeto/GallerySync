@@ -17,8 +17,7 @@ namespace Images.Converters
         /// <returns>
         ///     The image that was contained in the stream.
         /// </returns>
-        [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "fileName",
-            Justification = "Used for logging")]
+        [SuppressMessage(category: "Microsoft.Usage", checkId: "CA1801:ReviewUnusedParameters", MessageId = "fileName", Justification = "Used for logging")]
         public static Image<Rgba32> OpenBitmapFromStream(Stream stream)
         {
             Contract.Requires(stream != null);
@@ -34,7 +33,9 @@ namespace Images.Converters
             catch
             {
                 if (image != null)
+                {
                     image.Dispose();
+                }
 
                 throw;
             }

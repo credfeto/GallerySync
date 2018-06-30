@@ -2,14 +2,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace OutputBuilderClient
 {
     internal static class BrokenImages
     {
-        private static readonly ConcurrentDictionary<string, Exception> _brokenImages =
-            new ConcurrentDictionary<string, Exception>();
-
+        private static readonly ConcurrentDictionary<string, Exception> _brokenImages = new ConcurrentDictionary<string, Exception>();
 
         public static void LogBrokenImage(string path, Exception exception)
         {
@@ -18,27 +17,26 @@ namespace OutputBuilderClient
 
         public static string[] AllBrokenImages()
         {
-            return _brokenImages.OrderBy(item => item.Key)
-                .Select(FormatEntry).ToArray();
+            return _brokenImages.OrderBy(keySelector: item => item.Key)
+                .Select(FormatEntry)
+                .ToArray();
         }
 
         private static string FormatEntry(KeyValuePair<string, Exception> item)
         {
-            return string.Join(", ",
-                item.Key, 
-                item.Value.Message, 
-                FormatErrorSource(item.Value));
+            return string.Join(separator: ", ", item.Key, item.Value.Message, FormatErrorSource(item.Value));
         }
 
         private static string FormatErrorSource(Exception item)
         {
-            var method = item.TargetSite;
+            MethodBase method = item.TargetSite;
+
             if (method == null)
             {
                 return "Unknown";
             }
 
-            return string.Concat(method.DeclaringType.FullName, "::", method.Name);
+            return string.Concat(method.DeclaringType.FullName, str1: "::", method.Name);
         }
     }
 }

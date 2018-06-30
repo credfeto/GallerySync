@@ -6,12 +6,13 @@
 //   The item loader base.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Xml;
+
 namespace OutputBuilderClient.Metadata
 {
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
-    using System.Xml;
-
     /// <summary>
     ///     The item loader base.
     /// </summary>
@@ -69,10 +70,8 @@ namespace OutputBuilderClient.Metadata
         ///     The object invariant.
         /// </summary>
         [ContractInvariantMethod]
-        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
-            Justification = "Invoked by Code Contracts")]
-        [SuppressMessage("SubMain.CodeItRight.Rules.Performance", "PE00004:RemoveUnusedPrivateMethods",
-            Justification = "Invoked by Code Contracts")]
+        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1811:AvoidUncalledPrivateCode", Justification = "Invoked by Code Contracts")]
+        [SuppressMessage(category: "SubMain.CodeItRight.Rules.Performance", checkId: "PE00004:RemoveUnusedPrivateMethods", Justification = "Invoked by Code Contracts")]
         private void ObjectInvariant()
         {
             Contract.Invariant(!string.IsNullOrEmpty(this._property));

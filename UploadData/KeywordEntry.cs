@@ -5,23 +5,14 @@ namespace UploadData
 {
     public sealed class KeywordEntry
     {
-        private readonly string _keyword;
-        private readonly List<Photo> _photos;
-
         public KeywordEntry(string keyword)
         {
-            _keyword = keyword;
-            _photos = new List<Photo>();
+            this.Keyword = keyword;
+            this.Photos = new List<Photo>();
         }
 
-        public string Keyword
-        {
-            get { return _keyword; }
-        }
+        public string Keyword { get; }
 
-        public List<Photo> Photos
-        {
-            get { return _photos; }
-        }
+        public List<Photo> Photos { get; }
     }
 }

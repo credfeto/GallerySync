@@ -6,12 +6,13 @@
 //   The attribute item loader.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using System.Xml;
+
 namespace OutputBuilderClient.Metadata
 {
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
-    using System.Xml;
-
     /// <summary>
     ///     The attribute item loader.
     /// </summary>
@@ -53,7 +54,8 @@ namespace OutputBuilderClient.Metadata
             Contract.Requires(document != null);
             Contract.Requires(nameSpaceManager != null);
 
-            var imageNode = document.SelectSingleNode(this._pathToItem, nameSpaceManager) as XmlAttribute;
+            XmlAttribute imageNode = document.SelectSingleNode(this._pathToItem, nameSpaceManager) as XmlAttribute;
+
             if (imageNode == null)
             {
                 return string.Empty;
@@ -66,10 +68,8 @@ namespace OutputBuilderClient.Metadata
         ///     The object invariant.
         /// </summary>
         [ContractInvariantMethod]
-        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
-            Justification = "Invoked by Code Contracts")]
-        [SuppressMessage("SubMain.CodeItRight.Rules.Performance", "PE00004:RemoveUnusedPrivateMethods",
-            Justification = "Invoked by Code Contracts")]
+        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1811:AvoidUncalledPrivateCode", Justification = "Invoked by Code Contracts")]
+        [SuppressMessage(category: "SubMain.CodeItRight.Rules.Performance", checkId: "PE00004:RemoveUnusedPrivateMethods", Justification = "Invoked by Code Contracts")]
         private void ObjectInvariant()
         {
             Contract.Invariant(!string.IsNullOrEmpty(this._pathToItem));

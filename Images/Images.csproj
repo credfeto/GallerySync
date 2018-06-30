@@ -16,16 +16,16 @@
     </Description>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Properties"/>
+      <Folder Include="Properties"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ExifLib" Version="1.7.0"/>
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0003"/>
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0003"/>
-    <PackageReference Include="Taglib-Sharp-NetStandard" Version="1.0.0"/>
+      <PackageReference Include="ExifLib" Version="1.7.0"/>
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0003"/>
+      <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0003"/>
+      <PackageReference Include="Taglib-Sharp-NetStandard" Version="1.0.0"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
-    <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
+      <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
+      <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
   </ItemGroup>
 </Project>
