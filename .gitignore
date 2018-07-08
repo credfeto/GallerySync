@@ -113,3 +113,5 @@ UpgradeLog*.XML
 Gallery.zip
 *.lnt
 Metadata/Libraries/ZLib/ZLib_vs100_Release_Win32.lnt
+
+/.gtm/
