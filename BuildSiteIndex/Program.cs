@@ -81,7 +81,7 @@ namespace BuildSiteIndex
 
         private static bool _ignoreExisting;
 
-        private static readonly SemaphoreSlim _entrySemaphore = new SemaphoreSlim(initialCount: 1);
+        private static readonly SemaphoreSlim EntrySemaphore = new SemaphoreSlim(initialCount: 1);
 
         private static int Main(string[] args)
         {
@@ -483,9 +483,7 @@ namespace BuildSiteIndex
         {
             string path = parentRecord.BasePath;
 
-            GalleryEntry item;
-
-            if (!contents.TryGetValue(path, out item) || item == null)
+            if (!contents.TryGetValue(path, out GalleryEntry item) || item == null)
             {
                 return null;
             }
@@ -1210,7 +1208,7 @@ namespace BuildSiteIndex
 
         private static async Task AppendEntry(Dictionary<string, GalleryEntry> contents, string parentPath, string itemPath, GalleryEntry entry)
         {
-            await _entrySemaphore.WaitAsync();
+            await EntrySemaphore.WaitAsync();
 
             try
             {
@@ -1235,7 +1233,7 @@ namespace BuildSiteIndex
             }
             finally
             {
-                _entrySemaphore.Release();
+                EntrySemaphore.Release();
             }
         }
 
@@ -1254,7 +1252,7 @@ namespace BuildSiteIndex
                                          DateUpdated = DateTime.MinValue
                                      };
 
-                await _entrySemaphore.WaitAsync();
+                await EntrySemaphore.WaitAsync();
 
                 try
                 {
@@ -1262,16 +1260,16 @@ namespace BuildSiteIndex
                 }
                 finally
                 {
-                    _entrySemaphore.Release();
+                    EntrySemaphore.Release();
                 }
             }
         }
 
         private class LoadContext
         {
-            private int itemsUploaded;
+            private int _itemsUploaded;
 
-            public bool MaxReached => this.HasMaxBeenReached(this.itemsUploaded);
+            public bool MaxReached => this.HasMaxBeenReached(this._itemsUploaded);
 
             private bool HasMaxBeenReached(int count)
             {
@@ -1280,7 +1278,7 @@ namespace BuildSiteIndex
 
             public bool Increment()
             {
-                int value = Interlocked.Increment(ref this.itemsUploaded);
+                int value = Interlocked.Increment(ref this._itemsUploaded);
 
                 return this.HasMaxBeenReached(value);
             }
