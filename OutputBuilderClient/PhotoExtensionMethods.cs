@@ -42,7 +42,7 @@ namespace OutputBuilderClient
 
         private static async Task SetFileHash(this Photo sourcePhoto, ComponentFile file)
         {
-            string filename = Path.Combine(Settings.Default.RootFolder, sourcePhoto.BasePath + file.Extension);
+            string filename = Path.Combine(Settings.RootFolder, sourcePhoto.BasePath + file.Extension);
 
             file.Hash = await Hasher.HashFile(filename);
         }

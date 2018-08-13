@@ -23,7 +23,7 @@ namespace OutputBuilderClient
 
         public static void Load()
         {
-            string logPath = Settings.Default.ShortNamesFile;
+            string logPath = Settings.ShortNamesFile;
 
             if (File.Exists(logPath))
             {
@@ -63,7 +63,7 @@ namespace OutputBuilderClient
                 return;
             }
 
-            string logPath = Path.Combine(Settings.Default.ImagesOutputPath, path2: "ShortUrls.csv");
+            string logPath = Path.Combine(Settings.ImagesOutputPath, path2: "ShortUrls.csv");
 
             string[] text = {string.Format(format: "{0}\t{1}", url, shortUrl)};
 

@@ -43,7 +43,7 @@ namespace OutputBuilderClient
 
         public static List<PhotoMetadata> ExtractMetadata(Photo sourcePhoto)
         {
-            string rootFolder = Settings.Default.RootFolder;
+            string rootFolder = Settings.RootFolder;
 
             List<PhotoMetadata> metadata = new List<PhotoMetadata>();
 

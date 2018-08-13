@@ -56,7 +56,7 @@ namespace OutputBuilderClient
 
                     if (string.IsNullOrWhiteSpace(found.Hash))
                     {
-                        string filename = Path.Combine(Settings.Default.RootFolder, sourcePhoto.BasePath + componentFile.Extension);
+                        string filename = Path.Combine(Settings.RootFolder, sourcePhoto.BasePath + componentFile.Extension);
 
                         found.Hash = await Hasher.HashFile(filename);
                     }
@@ -90,7 +90,7 @@ namespace OutputBuilderClient
 
             foreach (ImageSize resize in photoToProcess.ImageSizes)
             {
-                string resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
+                string resizedFileName = Path.Combine(Settings.ImagesOutputPath,
                                                       HashNaming.PathifyHash(photoToProcess.PathHash),
                                                       ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
 
@@ -101,9 +101,9 @@ namespace OutputBuilderClient
                     return true;
                 }
 
-                if (resize.Width == Settings.Default.ThumbnailSize)
+                if (resize.Width == Settings.ThumbnailSize)
                 {
-                    resizedFileName = Path.Combine(Settings.Default.ImagesOutputPath,
+                    resizedFileName = Path.Combine(Settings.ImagesOutputPath,
                                                    HashNaming.PathifyHash(photoToProcess.PathHash),
                                                    ImageExtraction.IndividualResizeFileName(photoToProcess, resize, extension: "png"));
 

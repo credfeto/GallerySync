@@ -25,7 +25,7 @@ namespace OutputBuilderClient
                 fileGroup.Add(file.Replace(extension, newValue: ".xmp"));
             }
 
-            FileEntry entry = new FileEntry {Folder = folder, RelativeFolder = folder.Substring(Settings.Default.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup};
+            FileEntry entry = new FileEntry {Folder = folder, RelativeFolder = folder.Substring(Settings.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup};
 
             string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 

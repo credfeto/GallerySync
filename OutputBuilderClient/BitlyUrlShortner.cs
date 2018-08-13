@@ -18,15 +18,7 @@ namespace OutputBuilderClient
     [SuppressMessage(category: "Microsoft.Naming", checkId: "CA1704:IdentifiersShouldBeSpelledCorrectly", Justification = "Bitly is name of site.")]
     public static class BitlyUrlShortner
     {
-        /// <summary>
-        ///     The API key.
-        /// </summary>
-        private static string Key => Settings.Default.BitlyApiKey;
 
-        /// <summary>
-        ///     The bitly username.
-        /// </summary>
-        private static string Login => Settings.Default.BitlyApiUser;
 
         /// <summary>
         ///     Shortens the given URL.
@@ -42,7 +34,7 @@ namespace OutputBuilderClient
             Contract.Ensures(Contract.Result<Uri>() != null);
 
             string encodedUrl = HttpUtility.UrlEncode(url.ToString());
-            string urlRequest = string.Format(CultureInfo.InvariantCulture, format: "https://api-ssl.bit.ly/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}", Key, Login, encodedUrl);
+            string urlRequest = string.Format(CultureInfo.InvariantCulture, format: "https://api-ssl.bit.ly/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}", Settings.BitlyApiKey, Settings.BitlyApiUser, encodedUrl);
 
             Uri shortnerUrl = new Uri(urlRequest);
 

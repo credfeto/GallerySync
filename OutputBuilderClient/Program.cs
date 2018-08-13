@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Images;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using ObjectModel;
 using StorageHelpers;
@@ -16,7 +17,7 @@ namespace OutputBuilderClient
 {
     internal class Program
     {
-        private static readonly SemaphoreSlim _sempahore = new SemaphoreSlim(initialCount: 1);
+        private static readonly SemaphoreSlim Sempahore = new SemaphoreSlim(initialCount: 1);
 
         private static void AddUploadFiles(List<string> filesCreated)
         {
@@ -113,6 +114,14 @@ namespace OutputBuilderClient
 
         private static async Task<int> AsyncMain(string[] args)
         {
+            IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(path: "appsettings.json")
+                .Build();
+
+            Settings.RootFolder = config[@"Source:RootFolder"];
+            Settings.BitlyApiUser = config[@"UrlShortener:BitlyApiUser"];
+            Settings.BitlyApiKey = config[@"UrlShortener:BitlyApiKey"];
+
             if (args.Length == 1)
             {
                 ShortUrls.Load();
@@ -159,7 +168,7 @@ namespace OutputBuilderClient
         {
             string[] images = BrokenImages.AllBrokenImages();
 
-            File.WriteAllLines(Settings.Default.BrokenImagesFile, images, Encoding.UTF8);
+            File.WriteAllLines(Settings.BrokenImagesFile, images, Encoding.UTF8);
 
             return ConsoleOutput.Line(formatString: "Broken Images: {0}", images.Length);
         }
@@ -176,8 +185,8 @@ namespace OutputBuilderClient
 
         private static async Task ProcessGallery()
         {
-            Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepository(Settings.Default.RootFolder);
-            Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepository(Settings.Default.DatabaseOutputFolder);
+            Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepository(Settings.RootFolder);
+            Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepository(Settings.DatabaseOutputFolder);
 
             await Task.WhenAll(sourceTask, targetTask);
 
@@ -328,7 +337,7 @@ namespace OutputBuilderClient
                 return shortUrl;
             }
 
-            await _sempahore.WaitAsync();
+            await Sempahore.WaitAsync();
 
             if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
             {
@@ -337,7 +346,7 @@ namespace OutputBuilderClient
 
             try
             {
-                string filename = Settings.Default.ShortNamesFile + ".tracking.json";
+                string filename = Settings.ShortNamesFile + ".tracking.json";
 
                 List<ShortenerCount> tracking = new List<ShortenerCount>();
 
@@ -400,60 +409,8 @@ namespace OutputBuilderClient
             }
             finally
             {
-                _sempahore.Release();
+                Sempahore.Release();
             }
         }
     }
-
-//    <?xml version='1.0' encoding='utf-8'?>
-//<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OutputBuilderClient.Properties" GeneratedClassName="Settings">
-//  <Profiles />
-//  <Settings>
-//    <Setting Name="DatabaseOutputFolder" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">I:\Database\Current</Value>
-//    </Setting>
-//    <Setting Name="RootFolder" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">I:\Photos\Sorted</Value>
-//    </Setting>
-//    <Setting Name="ImageMaximumDimensions" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">400,600,800,1024,1600</Value>
-//    </Setting>
-//    <Setting Name="ThumbnailSize" Type="System.Int32" Scope="Application">
-//      <Value Profile="(Default)">150</Value>
-//    </Setting>
-//    <Setting Name="ImageMagickConvertExecutable" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">D:\Utils\imageprocessing\convert.exe</Value>
-//    </Setting>
-//    <Setting Name="DCRAWExecutable" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">D:\Utils\imageprocessing\dcraw.exe</Value>
-//    </Setting>
-//    <Setting Name="JpegOutputQuality" Type="System.Int32" Scope="Application">
-//      <Value Profile="(Default)">70</Value>
-//    </Setting>
-//    <Setting Name="WatermarkImage" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">D:\Utils\Gallery\watermark.png</Value>
-//    </Setting>
-//    <Setting Name="DatabaseBackupFolder" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">I:\Database\Backup\Current</Value>
-//    </Setting>
-//    <Setting Name="BitlyApiKey" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">R_43a3ce10699b39c57da408f60cb794ce</Value>
-//    </Setting>
-//    <Setting Name="BitlyApiUser" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">credfeto</Value>
-//    </Setting>
-//    <Setting Name="ImagesOutputPath" Type="System.String" Scope="Application">
-//      <Value Profile="(Default)">\\nas-01.yggdrasil.local\GalleryUpload</Value>
-//    </Setting>
-//    <Setting Name="ShortNamesFile" Type="System.String" Scope="Application">
-//          <Value Profile="(Default)">C:\PhotoDb\ShortUrls.csv</Value>
-//    </Setting>
-//    <Setting Name="BrokenImagesFile" Type="System.String" Scope="Application">
-//              <Value Profile="(Default)">C:\PhotoDb\BrokenImages.csv</Value>
-//        </Setting>
-//    <Setting Name="LatestDatabaseBackupFolder" Type="System.String" Scope="User">
-//      <Value Profile="(Default)">I:\Database\Backup\Latest</Value>
-//    </Setting>
-//  </Settings>
-//</SettingsFile>
 }

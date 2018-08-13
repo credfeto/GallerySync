@@ -54,7 +54,7 @@ namespace OutputBuilderClient
             safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
             safeUrl += ".info";
 
-            string outputPath = Path.Combine(Settings.Default.DatabaseOutputFolder, safeUrl);
+            string outputPath = Path.Combine(Settings.DatabaseOutputFolder, safeUrl);
 
             string txt = JsonConvert.SerializeObject(photo);
 
