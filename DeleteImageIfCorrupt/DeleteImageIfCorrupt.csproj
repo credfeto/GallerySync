@@ -15,10 +15,7 @@
     <Description>Photo Gallery Built Image Corruption Detector.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Properties"/>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Images\Images.csproj"/>
-    <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
+      <ProjectReference Include="..\Images\Images.csproj"/>
+      <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
   </ItemGroup>
 </Project>

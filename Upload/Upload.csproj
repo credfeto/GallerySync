@@ -16,14 +16,11 @@
     </Description>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Properties"/>
+      <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-dev000605"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-dev000605"/>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
-    <ProjectReference Include="..\UploadData\UploadData.csproj"/>
+      <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
+      <ProjectReference Include="..\UploadData\UploadData.csproj"/>
   </ItemGroup>
 </Project>

@@ -13,7 +13,4 @@
     <AssemblyTitle>Gallery.ObjectModel</AssemblyTitle>
     <Description>Photo Galler Object Model</Description>
   </PropertyGroup>
-  <ItemGroup>
-    <Folder Include="Properties"/>
-  </ItemGroup>
 </Project>

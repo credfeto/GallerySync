@@ -14,9 +14,6 @@
     <Description>Photo Gallery File Naming</Description>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Properties"/>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
+      <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
   </ItemGroup>
 </Project>
