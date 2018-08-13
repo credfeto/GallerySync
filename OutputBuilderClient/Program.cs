@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Images;
 using Newtonsoft.Json;
 using ObjectModel;
-using OutputBuilderClient.Properties;
 using StorageHelpers;
 
 namespace OutputBuilderClient
@@ -405,4 +404,56 @@ namespace OutputBuilderClient
             }
         }
     }
+
+//    <?xml version='1.0' encoding='utf-8'?>
+//<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OutputBuilderClient.Properties" GeneratedClassName="Settings">
+//  <Profiles />
+//  <Settings>
+//    <Setting Name="DatabaseOutputFolder" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">I:\Database\Current</Value>
+//    </Setting>
+//    <Setting Name="RootFolder" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">I:\Photos\Sorted</Value>
+//    </Setting>
+//    <Setting Name="ImageMaximumDimensions" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">400,600,800,1024,1600</Value>
+//    </Setting>
+//    <Setting Name="ThumbnailSize" Type="System.Int32" Scope="Application">
+//      <Value Profile="(Default)">150</Value>
+//    </Setting>
+//    <Setting Name="ImageMagickConvertExecutable" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">D:\Utils\imageprocessing\convert.exe</Value>
+//    </Setting>
+//    <Setting Name="DCRAWExecutable" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">D:\Utils\imageprocessing\dcraw.exe</Value>
+//    </Setting>
+//    <Setting Name="JpegOutputQuality" Type="System.Int32" Scope="Application">
+//      <Value Profile="(Default)">70</Value>
+//    </Setting>
+//    <Setting Name="WatermarkImage" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">D:\Utils\Gallery\watermark.png</Value>
+//    </Setting>
+//    <Setting Name="DatabaseBackupFolder" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">I:\Database\Backup\Current</Value>
+//    </Setting>
+//    <Setting Name="BitlyApiKey" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">R_43a3ce10699b39c57da408f60cb794ce</Value>
+//    </Setting>
+//    <Setting Name="BitlyApiUser" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">credfeto</Value>
+//    </Setting>
+//    <Setting Name="ImagesOutputPath" Type="System.String" Scope="Application">
+//      <Value Profile="(Default)">\\nas-01.yggdrasil.local\GalleryUpload</Value>
+//    </Setting>
+//    <Setting Name="ShortNamesFile" Type="System.String" Scope="Application">
+//          <Value Profile="(Default)">C:\PhotoDb\ShortUrls.csv</Value>
+//    </Setting>
+//    <Setting Name="BrokenImagesFile" Type="System.String" Scope="Application">
+//              <Value Profile="(Default)">C:\PhotoDb\BrokenImages.csv</Value>
+//        </Setting>
+//    <Setting Name="LatestDatabaseBackupFolder" Type="System.String" Scope="User">
+//      <Value Profile="(Default)">I:\Database\Backup\Latest</Value>
+//    </Setting>
+//  </Settings>
+//</SettingsFile>
 }

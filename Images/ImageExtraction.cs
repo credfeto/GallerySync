@@ -276,17 +276,6 @@ namespace Images
             }
         }
 
-        private static int CaclulateQrModuleSize(int height)
-        {
-            //var moduleSize = height/33;
-            //if (height%33 != 0)
-            //{
-            //    moduleSize += 1;
-            //}
-            //return moduleSize;
-            return 2;
-        }
-
         /// <summary>
         ///     Calculates the scaled height from the width.
         /// </summary>

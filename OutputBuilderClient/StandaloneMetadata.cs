@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using FileNaming;
 using ObjectModel;
-using OutputBuilderClient.Properties;
 using Scanner;
 
 namespace OutputBuilderClient

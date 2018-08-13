@@ -15,12 +15,15 @@
     <Description>Photo Gallery Output Builder</Description>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
-    <ProjectReference Include="..\Images\Images.csproj"/>
-    <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
-    <ProjectReference Include="..\Scanner\Scanner.csproj"/>
+      <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
+      <ProjectReference Include="..\Images\Images.csproj"/>
+      <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
+      <ProjectReference Include="..\Scanner\Scanner.csproj"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
+      <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
   </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Properties"/>
+    </ItemGroup>
 </Project>

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.IO;
 using ObjectModel;
-using OutputBuilderClient.Properties;
 
 namespace OutputBuilderClient
 {

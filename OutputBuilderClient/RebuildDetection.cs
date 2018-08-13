@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using FileNaming;
 using Images;
 using ObjectModel;
-using OutputBuilderClient.Properties;
 
 namespace OutputBuilderClient
 {

@@ -7,7 +7,6 @@ using ExifLib;
 using FileNaming;
 using ObjectModel;
 using OutputBuilderClient.Metadata;
-using OutputBuilderClient.Properties;
 using TagLib;
 using TagLib.Image;
 using TagLib.Xmp;

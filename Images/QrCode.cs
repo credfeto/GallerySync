@@ -1,8 +1,7 @@
-﻿using System.Drawing;
-using System.IO;
+﻿using System.IO;
+using QRCoder;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing.Drawing.Brushes;
 
 namespace Images
 {
@@ -11,27 +10,37 @@ namespace Images
         public static Image<Rgba32> EncodeUrl(string url, int height)
         {
             //url = "https://www.markridgwell.co.uk/";
-            var encoder = new QrEncoder(ErrorCorrectionLevel.H);
-            QrCode qr;
 
-            if (encoder.TryEncode(url, out qr))
+            try
             {
-                int moduleSize = ImageExtraction.CaclulateQrModuleSize(height);
+                QRCodeGenerator qrGenerator = new QRCodeGenerator();
+                QRCodeData qrCodeData = qrGenerator.CreateQrCode(url, QRCodeGenerator.ECCLevel.H);
+                PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
 
-                using (MemoryStream stream = new MemoryStream())
+                int moduleSize = CaclulateQrModuleSize(height);
+
+                byte[] data = qrCode.GetGraphic(moduleSize);
+
+                using (MemoryStream stream = new MemoryStream(data, writable: false))
                 {
-                    var darkBrush = Brushes.Black;
-                    var lightBrush = new SolidBrush(Color.FromArgb(alpha: 128, red: 255, green: 255, blue: 255));
-
-                    var renderer = new GraphicsRenderer(new FixedModuleSize(moduleSize, QuietZoneModules.Two), darkBrush, lightBrush);
-
-                    renderer.WriteToStream(qr.Matrix, ImageFormat.Png, stream);
-
                     return Image.Load(stream.ToArray());
                 }
             }
+            catch
+            {
+                return null;
+            }
+        }
 
-            return null;
+        private static int CaclulateQrModuleSize(int height)
+        {
+            //var moduleSize = height/33;
+            //if (height%33 != 0)
+            //{
+            //    moduleSize += 1;
+            //}
+            //return moduleSize;
+            return 2;
         }
     }
 }
