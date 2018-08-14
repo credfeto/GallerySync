@@ -8,16 +8,16 @@ namespace OutputBuilderClient
 {
     internal static class BrokenImages
     {
-        private static readonly ConcurrentDictionary<string, Exception> _brokenImages = new ConcurrentDictionary<string, Exception>();
+        private static readonly ConcurrentDictionary<string, Exception> Items = new ConcurrentDictionary<string, Exception>();
 
         public static void LogBrokenImage(string path, Exception exception)
         {
-            _brokenImages.TryAdd(path, exception);
+            Items.TryAdd(path, exception);
         }
 
         public static string[] AllBrokenImages()
         {
-            return _brokenImages.OrderBy(keySelector: item => item.Key)
+            return Items.OrderBy(keySelector: item => item.Key)
                 .Select(FormatEntry)
                 .ToArray();
         }

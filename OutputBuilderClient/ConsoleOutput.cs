@@ -6,13 +6,13 @@ namespace OutputBuilderClient
 {
     internal static class ConsoleOutput
     {
-        private static readonly SemaphoreSlim _consoleSempahore = new SemaphoreSlim(initialCount: 1);
+        private static readonly SemaphoreSlim ConsoleSempahore = new SemaphoreSlim(initialCount: 1);
 
         internal static async Task Line(string formatString, params object[] parameters)
         {
             string text = string.Format(formatString, parameters);
 
-            await _consoleSempahore.WaitAsync();
+            await ConsoleSempahore.WaitAsync();
 
             try
             {
@@ -20,7 +20,7 @@ namespace OutputBuilderClient
             }
             finally
             {
-                _consoleSempahore.Release();
+                ConsoleSempahore.Release();
             }
         }
     }

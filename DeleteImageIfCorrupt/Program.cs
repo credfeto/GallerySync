@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.PixelFormats;
 using StorageHelpers;
 
 namespace DeleteImageIfCorrupt
@@ -54,7 +53,7 @@ namespace DeleteImageIfCorrupt
         {
             try
             {
-                using (Image<Rgba32> image = Image.Load(bytes, out IImageFormat format))
+                using (Image.Load(bytes, out IImageFormat format))
                 {
                     return format.DefaultMimeType == "image/jpeg";
                 }

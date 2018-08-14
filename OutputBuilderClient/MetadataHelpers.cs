@@ -17,9 +17,7 @@ namespace OutputBuilderClient
                 return DateTime.MinValue;
             }
 
-            DateTime value;
-
-            if (DateTime.TryParse(dateTaken.Value, out value))
+            if (DateTime.TryParse(dateTaken.Value, out DateTime value))
             {
                 return value;
             }

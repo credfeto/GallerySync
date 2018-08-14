@@ -8,7 +8,7 @@ namespace FileNaming
 {
     public static class UrlNaming
     {
-        private const string Replacementchar = "-";
+        private const string REPLACEMENT_CHAR = "-";
 
         private static readonly Regex AcceptableUrlCharacters = new Regex(pattern: @"[^\w\-/]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
@@ -21,9 +21,9 @@ namespace FileNaming
             string root = RemoveDiacritics(basePath.Trim() + "/", compatNorm: true, NormaliseLWithStroke);
             root = RemoveApostrophes(root);
 
-            return NoHyphensNextToSlash.Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), Replacementchar), Replacementchar),
+            return NoHyphensNextToSlash.Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), REPLACEMENT_CHAR), REPLACEMENT_CHAR),
                                                 replacement: "/")
-                .TrimEnd(Replacementchar.ToCharArray())
+                .TrimEnd(REPLACEMENT_CHAR.ToCharArray())
                 .ToLowerInvariant();
         }
 
@@ -33,7 +33,7 @@ namespace FileNaming
                 .Replace(oldValue: "'S", newValue: "S");
         }
 
-        internal static IEnumerable<char> RemoveDiacriticsEnum(string src, bool compatNorm, Func<char, char> customFolding)
+        private static IEnumerable<char> RemoveDiacriticsEnum(string src, bool compatNorm, Func<char, char> customFolding)
         {
             foreach (char c in src.Normalize(compatNorm ? NormalizationForm.FormKD : NormalizationForm.FormD))
             {

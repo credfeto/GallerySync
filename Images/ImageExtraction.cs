@@ -60,9 +60,8 @@ namespace Images
                 using (Image<Rgba32> sourceBitmap = converter.LoadImage(filename))
                 {
                     int sourceImageWidth = sourceBitmap.Width;
-                    int sourceImageHeight = sourceBitmap.Height;
 
-                    foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth, sourceImageHeight)))
+                    foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
                     {
                         using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
                         {
@@ -94,7 +93,7 @@ namespace Images
                                 resizedFileName = Path.Combine(settings.ImagesOutputPath,
                                                                HashNaming.PathifyHash(sourcePhoto.PathHash),
                                                                IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
-                                resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.BasePath, sourcePhoto.Metadata, creationDate, settings);
+                                resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
                                 await WriteImage(resizedFileName, resizedBytes, creationDate);
 
                                 filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" + IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
@@ -172,7 +171,7 @@ namespace Images
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate, settings);
+            SetMetadataProperties(image, url, shortUrl, metadata, creationDate, settings);
 
             try
             {
@@ -480,7 +479,7 @@ namespace Images
             }
         }
 
-        private static bool ResziedImageWillNotBeBigger(int size, int sourceImageWidth, int sourceImageHeight)
+        private static bool ResziedImageWillNotBeBigger(int size, int sourceImageWidth)
         {
             // || size <= sourceImageHeight
             return size <= sourceImageWidth;
@@ -542,12 +541,12 @@ namespace Images
             //return image.ToByteArray(MagickFormat.Jpeg);
         }
 
-        private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, string shortUrl, string filePath, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
+        private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, shortUrl, filePath, metadata, creationDate, settings);
+            SetMetadataProperties(image, url, shortUrl, metadata, creationDate, settings);
 
             using (MemoryStream ms = new MemoryStream())
             {
@@ -594,10 +593,9 @@ namespace Images
         /// </param>
         /// <param name="url"></param>
         /// <param name="shortUrl"></param>
-        /// <param name="filePath"></param>
         /// <param name="metadata"></param>
         /// <param name="creationDate"></param>
-        private static void SetMetadataProperties(Image<Rgba32> image, string url, string shortUrl, string filePath, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
+        private static void SetMetadataProperties(Image<Rgba32> image, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
         {
             Contract.Requires(image != null);
 
