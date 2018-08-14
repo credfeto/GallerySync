@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using Images;
 using ObjectModel;
 
 namespace OutputBuilderClient
@@ -56,14 +57,14 @@ namespace OutputBuilderClient
             }
         }
 
-        public static void LogShortUrl(string url, string shortUrl)
+        public static void LogShortUrl(string url, string shortUrl, ISettings imageSettings)
         {
             if (!TryAdd(url, shortUrl))
             {
                 return;
             }
 
-            string logPath = Path.Combine(Settings.ImagesOutputPath, path2: "ShortUrls.csv");
+            string logPath = Path.Combine(imageSettings.ImagesOutputPath, path2: "ShortUrls.csv");
 
             string[] text = {string.Format(format: "{0}\t{1}", url, shortUrl)};
 

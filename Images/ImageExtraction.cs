@@ -616,6 +616,7 @@ namespace Images
             return settings.ImageMaximumDimensions.Split(',')
                 .Select(selector: value => Convert.ToInt32(value))
                 .Concat(new[] {settings.ThumbnailSize})
+                .Distinct()
                 .OrderByDescending(keySelector: x => x)
                 .ToArray();
         }

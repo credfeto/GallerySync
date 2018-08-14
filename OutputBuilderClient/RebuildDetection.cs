@@ -10,9 +10,9 @@ namespace OutputBuilderClient
 {
     internal static class RebuildDetection
     {
-        public static async Task<bool> NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
+        public static async Task<bool> NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings)
         {
-            return await MetadataVersionRequiresRebuild(targetPhoto) || await HaveFilesChanged(sourcePhoto, targetPhoto) || HasMissingResizes(targetPhoto);
+            return await MetadataVersionRequiresRebuild(targetPhoto) || await HaveFilesChanged(sourcePhoto, targetPhoto) || HasMissingResizes(targetPhoto, imageSettings);
         }
 
         public static async Task<bool> MetadataVersionOutOfDate(Photo targetPhoto)
@@ -79,7 +79,7 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static bool HasMissingResizes(Photo photoToProcess)
+        private static bool HasMissingResizes(Photo photoToProcess, ISettings imageSettings)
         {
             if (photoToProcess.ImageSizes == null)
             {
@@ -90,7 +90,7 @@ namespace OutputBuilderClient
 
             foreach (ImageSize resize in photoToProcess.ImageSizes)
             {
-                string resizedFileName = Path.Combine(Settings.ImagesOutputPath,
+                string resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
                                                       HashNaming.PathifyHash(photoToProcess.PathHash),
                                                       ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
 
@@ -101,9 +101,9 @@ namespace OutputBuilderClient
                     return true;
                 }
 
-                if (resize.Width == Settings.ThumbnailSize)
+                if (resize.Width == imageSettings.ThumbnailSize)
                 {
-                    resizedFileName = Path.Combine(Settings.ImagesOutputPath,
+                    resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
                                                    HashNaming.PathifyHash(photoToProcess.PathHash),
                                                    ImageExtraction.IndividualResizeFileName(photoToProcess, resize, extension: "png"));
 

@@ -118,9 +118,18 @@ namespace OutputBuilderClient
                 .AddJsonFile(path: "appsettings.json")
                 .Build();
 
-            Settings.RootFolder = config[@"Source:RootFolder"];
-            Settings.BitlyApiUser = config[@"UrlShortener:BitlyApiUser"];
-            Settings.BitlyApiKey = config[@"UrlShortener:BitlyApiKey"];
+            Settings.RootFolder = config.GetValue<string>( @"Source:RootFolder");
+            Settings.BitlyApiUser = config.GetValue<string>( @"UrlShortener:BitlyApiUser");
+            Settings.BitlyApiKey = config.GetValue<string>( @"UrlShortener:BitlyApiKey");
+
+            ISettings imageSettings = new ImageSettings(
+                thumbnailSize: config.GetValue<int>(@"Output:ThumbnailSize", 150),
+                defaultShortUrl: @"https://www.markridgwell.co.uk",
+                imageMaximumDimensions: config.GetValue<string>(@"Output:ImageMaximumDimensions"),
+                rootFolder: Settings.RootFolder,
+                imagesOutputPath: config.GetValue<string>(@"Output:ImagesOutputPath"),
+                jpegOutputQuality: config.GetValue<int>(@"Output:JpegOutputQuality", 100),
+                watermarkImage: config.GetValue<string>(@"Images:Watermark"));
 
             if (args.Length == 1)
             {
@@ -147,7 +156,7 @@ namespace OutputBuilderClient
             {
                 ShortUrls.Load();
 
-                await ProcessGallery();
+                await ProcessGallery(imageSettings);
 
                 retval = 0;
             }
@@ -173,17 +182,17 @@ namespace OutputBuilderClient
             return ConsoleOutput.Line(formatString: "Broken Images: {0}", images.Length);
         }
 
-        private static async Task<HashSet<string>> Process(Photo[] source, Photo[] target)
+        private static async Task<HashSet<string>> Process(Photo[] source, Photo[] target, ISettings imageSettings)
         {
             ConcurrentDictionary<string, bool> items = new ConcurrentDictionary<string, bool>();
 
-            await Task.WhenAll(source.Select(selector: sourcePhoto => ProcessSinglePhoto(target, sourcePhoto, items))
+            await Task.WhenAll(source.Select(selector: sourcePhoto => ProcessSinglePhoto(target, sourcePhoto, items, imageSettings))
                                    .ToArray());
 
             return new HashSet<string>(items.Keys);
         }
 
-        private static async Task ProcessGallery()
+        private static async Task ProcessGallery(ISettings imageSettings)
         {
             Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepository(Settings.RootFolder);
             Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepository(Settings.DatabaseOutputFolder);
@@ -193,18 +202,18 @@ namespace OutputBuilderClient
             Photo[] source = sourceTask.Result;
             Photo[] target = targetTask.Result;
 
-            HashSet<string> liveItems = await Process(source, target);
+            HashSet<string> liveItems = await Process(source, target, imageSettings);
 
             await KillDeadItems(liveItems);
         }
 
-        private static async Task ProcessOneFile(Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl)
+        private static async Task ProcessOneFile(Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl, ISettings imageSettings)
         {
             await ConsoleOutput.Line(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
             await targetPhoto.UpdateFileHashes(sourcePhoto);
 
-            bool buildMetadata = targetPhoto == null || rebuild || rebuildMetadata || targetPhoto != null && targetPhoto.Metadata == null;
+            bool buildMetadata = targetPhoto == null || rebuild || rebuildMetadata || targetPhoto.Metadata == null;
 
             if (buildMetadata)
             {
@@ -222,7 +231,8 @@ namespace OutputBuilderClient
             if (buildImages)
             {
                 DateTime creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
-                sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(sourcePhoto, filesCreated, creationDate, url, shortUrl);
+
+                sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
             }
             else
             {
@@ -251,7 +261,7 @@ namespace OutputBuilderClient
             }
         }
 
-        private static async Task ProcessSinglePhoto(Photo[] target, Photo sourcePhoto, ConcurrentDictionary<string, bool> items)
+        private static async Task ProcessSinglePhoto(Photo[] target, Photo sourcePhoto, ConcurrentDictionary<string, bool> items, ISettings imageSettings)
         {
             ForceGarbageCollection();
 
@@ -259,7 +269,7 @@ namespace OutputBuilderClient
             {
                 Photo targetPhoto = target.FirstOrDefault(predicate: item => item.PathHash == sourcePhoto.PathHash);
                 bool build = targetPhoto == null;
-                bool rebuild = targetPhoto != null && await RebuildDetection.NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto);
+                bool rebuild = targetPhoto != null && await RebuildDetection.NeedsFullResizedImageRebuild(sourcePhoto, targetPhoto, imageSettings);
                 bool rebuildMetadata = targetPhoto != null && await RebuildDetection.MetadataVersionOutOfDate(targetPhoto);
 
                 string url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
@@ -275,7 +285,7 @@ namespace OutputBuilderClient
 
                         if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                         {
-                            ShortUrls.LogShortUrl(url, shortUrl);
+                            ShortUrls.LogShortUrl(url, shortUrl, imageSettings);
 
                             rebuild = true;
                             await ConsoleOutput.Line(formatString: " +++ Force rebuild: missing shortcut URL.  New short url: {0}", shortUrl);
@@ -301,7 +311,7 @@ namespace OutputBuilderClient
 
                 if (build || rebuild || rebuildMetadata)
                 {
-                    await ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl);
+                    await ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl, imageSettings);
                 }
                 else
                 {
@@ -330,9 +340,7 @@ namespace OutputBuilderClient
 
         private static async Task<string> TryGenerateShortUrl(string url)
         {
-            string shortUrl;
-
-            if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+            if (ShortUrls.TryGetValue(url, out string shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
             {
                 return shortUrl;
             }
