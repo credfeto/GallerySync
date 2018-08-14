@@ -10,7 +10,7 @@ using OutputBuilderClient.Metadata;
 using TagLib;
 using TagLib.Image;
 using TagLib.Xmp;
-using File = TagLib.Image.File;
+using File = System.IO.File;
 
 namespace OutputBuilderClient
 {
@@ -103,18 +103,24 @@ namespace OutputBuilderClient
         {
             try
             {
-                File file = TagLib.File.Create(fileName) as File;
+                byte[] data = File.ReadAllBytes(fileName);
 
-                if (file == null)
+                using (MemoryStream ms = new MemoryStream(data, writable: false))
                 {
-                    return;
-                }
+                    TagLib.File.IFileAbstraction fa = new StreamFileAbstraction(fileName, ms, Stream.Null);
+                    TagLib.Image.File file = TagLib.File.Create(fa) as TagLib.Image.File;
 
-                ImageTag tag = file.GetTag(TagTypes.XMP) as ImageTag;
+                    if (file == null)
+                    {
+                        return;
+                    }
 
-                if (tag != null && !tag.IsEmpty)
-                {
-                    ExtractXmpTagCommon(metadata, tag);
+                    ImageTag tag = file.GetTag(TagTypes.XMP) as ImageTag;
+
+                    if (tag != null && !tag.IsEmpty)
+                    {
+                        ExtractXmpTagCommon(metadata, tag);
+                    }
                 }
             }
             catch (Exception)
@@ -124,7 +130,7 @@ namespace OutputBuilderClient
 
         public static void ExtractMetadataFromXmpSideCar(List<PhotoMetadata> metadata, string fileName)
         {
-            string xmp = System.IO.File.ReadAllText(fileName);
+            string xmp = File.ReadAllText(fileName);
 
             XmpTag tag = null;
 
@@ -182,9 +188,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpAperture(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            uint[] aperture;
-
-            if (reader.GetTagValue(ExifTags.ApertureValue, out aperture))
+            if (reader.GetTagValue(ExifTags.ApertureValue, out uint[] aperture))
             {
                 double d = MetadataNormalizationFunctions.ToApexValue(MetadataNormalizationFunctions.ToReal(aperture[0], aperture[1]));
 
@@ -194,9 +198,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpArtist(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            string artist;
-
-            if (reader.GetTagValue(ExifTags.Artist, out artist))
+            if (reader.GetTagValue(ExifTags.Artist, out string artist))
             {
                 AppendMetadata(metadata, MetadataNames.Photographer, artist);
             }
@@ -204,9 +206,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpCameraMake(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            string cameraMake;
-
-            if (reader.GetTagValue(ExifTags.Make, out cameraMake))
+            if (reader.GetTagValue(ExifTags.Make, out string cameraMake))
             {
                 AppendMetadata(metadata, MetadataNames.CameraManufacturer, cameraMake);
             }
@@ -214,9 +214,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpCameraModel(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            string cameraModel;
-
-            if (reader.GetTagValue(ExifTags.Model, out cameraModel))
+            if (reader.GetTagValue(ExifTags.Model, out string cameraModel))
             {
                 AppendMetadata(metadata, MetadataNames.CameraModel, cameraModel);
             }
@@ -224,9 +222,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpCopyright(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            string copyright;
-
-            if (reader.GetTagValue(ExifTags.Artist, out copyright))
+            if (reader.GetTagValue(ExifTags.Artist, out string copyright))
             {
                 AppendMetadata(metadata, MetadataNames.Copyright, copyright);
             }
@@ -234,9 +230,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpDateTime(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            DateTime whenTaken;
-
-            if (reader.GetTagValue(ExifTags.DateTimeDigitized, out whenTaken))
+            if (reader.GetTagValue(ExifTags.DateTimeDigitized, out DateTime whenTaken))
             {
                 AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
             }
@@ -252,9 +246,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpExposureTime(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            uint[] exposureTime;
-
-            if (reader.GetTagValue(ExifTags.ExposureTime, out exposureTime))
+            if (reader.GetTagValue(ExifTags.ExposureTime, out uint[] exposureTime))
             {
                 double d = MetadataNormalizationFunctions.ToReal(exposureTime[0], exposureTime[1]);
 
@@ -264,9 +256,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpFNumber(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            uint[] fNumber;
-
-            if (reader.GetTagValue(ExifTags.FNumber, out fNumber))
+            if (reader.GetTagValue(ExifTags.FNumber, out uint[] fNumber))
             {
                 double d = MetadataNormalizationFunctions.ClosestFStop(MetadataNormalizationFunctions.ToReal(fNumber[0], fNumber[1]));
 
@@ -276,9 +266,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpFocalLength(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            uint[] focalLength;
-
-            if (reader.GetTagValue(ExifTags.FocalLength, out focalLength))
+            if (reader.GetTagValue(ExifTags.FocalLength, out uint[] focalLength))
             {
                 double d = MetadataNormalizationFunctions.ToReal(focalLength[0], focalLength[1]);
 
@@ -288,21 +276,14 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpGpsLocation(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            double[] latitudeComponents;
-            double[] longitudeComponents;
-
-            if (reader.GetTagValue(ExifTags.GPSLatitude, out latitudeComponents) && reader.GetTagValue(ExifTags.GPSLongitude, out longitudeComponents))
+            if (reader.GetTagValue(ExifTags.GPSLatitude, out double[] latitudeComponents) && reader.GetTagValue(ExifTags.GPSLongitude, out double[] longitudeComponents))
             {
-                string lattitudeRef;
-
-                if (!reader.GetTagValue(ExifTags.GPSLatitudeRef, out lattitudeRef))
+                if (!reader.GetTagValue(ExifTags.GPSLatitudeRef, out string lattitudeRef))
                 {
                     lattitudeRef = "N";
                 }
 
-                string longitudeRef;
-
-                if (!reader.GetTagValue(ExifTags.GPSLongitudeRef, out longitudeRef))
+                if (!reader.GetTagValue(ExifTags.GPSLongitudeRef, out string longitudeRef))
                 {
                     longitudeRef = "E";
                 }
@@ -328,9 +309,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpIsoSpeed(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            ushort isoSpeed;
-
-            if (reader.GetTagValue(ExifTags.PhotographicSensitivity, out isoSpeed))
+            if (reader.GetTagValue(ExifTags.PhotographicSensitivity, out ushort isoSpeed))
             {
                 AppendMetadata(metadata, MetadataNames.ISOSpeed, isoSpeed);
             }
@@ -355,7 +334,7 @@ namespace OutputBuilderClient
             {
                 string xmpFileName = Path.Combine(rootFolder, sourcePhoto.BasePath + ".xmp");
 
-                if (System.IO.File.Exists(xmpFileName))
+                if (File.Exists(xmpFileName))
                 {
                     ExtractXmpSidecareAlternative(metadata, xmpFileName);
                     ExtractMetadataFromXmpSideCar(metadata, xmpFileName);
@@ -376,10 +355,7 @@ namespace OutputBuilderClient
             {
                 Dictionary<string, string> properties = XmpFile.ExtractProperties(sidecarFileName);
 
-                string latStr;
-                string lngStr;
-
-                if (properties.TryGetValue(MetadataNames.Latitude, out latStr) && properties.TryGetValue(MetadataNames.Longitude, out lngStr))
+                if (properties.TryGetValue(MetadataNames.Latitude, out string latStr) && properties.TryGetValue(MetadataNames.Longitude, out string lngStr))
                 {
                     string[] latParts = latStr.Split(separator: ',');
                     string[] lngParts = lngStr.Split(separator: ',');
@@ -511,9 +487,7 @@ namespace OutputBuilderClient
 
         private static void ExtractXmpUserComment(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            string userComment;
-
-            if (reader.GetTagValue(ExifTags.UserComment, out userComment))
+            if (reader.GetTagValue(ExifTags.UserComment, out string userComment))
             {
                 if (!string.IsNullOrWhiteSpace(userComment) && !IsStupidManufacturerComment(userComment))
                 {
