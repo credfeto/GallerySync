@@ -235,10 +235,7 @@ namespace OutputBuilderClient.Metadata
         {
             if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.FocalLength))
             {
-                uint v1;
-                uint v2;
-
-                if (SplitParts(value, out v1, out v2))
+                if (SplitParts(value, out uint v1, out uint v2))
                 {
                     double d = MetadataNormalizationFunctions.ToReal(v1, v2);
 
@@ -248,10 +245,7 @@ namespace OutputBuilderClient.Metadata
 
             if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.Aperture))
             {
-                uint v1;
-                uint v2;
-
-                if (SplitParts(value, out v1, out v2))
+                if (SplitParts(value, out uint v1, out uint v2))
                 {
                     double d = MetadataNormalizationFunctions.ToReal(v1, v2);
 
@@ -261,10 +255,7 @@ namespace OutputBuilderClient.Metadata
 
             if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.ExposureTime))
             {
-                uint v1;
-                uint v2;
-
-                if (SplitParts(value, out v1, out v2))
+                if (SplitParts(value, out uint v1, out uint v2))
                 {
                     double d = MetadataNormalizationFunctions.ToReal(v1, v2);
 
@@ -274,9 +265,7 @@ namespace OutputBuilderClient.Metadata
 
             if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.Orientation))
             {
-                int orientation;
-
-                if (int.TryParse(value, out orientation))
+                if (int.TryParse(value, out int orientation))
                 {
                     // http://sylvana.net/jpegcrop/exif_orientation.html
                     //  1        2       3      4         5            6           7          8
@@ -410,9 +399,7 @@ namespace OutputBuilderClient.Metadata
             Contract.Requires(loader != null);
             Contract.Requires(properties != null);
 
-            string lastValue;
-
-            if (properties.TryGetValue(loader.Name, out lastValue))
+            if (properties.TryGetValue(loader.Name, out string lastValue))
             {
                 if (string.IsNullOrWhiteSpace(lastValue) && !string.IsNullOrWhiteSpace(value))
                 {
