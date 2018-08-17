@@ -15,12 +15,9 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Processing.Drawing;
-using SixLabors.ImageSharp.Processing.Overlays;
-using SixLabors.ImageSharp.Processing.Quantization;
-using SixLabors.ImageSharp.Processing.Transforms;
+using SixLabors.ImageSharp.Processing.Processors.Quantization;
+using SixLabors.Primitives;
 using StorageHelpers;
-using Point = SixLabors.Primitives.Point;
 
 namespace Images
 {
@@ -550,7 +547,7 @@ namespace Images
 
             using (MemoryStream ms = new MemoryStream())
             {
-                PngEncoder encoder = new PngEncoder {CompressionLevel = 9, Quantizer = new WuQuantizer(), PngColorType = PngColorType.Palette};
+                PngEncoder encoder = new PngEncoder {CompressionLevel = 9, Quantizer = new WuQuantizer(), ColorType = PngColorType.Palette};
                 image.SaveAsPng(ms, encoder);
 
                 return ms.ToArray();
@@ -603,6 +600,7 @@ namespace Images
             const string credit = "Camera owner, Mark Ridgwell; Photographer, Mark Ridgwell; Image creator, Mark Ridgwell";
             const string licensing = "For licensing information see https://www.markridgwell.co.uk/about/";
             const string program = "https://www.markridgwell.co.uk/";
+
             //string title = ExtractTitle(filePath, metadata);
             string description = ExtractDescription(metadata, url, shortUrl, creationDate, settings);
 

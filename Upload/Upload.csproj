@@ -17,7 +17,7 @@
   </PropertyGroup>
   <ItemGroup>
       <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
-      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-dev000605"/>
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005"/>
   </ItemGroup>
   <ItemGroup>
       <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>

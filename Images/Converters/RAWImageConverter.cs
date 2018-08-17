@@ -181,10 +181,7 @@ namespace Images.Converters
                     }
                     catch (Exception)
                     {
-                        if (image != null)
-                        {
-                            image.Dispose();
-                        }
+                        image?.Dispose();
 
                         throw;
                     }
