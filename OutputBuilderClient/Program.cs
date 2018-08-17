@@ -19,73 +19,9 @@ namespace OutputBuilderClient
     {
         private static readonly SemaphoreSlim Sempahore = new SemaphoreSlim(initialCount: 1);
 
-        private static void AddUploadFiles(List<string> filesCreated)
-        {
-            // TODO: Ire-implement
-//            foreach (string file in filesCreated)
-//            {
-//                string key = "U" + Hasher.HashBytes(Encoding.UTF8.GetBytes(file));
-//
-//                var existing = outputSession.Load<FileToUpload>(key);
-//                if (existing == null)
-//                {
-//                    var fileToUpload = new FileToUpload { FileName = file, Completed = false };
-//
-//                    outputSession.Store(fileToUpload, key);
-//                }
-//                else
-//                {
-//                    if (existing.Completed)
-//                    {
-//                        existing.Completed = false;
-//                        outputSession.Store(existing, key);
-//                    }
-//                }
-//            }
-        }
-
         private static void ForceGarbageCollection()
         {
             GC.GetTotalMemory(forceFullCollection: true);
-        }
-
-        private static Task KillDeadItems(HashSet<string> liveItems)
-        {
-            return Task.CompletedTask;
-
-            // TODO: REIMPLEMENT
-//            using (IDocumentSession outputSession = documentStoreOutput.OpenSession())
-//            {
-//                foreach (Photo sourcePhoto in outputSession.GetAll<Photo>())
-//                {
-//                    if (liveItems.Contains(sourcePhoto.PathHash))
-//                    {
-//                        continue;
-//                    }
-//
-//                    KillOnePhoto(documentStoreOutput, sourcePhoto);
-//                }
-//            }
-        }
-
-        private static void KillOnePhoto(Photo sourcePhoto)
-        {
-            // TODO: REIMPLEMENT
-//            using (IDocumentSession deletionSession = documentStoreOutput.OpenSession())
-//            {
-//                var targetPhoto = deletionSession.Load<Photo>(sourcePhoto.PathHash);
-//                if (targetPhoto != null)
-//                {
-//                    OutputText("Deleting {0} as no longer exists", sourcePhoto.UrlSafePath);
-//                    deletionSession.Delete(targetPhoto);
-//
-//                    deletionSession.SaveChanges();
-//                }
-//                else
-//                {
-//                    OutputText("Could not delete {0}", sourcePhoto.UrlSafePath);
-//                }
-//            }
         }
 
         private static int Main(string[] args)
@@ -116,20 +52,35 @@ namespace OutputBuilderClient
         {
             IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile(path: "appsettings.json")
+                .AddCommandLine(args,
+                                new Dictionary<string, string>
+                                {
+                                    {@"-source", @"Source:RootFolder"},
+                                    {@"-output", @"Database:OutputFolder"},
+                                    {@"-imageOutput", @"Output:ImagesOutputPath"},
+                                    {@"-brokenImages", @"Output:BrokenImagesFile"},
+                                    {@"-shortUrls", @"Output:ShortUrls"},
+                                    {@"-watermark", @"Images:Watermark"},
+                                    {@"-thumbnailSize", @"Output:ThumbnailSize"},
+                                    {@"-quality", @"Output:JpegOutputQuality"},
+                                    {@"-resizes", @"Output:ImageMaximumDimensions"}
+                                })
                 .Build();
 
-            Settings.RootFolder = config.GetValue<string>( @"Source:RootFolder");
-            Settings.BitlyApiUser = config.GetValue<string>( @"UrlShortener:BitlyApiUser");
-            Settings.BitlyApiKey = config.GetValue<string>( @"UrlShortener:BitlyApiKey");
+            Settings.RootFolder = config.GetValue<string>(key: @"Source:RootFolder");
+            Settings.DatabaseOutputFolder = config.GetValue<string>(key: @"Output:ShortUrls");
+            Settings.ShortNamesFile = config.GetValue<string>(key: @"Output:ShortUrls");
+            Settings.BrokenImagesFile = config.GetValue<string>(key: @"Output:BrokenImagesFile");
+            Settings.BitlyApiUser = config.GetValue<string>(key: @"UrlShortener:BitlyApiUser");
+            Settings.BitlyApiKey = config.GetValue<string>(key: @"UrlShortener:BitlyApiKey");
 
-            ISettings imageSettings = new ImageSettings(
-                thumbnailSize: config.GetValue<int>(@"Output:ThumbnailSize", 150),
-                defaultShortUrl: @"https://www.markridgwell.co.uk",
-                imageMaximumDimensions: config.GetValue<string>(@"Output:ImageMaximumDimensions"),
-                rootFolder: Settings.RootFolder,
-                imagesOutputPath: config.GetValue<string>(@"Output:ImagesOutputPath"),
-                jpegOutputQuality: config.GetValue<int>(@"Output:JpegOutputQuality", 100),
-                watermarkImage: config.GetValue<string>(@"Images:Watermark"));
+            ISettings imageSettings = new ImageSettings(thumbnailSize: config.GetValue(key: @"Output:ThumbnailSize", defaultValue: 150),
+                                                        defaultShortUrl: @"https://www.markridgwell.co.uk",
+                                                        imageMaximumDimensions: config.GetValue(key: @"Output:ImageMaximumDimensions", defaultValue: @"400,600,800,1024,1600"),
+                                                        rootFolder: Settings.RootFolder,
+                                                        imagesOutputPath: config.GetValue<string>(key: @"Output:ImagesOutputPath"),
+                                                        jpegOutputQuality: config.GetValue(key: @"Output:JpegOutputQuality", defaultValue: 100),
+                                                        watermarkImage: config.GetValue<string>(key: @"Images:Watermark"));
 
             if (args.Length == 1)
             {
@@ -202,9 +153,7 @@ namespace OutputBuilderClient
             Photo[] source = sourceTask.Result;
             Photo[] target = targetTask.Result;
 
-            HashSet<string> liveItems = await Process(source, target, imageSettings);
-
-            await KillDeadItems(liveItems);
+            await Process(source, target, imageSettings);
         }
 
         private static async Task ProcessOneFile(Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl, ISettings imageSettings)
@@ -248,15 +197,12 @@ namespace OutputBuilderClient
 
                 if (buildImages)
                 {
-                    AddUploadFiles(filesCreated);
                 }
 
                 await PhotoMetadataRepository.Store(targetPhoto);
             }
             else
             {
-                AddUploadFiles(filesCreated);
-
                 await PhotoMetadataRepository.Store(sourcePhoto);
             }
         }
