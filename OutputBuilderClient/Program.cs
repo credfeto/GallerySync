@@ -57,7 +57,7 @@ namespace OutputBuilderClient
                                 {
                                     {@"-source", @"Source:RootFolder"},
                                     {@"-output", @"Database:OutputFolder"},
-                                    {@"-imageOutput", @"Output:ImagesOutputPath"},
+                                    {@"-imageoutput", @"Output:ImagesOutputPath"},
                                     {@"-brokenImages", @"Output:BrokenImagesFile"},
                                     {@"-shortUrls", @"Output:ShortUrls"},
                                     {@"-watermark", @"Images:Watermark"},
