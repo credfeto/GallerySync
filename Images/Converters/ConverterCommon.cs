@@ -23,7 +23,7 @@ namespace Images.Converters
         {
             Contract.Requires(stream != null);
 
-            using (var ms = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
                 stream.CopyTo(ms);
                 ms.Seek(0, SeekOrigin.Begin);

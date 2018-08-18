@@ -24,9 +24,7 @@ namespace FileNaming
             {
                 string datePart = match.Value.Trim();
 
-                DateTime date;
-
-                if (DateTime.TryParse(datePart, out date))
+                if (DateTime.TryParse(datePart, out DateTime date))
                 {
                     string fieldEnd = name.Remove(startIndex: 0, match.Value.Length)
                         .TrimStart(NamePrefixStripCharacters.ToCharArray());
@@ -53,9 +51,7 @@ namespace FileNaming
             {
                 string datePart = match.Value.Trim();
 
-                DateTime date;
-
-                if (DateTime.TryParse(datePart, out date))
+                if (DateTime.TryParse(datePart, out DateTime date))
                 {
                     return string.Format(CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), date);
                 }
