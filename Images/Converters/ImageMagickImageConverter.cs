@@ -20,8 +20,8 @@ namespace Images.Converters
     [SupportedExtension(extension: "jpeg")]
     [SupportedExtension(extension: "jpe")]
     [SupportedExtension(extension: "gif")]
-    [SupportedExtension(extension: "tif")]
-    [SupportedExtension(extension: "tiff")]
+//    [SupportedExtension(extension: "tif")]
+//    [SupportedExtension(extension: "tiff")]
     [SupportedExtension(extension: "png")]
     [SupportedExtension(extension: "bmp")]
     internal class ImageMagickImageConverter : IImageConverter
@@ -38,10 +38,7 @@ namespace Images.Converters
             }
             catch
             {
-                if (image != null)
-                {
-                    image.Dispose();
-                }
+                image?.Dispose();
 
                 throw;
             }

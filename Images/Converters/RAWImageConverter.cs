@@ -173,7 +173,7 @@ namespace Images.Converters
 
                     try
                     {
-                        image = ConverterCommon.OpenBitmapFromStream(stream);
+                        image = ConverterCommon.OpenBitmapFromTiffStream(stream);
 
                         process.WaitForExit();
 

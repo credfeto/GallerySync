@@ -16,6 +16,7 @@
     </Description>
   </PropertyGroup>
   <ItemGroup>
+      <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.584.1"/>
       <PackageReference Include="ExifLib.Standard" Version="1.7.0"/>
       <PackageReference Include="QRCoder" Version="1.3.3"/>
       <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005"/>

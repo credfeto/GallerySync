@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.IO;
+using BitMiracle.LibTiff.Classic;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -18,27 +19,73 @@ namespace Images.Converters
         ///     The image that was contained in the stream.
         /// </returns>
         [SuppressMessage(category: "Microsoft.Usage", checkId: "CA1801:ReviewUnusedParameters", MessageId = "fileName", Justification = "Used for logging")]
-        public static Image<Rgba32> OpenBitmapFromStream(Stream stream)
+        public static Image<Rgba32> OpenBitmapFromTiffStream(Stream stream)
         {
             Contract.Requires(stream != null);
 
-            Image<Rgba32> image = null;
-
-            try
+            using (var ms = new MemoryStream())
             {
-                image = Image.Load(stream);
+                stream.CopyTo(ms);
+                ms.Seek(0, SeekOrigin.Begin);
 
-                return image;
-            }
-            catch
-            {
-                if (image != null)
+                using (Tiff tif = Tiff.ClientOpen(name: "in-memory", mode: "r", ms, new TiffStream()))
                 {
-                    image.Dispose();
-                }
+                    // Find the width and height of the image
+                    FieldValue[] value = tif.GetField(TiffTag.IMAGEWIDTH);
+                    int width = value[0]
+                        .ToInt();
 
-                throw;
+                    value = tif.GetField(TiffTag.IMAGELENGTH);
+                    int height = value[0]
+                        .ToInt();
+
+                    // Read the image into the memory buffer
+                    int[] raster = new int[height * width];
+
+                    if (!tif.ReadRGBAImage(width, height, raster))
+                    {
+                        return null;
+                    }
+
+                    using (Image<Rgba32> bmp = new Image<Rgba32>(width, height))
+                    {
+                        for (int y = 0; y < bmp.Height; y++)
+                        {
+                            int rasterOffset = y * bmp.Width;
+
+                            for (int x = 0; x < bmp.Width; x++)
+                            {
+                                int rgba = raster[rasterOffset++];
+                                byte r = (byte) ((rgba >> 16) & 0xff);
+                                byte g = (byte) ((rgba >> 8) & 0xff);
+                                byte b = (byte) (rgba & 0xff);
+                                byte a = (byte) ((rgba >> 24) & 0xff);
+
+                                bmp[x, y] = new Rgba32(r, g, b, a);
+                            }
+                        }
+
+                        return bmp;
+                    }
+                }
             }
+
+//            }
+//
+//            Image<Rgba32> image = null;
+//
+//            try
+//            {
+//                image = Image.Load(stream);
+//
+//                return image;
+//            }
+//            catch
+//            {
+//                image?.Dispose();
+//
+//                throw;
+//            }
         }
     }
 }
