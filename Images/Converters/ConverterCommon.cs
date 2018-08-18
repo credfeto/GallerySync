@@ -47,8 +47,13 @@ namespace Images.Converters
                         return null;
                     }
 
-                    using (Image<Rgba32> bmp = new Image<Rgba32>(width, height))
+                    bool ok = false;
+                    Image<Rgba32> bmp = null;
+
+                    try
                     {
+                        bmp = new Image<Rgba32>(width, height);
+
                         for (int y = 0; y < bmp.Height; y++)
                         {
                             int rasterOffset = y * bmp.Width;
@@ -65,27 +70,17 @@ namespace Images.Converters
                             }
                         }
 
+                        ok = true;
                         return bmp;
+                    }
+                    finally
+                    {
+                        if(!ok)
+                        bmp?.Dispose();
+
                     }
                 }
             }
-
-//            }
-//
-//            Image<Rgba32> image = null;
-//
-//            try
-//            {
-//                image = Image.Load(stream);
-//
-//                return image;
-//            }
-//            catch
-//            {
-//                image?.Dispose();
-//
-//                throw;
-//            }
-        }
+       }
     }
 }

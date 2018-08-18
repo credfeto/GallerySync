@@ -56,6 +56,11 @@ namespace Images
 
                 using (Image<Rgba32> sourceBitmap = converter.LoadImage(filename))
                 {
+                    if (sourceBitmap == null)
+                    {
+                        return null;
+                    }
+
                     int sourceImageWidth = sourceBitmap.Width;
 
                     foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
