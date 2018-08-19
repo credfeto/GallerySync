@@ -177,6 +177,8 @@ namespace Images.Converters
 
                         process.WaitForExit();
 
+                        ImageHelpers.RotateImageIfNecessary(image, degrees: 180);
+
                         return image;
                     }
                     catch (Exception)
