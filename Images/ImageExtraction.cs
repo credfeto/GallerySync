@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using FileNaming;
+using ImageLoader.Interfaces;
 using ObjectModel;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -23,7 +24,6 @@ namespace Images
 {
     public static class ImageExtraction
     {
-        private static readonly Dictionary<string, IImageConverter> RegisteredConverters = LocateConverters();
 
         /// <summary>
         ///     Gets the copyright declaration.
@@ -41,20 +41,24 @@ namespace Images
             }
         }
 
-        public static async Task<List<ImageSize>> BuildImages(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl, ISettings settings)
+        public static async Task<List<ImageSize>> BuildImages(
+            IImageLoader loader,
+
+            Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl, ISettings settings)
         {
             List<ImageSize> sizes = new List<ImageSize>();
 
             string rawExtension = sourcePhoto.ImageExtension.TrimStart('.')
                 .ToUpperInvariant();
 
-            if (RegisteredConverters.TryGetValue(rawExtension, out IImageConverter converter))
+
+            if (loader.SupportedExtensions.Contains(rawExtension))
             {
                 int[] imageSizes = StandardImageSizesWithThumbnailSize(settings);
 
                 string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
-                using (Image<Rgba32> sourceBitmap = converter.LoadImage(filename))
+                using (Image<Rgba32> sourceBitmap = await loader.LoadImageAsync(filename))
                 {
                     if (sourceBitmap == null)
                     {

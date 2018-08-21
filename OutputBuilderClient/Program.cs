@@ -7,8 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ImageLoader.Interfaces;
 using Images;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ObjectModel;
 using StorageHelpers;
@@ -82,6 +84,11 @@ namespace OutputBuilderClient
                                                         jpegOutputQuality: config.GetValue(key: @"Output:JpegOutputQuality", defaultValue: 100),
                                                         watermarkImage: config.GetValue<string>(key: @"Images:Watermark"));
 
+            ServiceCollection serviceCollection = RegisterServices();
+
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
             if (args.Length == 1)
             {
                 ShortUrls.Load();
@@ -107,7 +114,9 @@ namespace OutputBuilderClient
             {
                 ShortUrls.Load();
 
-                await ProcessGallery(imageSettings);
+                IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
+
+                await ProcessGallery(imageSettings, imageLoader);
 
                 retval = 0;
             }
@@ -124,6 +133,18 @@ namespace OutputBuilderClient
             return retval;
         }
 
+        private static ServiceCollection RegisterServices()
+        {
+            var serviceCollection = new ServiceCollection();
+
+            ImageLoader.Core.ImageLoaderCoreSetup.Configure(serviceCollection);
+            ImageLoader.Standard.ImageLoaderStandardSetup.Configure(serviceCollection);
+            ImageLoader.Raw.ImageLoaderRawSetup.Configure(serviceCollection);
+            ImageLoader.Photoshop.ImageLoaderPhotoshopSetup.Configure(serviceCollection);
+
+            return serviceCollection;
+        }
+
         private static Task DumpBrokenImages()
         {
             string[] images = BrokenImages.AllBrokenImages();
@@ -133,17 +154,17 @@ namespace OutputBuilderClient
             return ConsoleOutput.Line(formatString: "Broken Images: {0}", images.Length);
         }
 
-        private static async Task<HashSet<string>> Process(Photo[] source, Photo[] target, ISettings imageSettings)
+        private static async Task<HashSet<string>> Process(IImageLoader imageLoader, Photo[] source, Photo[] target, ISettings imageSettings)
         {
             ConcurrentDictionary<string, bool> items = new ConcurrentDictionary<string, bool>();
 
-            await Task.WhenAll(source.Select(selector: sourcePhoto => ProcessSinglePhoto(target, sourcePhoto, items, imageSettings))
+            await Task.WhenAll(source.Select(selector: sourcePhoto => ProcessSinglePhoto(imageLoader, target, sourcePhoto, items, imageSettings))
                                    .ToArray());
 
             return new HashSet<string>(items.Keys);
         }
 
-        private static async Task ProcessGallery(ISettings imageSettings)
+        private static async Task ProcessGallery(ISettings imageSettings, IImageLoader imageLoader)
         {
             Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepository(Settings.RootFolder);
             Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepository(Settings.DatabaseOutputFolder);
@@ -153,10 +174,10 @@ namespace OutputBuilderClient
             Photo[] source = sourceTask.Result;
             Photo[] target = targetTask.Result;
 
-            await Process(source, target, imageSettings);
+            await Process(imageLoader, source, target, imageSettings);
         }
 
-        private static async Task ProcessOneFile(Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl, ISettings imageSettings)
+        private static async Task ProcessOneFile(IImageLoader imageLoader, Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl, ISettings imageSettings)
         {
             await ConsoleOutput.Line(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
@@ -181,7 +202,7 @@ namespace OutputBuilderClient
             {
                 DateTime creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
 
-                sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
+                sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(imageLoader, sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
             }
             else
             {
@@ -207,7 +228,7 @@ namespace OutputBuilderClient
             }
         }
 
-        private static async Task ProcessSinglePhoto(Photo[] target, Photo sourcePhoto, ConcurrentDictionary<string, bool> items, ISettings imageSettings)
+        private static async Task ProcessSinglePhoto(IImageLoader imageLoader, Photo[] target, Photo sourcePhoto, ConcurrentDictionary<string, bool> items, ISettings imageSettings)
         {
             ForceGarbageCollection();
 
@@ -257,7 +278,7 @@ namespace OutputBuilderClient
 
                 if (build || rebuild || rebuildMetadata)
                 {
-                    await ProcessOneFile(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl, imageSettings);
+                    await ProcessOneFile(imageLoader, sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl, imageSettings);
                 }
                 else
                 {
