@@ -195,7 +195,7 @@ namespace OutputBuilderClient.Metadata
             yield return new AttributeItemLoader(MetadataNames.Longitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLongitude");
             yield return new ElementItemLoader(MetadataNames.Longitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLongitude");
 
-            yield return new ElementItemLoader(MetadataNames.ISOSpeed, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ISOSpeedRatings/rdf:Seq/rdf:li");
+            yield return new ElementItemLoader(MetadataNames.IsoSpeed, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ISOSpeedRatings/rdf:Seq/rdf:li");
             yield return new ElementItemListLoader(MetadataNames.Keywords, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
         }
 

@@ -311,7 +311,7 @@ namespace OutputBuilderClient
         {
             if (reader.GetTagValue(ExifTags.PhotographicSensitivity, out ushort isoSpeed))
             {
-                AppendMetadata(metadata, MetadataNames.ISOSpeed, isoSpeed);
+                AppendMetadata(metadata, MetadataNames.IsoSpeed, isoSpeed);
             }
         }
 
@@ -461,7 +461,7 @@ namespace OutputBuilderClient
 
             if (tag.ISOSpeedRatings.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.ISOSpeed, tag.ISOSpeedRatings.Value);
+                AppendMetadata(metadata, MetadataNames.IsoSpeed, tag.ISOSpeedRatings.Value);
             }
 
             if (tag.FocalLength.HasValue)
