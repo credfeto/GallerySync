@@ -70,7 +70,7 @@ namespace OutputBuilderClient
                 .Build();
 
             Settings.RootFolder = config.GetValue<string>(key: @"Source:RootFolder");
-            Settings.DatabaseOutputFolder = config.GetValue<string>(key: @"Output:ShortUrls");
+            Settings.DatabaseOutputFolder = config.GetValue<string>(key: @"Output:OutputFolder");
             Settings.ShortNamesFile = config.GetValue<string>(key: @"Output:ShortUrls");
             Settings.BrokenImagesFile = config.GetValue<string>(key: @"Output:BrokenImagesFile");
             Settings.BitlyApiUser = config.GetValue<string>(key: @"UrlShortener:BitlyApiUser");
