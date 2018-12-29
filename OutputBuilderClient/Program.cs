@@ -7,7 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ImageLoader.Core;
 using ImageLoader.Interfaces;
+using ImageLoader.Photoshop;
+using ImageLoader.Raw;
+using ImageLoader.Standard;
 using Images;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,7 +74,7 @@ namespace OutputBuilderClient
                 .Build();
 
             Settings.RootFolder = config.GetValue<string>(key: @"Source:RootFolder");
-            Settings.DatabaseOutputFolder = config.GetValue<string>(key: @"Output:OutputFolder");
+            Settings.DatabaseOutputFolder = config.GetValue<string>(key: @"Database:OutputFolder");
             Settings.ShortNamesFile = config.GetValue<string>(key: @"Output:ShortUrls");
             Settings.BrokenImagesFile = config.GetValue<string>(key: @"Output:BrokenImagesFile");
             Settings.BitlyApiUser = config.GetValue<string>(key: @"UrlShortener:BitlyApiUser");
@@ -86,8 +90,7 @@ namespace OutputBuilderClient
 
             ServiceCollection serviceCollection = RegisterServices();
 
-
-            var serviceProvider = serviceCollection.BuildServiceProvider();
+            ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
             if (args.Length == 1)
             {
@@ -135,12 +138,12 @@ namespace OutputBuilderClient
 
         private static ServiceCollection RegisterServices()
         {
-            var serviceCollection = new ServiceCollection();
+            ServiceCollection serviceCollection = new ServiceCollection();
 
-            ImageLoader.Core.ImageLoaderCoreSetup.Configure(serviceCollection);
-            ImageLoader.Standard.ImageLoaderStandardSetup.Configure(serviceCollection);
-            ImageLoader.Raw.ImageLoaderRawSetup.Configure(serviceCollection);
-            ImageLoader.Photoshop.ImageLoaderPhotoshopSetup.Configure(serviceCollection);
+            ImageLoaderCoreSetup.Configure(serviceCollection);
+            ImageLoaderStandardSetup.Configure(serviceCollection);
+            ImageLoaderRawSetup.Configure(serviceCollection);
+            ImageLoaderPhotoshopSetup.Configure(serviceCollection);
 
             return serviceCollection;
         }
@@ -177,7 +180,14 @@ namespace OutputBuilderClient
             await Process(imageLoader, source, target, imageSettings);
         }
 
-        private static async Task ProcessOneFile(IImageLoader imageLoader, Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl, ISettings imageSettings)
+        private static async Task ProcessOneFile(IImageLoader imageLoader,
+                                                 Photo sourcePhoto,
+                                                 Photo targetPhoto,
+                                                 bool rebuild,
+                                                 bool rebuildMetadata,
+                                                 string url,
+                                                 string shortUrl,
+                                                 ISettings imageSettings)
         {
             await ConsoleOutput.Line(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
 
