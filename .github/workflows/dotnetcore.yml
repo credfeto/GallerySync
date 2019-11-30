@@ -23,7 +23,7 @@ jobs:
     - name: Setup nuget
       run: sudo apt-get install nuget
     - name: Add personal feed
-      run: nuget sources add -name Credfeto -Source https://www.myget.org/F/credfeto/api/v3/index.json
+      run: sudo nuget sources add -name Credfeto -Source https://www.myget.org/F/credfeto/api/v3/index.json
     - name: Build with dotnet
       run: dotnet build --configuration Release /p:Version=1.0.0.${{ steps.buildnumber.outputs.build_number }}
 #    - name: Pack tool 
