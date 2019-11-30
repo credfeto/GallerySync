@@ -25,7 +25,7 @@ jobs:
     - name: Add personal feed
       run: sudo nuget sources add -name Credfeto -Source https://www.myget.org/F/credfeto/api/v3/index.json
     - name: Build with dotnet
-      run: dotnet build --configuration Release /p:Version=1.0.0.${{ steps.buildnumber.outputs.build_number }} --source https://www.myget.org/F/credfeto/api/v3/index.json
+      run: dotnet build --configuration Release /p:Version=1.0.0.${{ steps.buildnumber.outputs.build_number }} --source https://www.myget.org/F/credfeto/api/v3/index.json --source https://api.nuget.org/v3/index.json
 #    - name: Pack tool 
 #      run: dotnet pack --configuration Release -o dist
 #    - name: publish
