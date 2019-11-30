@@ -1,30 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-      <TargetFramework>netcoreapp3.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Company>Mark Ridgwell</Company>
-    <Copyright>Mark Ridgwell</Copyright>
-    <Product>Photo Gallery</Product>
-    <NeutralLanguage>en-GB</NeutralLanguage>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyTitle>Gallery.BuildSiteIndex</AssemblyTitle>
-    <Description>Photo Gallery Site Index Builder</Description>
-  </PropertyGroup>
-  <ItemGroup>
-      <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
-      <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
-      <ProjectReference Include="..\Scanner\Scanner.csproj"/>
-      <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
-      <ProjectReference Include="..\Upload\Upload.csproj"/>
-  </ItemGroup>
-  <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.0.1"/>
-      <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.0.1"/>
-      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.1"/>
-      <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+        <WarningsAsErrors/>
+        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+        <Features>strict;flow-analysis</Features>
+        <PackAsTool>true</PackAsTool>
+        <IsPackable>true</IsPackable>
+        <Nullable>disable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup>
+        <Company>Mark Ridgwell</Company>
+        <Copyright>Mark Ridgwell</Copyright>
+        <Product>Photo Gallery</Product>
+        <NeutralLanguage>en-GB</NeutralLanguage>
+    </PropertyGroup>
+    <PropertyGroup>
+        <AssemblyTitle>Gallery.BuildSiteIndex</AssemblyTitle>
+        <Description>Photo Gallery Site Index Builder</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
+        <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
+        <ProjectReference Include="..\Scanner\Scanner.csproj"/>
+        <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
+        <ProjectReference Include="..\Upload\Upload.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.1"/>
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
+    </ItemGroup>
 </Project>

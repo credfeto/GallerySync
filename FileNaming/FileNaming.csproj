@@ -1,19 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Company>Mark Ridgwell</Company>
-    <Copyright>Mark Ridgwell</Copyright>
-    <Product>Photo Gallery</Product>
-    <NeutralLanguage>en-GB</NeutralLanguage>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyTitle>Gallery.FileNaming</AssemblyTitle>
-    <Description>Photo Gallery File Naming</Description>
-  </PropertyGroup>
-  <ItemGroup>
-      <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+        <WarningsAsErrors/>
+        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+        <Features>strict;flow-analysis</Features>
+        <PackAsTool>true</PackAsTool>
+        <IsPackable>true</IsPackable>
+        <Nullable>disable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup>
+        <Company>Mark Ridgwell</Company>
+        <Copyright>Mark Ridgwell</Copyright>
+        <Product>Photo Gallery</Product>
+        <NeutralLanguage>en-GB</NeutralLanguage>
+    </PropertyGroup>
+    <PropertyGroup>
+        <AssemblyTitle>Gallery.FileNaming</AssemblyTitle>
+        <Description>Photo Gallery File Naming</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
+    </ItemGroup>
 </Project>

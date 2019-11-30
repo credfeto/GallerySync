@@ -1,21 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Company>Mark Ridgwell</Company>
-    <Copyright>Mark Ridgwell</Copyright>
-    <Product>Photo Gallery</Product>
-    <NeutralLanguage>en-GB</NeutralLanguage>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyTitle>Gallery.DeleteImageIfCorrupt</AssemblyTitle>
-    <Description>Photo Gallery Built Image Corruption Detector.</Description>
-  </PropertyGroup>
-  <ItemGroup>
-      <ProjectReference Include="..\Images\Images.csproj"/>
-      <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+        <WarningsAsErrors/>
+        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+        <Features>strict;flow-analysis</Features>
+        <PackAsTool>true</PackAsTool>
+        <IsPackable>true</IsPackable>
+        <Nullable>disable</Nullable>
+    </PropertyGroup>
+    <PropertyGroup>
+        <Company>Mark Ridgwell</Company>
+        <Copyright>Mark Ridgwell</Copyright>
+        <Product>Photo Gallery</Product>
+        <NeutralLanguage>en-GB</NeutralLanguage>
+    </PropertyGroup>
+    <PropertyGroup>
+        <AssemblyTitle>Gallery.DeleteImageIfCorrupt</AssemblyTitle>
+        <Description>Photo Gallery Built Image Corruption Detector.</Description>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Images\Images.csproj"/>
+        <ProjectReference Include="..\StorageHelpers\StorageHelpers.csproj"/>
+    </ItemGroup>
 </Project>
