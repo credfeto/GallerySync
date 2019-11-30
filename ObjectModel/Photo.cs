@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Twaddle.Gallery.ObjectModel
+namespace ObjectModel
 {
     [Serializable]
-    [DebuggerDisplay("BasePath: {BasePath}, Image:{ImageExtension} Hash:{PathHash}")]
+    [DebuggerDisplay(value: "BasePath: {BasePath}, Image:{ImageExtension} Hash:{PathHash}")]
     public class Photo
     {
         public int Version { get; set; }

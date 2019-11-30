@@ -9,11 +9,11 @@ namespace FileNaming
         {
             const string separator = @"\";
 
-            var indexes = new[] {2, 4, 8, 12, 20 };
+            int[] indexes = {2, 4, 8, 12, 20};
 
-            var builder = new StringBuilder(pathHash);
+            StringBuilder builder = new StringBuilder(pathHash);
 
-            foreach (var index in indexes.OrderByDescending( x => x ))
+            foreach (int index in indexes.OrderByDescending(keySelector: x => x))
             {
                 builder.Insert(index, separator);
             }

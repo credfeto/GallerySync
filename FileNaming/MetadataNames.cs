@@ -12,7 +12,7 @@
 
         public const string Photographer = "Photographer";
 
-        public const string ISOSpeed = "ISO Speed";
+        public const string IsoSpeed = "ISO Speed";
 
         public const string Latitude = "Latitude";
 
@@ -34,6 +34,6 @@
 
         public const string Comment = "Comment";
 
-        public static string Title = "Title";    
+        public static string Title = "Title";
     }
 }

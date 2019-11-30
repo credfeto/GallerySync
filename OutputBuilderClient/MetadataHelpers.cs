@@ -2,21 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using FileNaming;
-using Twaddle.Gallery.ObjectModel;
+using ObjectModel;
 
 namespace OutputBuilderClient
 {
-    static internal class MetadataHelpers
+    internal static class MetadataHelpers
     {
         public static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
         {
-            var dateTaken = metadata.FirstOrDefault(candidate => candidate.Name == MetadataNames.DateTaken);
-            if (dateTaken == null)
-                return DateTime.MinValue;
+            PhotoMetadata dateTaken = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.DateTaken);
 
-            DateTime value;
-            if (DateTime.TryParse(dateTaken.Value, out value))
+            if (dateTaken == null)
+            {
+                return DateTime.MinValue;
+            }
+
+            if (DateTime.TryParse(dateTaken.Value, out DateTime value))
+            {
                 return value;
+            }
 
             return DateTime.MinValue;
         }

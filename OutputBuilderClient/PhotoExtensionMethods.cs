@@ -1,9 +1,8 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
 using FileNaming;
-using OutputBuilderClient.Properties;
-using Twaddle.Gallery.ObjectModel;
+using ObjectModel;
 
 namespace OutputBuilderClient
 {
@@ -25,26 +24,25 @@ namespace OutputBuilderClient
         public static Task UpdateFileHashes(this Photo targetPhoto, Photo sourcePhoto)
         {
             if (targetPhoto != null)
-                foreach (var sourceFile in
-                    sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash)))
+            {
+                foreach (ComponentFile sourceFile in sourcePhoto.Files.Where(predicate: s => string.IsNullOrWhiteSpace(s.Hash)))
                 {
-                    var targetFile =
-                        targetPhoto.Files.FirstOrDefault(
-                            s => s.Extension == sourceFile.Extension && !string.IsNullOrWhiteSpace(s.Hash));
-                    if (targetFile != null)
-                        sourceFile.Hash = targetFile.Hash;
-                }
+                    ComponentFile targetFile = targetPhoto.Files.FirstOrDefault(predicate: s => s.Extension == sourceFile.Extension && !string.IsNullOrWhiteSpace(s.Hash));
 
-            return Task.WhenAll(
-                sourcePhoto.Files.Where(s => string.IsNullOrWhiteSpace(s.Hash))
-                    .Select(sourcePhoto.SetFileHash));
+                    if (targetFile != null)
+                    {
+                        sourceFile.Hash = targetFile.Hash;
+                    }
+                }
+            }
+
+            return Task.WhenAll(sourcePhoto.Files.Where(predicate: s => string.IsNullOrWhiteSpace(s.Hash))
+                                    .Select(sourcePhoto.SetFileHash));
         }
 
         private static async Task SetFileHash(this Photo sourcePhoto, ComponentFile file)
         {
-            var filename = Path.Combine(
-                Settings.Default.RootFolder,
-                sourcePhoto.BasePath + file.Extension);
+            string filename = Path.Combine(Settings.RootFolder, sourcePhoto.BasePath + file.Extension);
 
             file.Hash = await Hasher.HashFile(filename);
         }

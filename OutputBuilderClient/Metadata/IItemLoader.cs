@@ -6,16 +6,16 @@
 //   The item loader.
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
+using System.Diagnostics.CodeAnalysis;
+using System.Xml;
+
 namespace OutputBuilderClient.Metadata
 {
-    using System.Diagnostics.CodeAnalysis;
-    using System.Xml;
-
     /// <summary>
     ///     The item loader.
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1059:MembersShouldNotExposeCertainConcreteTypes",
-        MessageId = "System.Xml.XmlDocument", Justification = "Better API")]
+    [SuppressMessage(category: "Microsoft.Design", checkId: "CA1059:MembersShouldNotExposeCertainConcreteTypes", MessageId = "System.Xml.XmlDocument", Justification = "Better API")]
     internal interface IItemLoader
     {
         /// <summary>

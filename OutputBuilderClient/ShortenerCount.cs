@@ -1,11 +1,10 @@
-﻿namespace OutputBuilderClient
-{
-    using System;
-    using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
+namespace OutputBuilderClient
+{
     [Serializable]
-    [DebuggerDisplay("Year: {Year}, Month:{Month} Impressions:{Impressions} TotalImpressionsEver:{TotalImpressionsEver}"
-        )]
+    [DebuggerDisplay(value: "Year: {Year}, Month:{Month} Impressions:{Impressions} TotalImpressionsEver:{TotalImpressionsEver}")]
     public class ShortenerCount
     {
         public int Impressions { get; set; }

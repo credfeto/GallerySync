@@ -10,8 +10,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
-using Alphaleonis.Win32.Filesystem;
 using StorageHelpers;
 
 namespace OutputBuilderClient
@@ -41,8 +41,8 @@ namespace OutputBuilderClient
         {
             Contract.Requires(!string.IsNullOrEmpty(fileMask));
 
-            _path = Path.GetTempPath();
-            _fileMask = fileMask;
+            this._path = Path.GetTempPath();
+            this._fileMask = fileMask;
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace OutputBuilderClient
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
 
@@ -60,9 +60,8 @@ namespace OutputBuilderClient
         /// </summary>
         ~TemporaryFilesCleaner()
         {
-            Dispose(false);
+            this.Dispose(disposing: false);
         }
-
 
         /// <summary>
         ///     Releases unmanaged and - optionally - managed resources.
@@ -73,27 +72,28 @@ namespace OutputBuilderClient
         private void Dispose(bool disposing)
         {
             if (!disposing)
+            {
                 return;
+            }
 
-            var files = Directory.GetFiles(_path, _fileMask);
-            foreach (
-                var fullFileName in files.Select(file => Path.Combine(_path, file))
-            )
+            string[] files = Directory.GetFiles(this._path, this._fileMask);
+
+            foreach (string fullFileName in files.Select(selector: file => Path.Combine(this._path, file)))
+            {
                 FileHelpers.DeleteFile(fullFileName);
+            }
         }
 
         /// <summary>
         ///     The object invariant.
         /// </summary>
-        [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode",
-            Justification = "Required for Code Contracts")]
-        [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic",
-            Justification = "Required for Code Contracts")]
+        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1811:AvoidUncalledPrivateCode", Justification = "Required for Code Contracts")]
+        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1822:MarkMembersAsStatic", Justification = "Required for Code Contracts")]
         [ContractInvariantMethod]
         private void ObjectInvariant()
         {
-            Contract.Invariant(!string.IsNullOrEmpty(_fileMask));
-            Contract.Invariant(!string.IsNullOrEmpty(_path));
+            Contract.Invariant(!string.IsNullOrEmpty(this._fileMask));
+            Contract.Invariant(!string.IsNullOrEmpty(this._path));
         }
     }
 }

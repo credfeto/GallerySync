@@ -1,12 +1,12 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
 using FileNaming;
-using Twaddle.Directory.Scanner;
-using Twaddle.Gallery.ObjectModel;
+using ObjectModel;
+using Scanner;
 
 namespace OutputBuilderClient
 {
@@ -16,46 +16,50 @@ namespace OutputBuilderClient
 
         public Photo[] Photos
         {
-            get { return _photos.OrderBy(x => x.UrlSafePath).ToArray(); }
+            get
+            {
+                return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
+                    .ToArray();
+            }
         }
 
         public async Task FileFound(FileEntry entry)
         {
-            var basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
+            string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
-            var item = await CreatePhotoRecord(entry, basePath);
+            Photo item = await CreatePhotoRecord(entry, basePath);
 
-            Store(item);
+            this.Store(item);
         }
 
         private void Store(Photo photo)
         {
-            _photos.Add(photo);
+            this._photos.Add(photo);
         }
 
         private static async Task<Photo> CreatePhotoRecord(FileEntry entry, string basePath)
         {
-            var urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
+            string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
-            var componentFiles = new List<ComponentFile>();
+            List<ComponentFile> componentFiles = new List<ComponentFile>();
 
-            var factory = Task<ComponentFile>.Factory;
+            TaskFactory<ComponentFile> factory = Task<ComponentFile>.Factory;
 
-            var tasks =
-                entry.AlternateFileNames.Concat(new[] {entry.LocalFileName})
-                    .Select(fileName => ReadComponentFile(factory, Path.Combine(entry.Folder, fileName)))
-                    .ToArray();
+            Task<ComponentFile>[] tasks = entry.AlternateFileNames.Concat(new[] {entry.LocalFileName})
+                .Select(selector: fileName => ReadComponentFile(factory, Path.Combine(entry.Folder, fileName)))
+                .ToArray();
 
-            var item = new Photo
-            {
-                BasePath = basePath,
-                UrlSafePath = urlSafePath,
-                PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
-                ImageExtension = Path.GetExtension(entry.LocalFileName),
-                Files = componentFiles
-            };
+            Photo item = new Photo
+                         {
+                             BasePath = basePath,
+                             UrlSafePath = urlSafePath,
+                             PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
+                             ImageExtension = Path.GetExtension(entry.LocalFileName),
+                             Files = componentFiles
+                         };
 
-            await Task.WhenAll(tasks).ContinueWith(t => componentFiles.AddRange(t.Result));
+            await Task.WhenAll(tasks)
+                .ContinueWith(continuationAction: t => componentFiles.AddRange(t.Result));
 
             //Console.WriteLine("Found: {0}", basePath);
 
@@ -64,21 +68,15 @@ namespace OutputBuilderClient
 
         private static Task<ComponentFile> ReadComponentFile(TaskFactory<ComponentFile> factory, string fileName)
         {
-            return factory.StartNew(() => ReadComponentFileAsync(fileName));
+            return factory.StartNew(function: () => ReadComponentFileAsync(fileName));
         }
 
         private static ComponentFile ReadComponentFileAsync(string fileName)
         {
-            var info = new FileInfo(fileName);
-            var extension = info.Extension.ToLowerInvariant();
+            FileInfo info = new FileInfo(fileName);
+            string extension = info.Extension.ToLowerInvariant();
 
-            return new ComponentFile
-            {
-                Extension = extension,
-                Hash = string.Empty,
-                LastModified = info.LastWriteTimeUtc,
-                FileSize = info.Length
-            };
+            return new ComponentFile {Extension = extension, Hash = string.Empty, LastModified = info.LastWriteTimeUtc, FileSize = info.Length};
         }
     }
 }

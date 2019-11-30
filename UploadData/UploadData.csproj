@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Company>Mark Ridgwell</Company>
+    <Copyright>Mark Ridgwell</Copyright>
+    <Product>Photo Gallery</Product>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyTitle>
+    </AssemblyTitle>
+    <Description>
+    </Description>
+  </PropertyGroup>
+  <ItemGroup>
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005"/>
+  </ItemGroup>
+  <ItemGroup>
+      <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
+      <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
+  </ItemGroup>
+</Project>

@@ -19,22 +19,19 @@ namespace FileNaming
             }
 
             Match match = Regex.Match(name, DateMatchRegex, RegexOptions.Singleline);
+
             if (match.Success)
             {
                 string datePart = match.Value.Trim();
 
-                DateTime date;
-                if (DateTime.TryParse(datePart, out date))
+                if (DateTime.TryParse(datePart, out DateTime date))
                 {
-                    string fieldEnd =
-                        name.Remove(0, match.Value.Length).TrimStart(NamePrefixStripCharacters.ToCharArray());
+                    string fieldEnd = name.Remove(startIndex: 0, match.Value.Length)
+                        .TrimStart(NamePrefixStripCharacters.ToCharArray());
+
                     return string.IsNullOrEmpty(fieldEnd)
-                               ? string.Format(CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), date)
-                               : string.Format(
-                                   CultureInfo.InvariantCulture,
-                                   GetDateFormatString(dateFormat) + " - {1}",
-                                   date,
-                                   fieldEnd);
+                        ? string.Format(CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), date)
+                        : string.Format(CultureInfo.InvariantCulture, GetDateFormatString(dateFormat) + " - {1}", date, fieldEnd);
                 }
             }
 
@@ -49,12 +46,12 @@ namespace FileNaming
             }
 
             Match match = Regex.Match(name, DateMatchRegex, RegexOptions.Singleline);
+
             if (match.Success)
             {
                 string datePart = match.Value.Trim();
 
-                DateTime date;
-                if (DateTime.TryParse(datePart, out date))
+                if (DateTime.TryParse(datePart, out DateTime date))
                 {
                     return string.Format(CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), date);
                 }
@@ -88,11 +85,9 @@ namespace FileNaming
 
             switch (dateFormat)
             {
-                case DateFormat.ShortDate:
-                    return @"{0:d MMM yyyy}";
+                case DateFormat.ShortDate: return @"{0:d MMM yyyy}";
 
-                default:
-                    return @"{0:d MMMM yyyy}";
+                default: return @"{0:d MMMM yyyy}";
             }
         }
     }

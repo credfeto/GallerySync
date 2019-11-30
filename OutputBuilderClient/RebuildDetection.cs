@@ -1,29 +1,26 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Alphaleonis.Win32.Filesystem;
 using FileNaming;
-using OutputBuilderClient.Properties;
-using Twaddle.Gallery.ObjectModel;
+using Images;
+using ObjectModel;
 
 namespace OutputBuilderClient
 {
     internal static class RebuildDetection
     {
-        public static async Task<bool> NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto)
+        public static async Task<bool> NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings)
         {
-            return await MetadataVersionRequiresRebuild(targetPhoto) ||
-                   await HaveFilesChanged(sourcePhoto, targetPhoto)
-                   || HasMissingResizes(targetPhoto);
+            return await MetadataVersionRequiresRebuild(targetPhoto) || await HaveFilesChanged(sourcePhoto, targetPhoto) || HasMissingResizes(targetPhoto, imageSettings);
         }
 
         public static async Task<bool> MetadataVersionOutOfDate(Photo targetPhoto)
         {
             if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                await ConsoleOutput.Line(
-                    " +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version
-                    + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                await ConsoleOutput.Line(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion + ")");
+
                 return true;
             }
 
@@ -34,50 +31,47 @@ namespace OutputBuilderClient
         {
             if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
             {
-                await ConsoleOutput.Line(" +++ Metadata update: File count changed");
+                await ConsoleOutput.Line(formatString: " +++ Metadata update: File count changed");
+
                 return true;
             }
 
-            foreach (var componentFile in targetPhoto.Files)
+            foreach (ComponentFile componentFile in targetPhoto.Files)
             {
-                var found =
-                    sourcePhoto.Files.FirstOrDefault(
-                        candiate =>
-                            StringComparer.InvariantCultureIgnoreCase.Equals((string) candiate.Extension,
-                                componentFile.Extension));
+                ComponentFile found = sourcePhoto.Files.FirstOrDefault(predicate: candiate => StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension, componentFile.Extension));
 
                 if (found != null)
                 {
                     if (componentFile.FileSize != found.FileSize)
                     {
-                        await ConsoleOutput.Line(" +++ Metadata update: File size changed (File: " + found.Extension +
-                                                 ")");
+                        await ConsoleOutput.Line(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
+
                         return true;
                     }
 
                     if (componentFile.LastModified == found.LastModified)
-                        continue;
-
-                    if (String.IsNullOrWhiteSpace(found.Hash))
                     {
-                        var filename = Path.Combine(
-                            Settings.Default.RootFolder,
-                            sourcePhoto.BasePath + componentFile.Extension);
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(found.Hash))
+                    {
+                        string filename = Path.Combine(Settings.RootFolder, sourcePhoto.BasePath + componentFile.Extension);
 
                         found.Hash = await Hasher.HashFile(filename);
                     }
 
                     if (componentFile.Hash != found.Hash)
                     {
-                        await ConsoleOutput.Line(" +++ Metadata update: File hash changed (File: " + found.Extension +
-                                                 ")");
+                        await ConsoleOutput.Line(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
+
                         return true;
                     }
                 }
                 else
                 {
-                    await ConsoleOutput.Line(" +++ Metadata update: File missing (File: " + componentFile.Extension +
-                                             ")");
+                    await ConsoleOutput.Line(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
+
                     return true;
                 }
             }
@@ -85,59 +79,38 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static bool HasMissingResizes(Photo photoToProcess)
+        private static bool HasMissingResizes(Photo photoToProcess, ISettings imageSettings)
         {
             if (photoToProcess.ImageSizes == null)
             {
-                Console.WriteLine(" +++ Force rebuild: No image sizes at all!");
+                Console.WriteLine(value: " +++ Force rebuild: No image sizes at all!");
+
                 return true;
             }
 
-            foreach (var resize in photoToProcess.ImageSizes)
+            foreach (ImageSize resize in photoToProcess.ImageSizes)
             {
-                var resizedFileName = Path.Combine(
-                    Settings.Default.ImagesOutputPath,
-                    HashNaming.PathifyHash(photoToProcess.PathHash),
-                    ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
+                string resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
+                                                      HashNaming.PathifyHash(photoToProcess.PathHash),
+                                                      ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
+
                 if (!File.Exists(resizedFileName))
                 {
-                    Console.WriteLine(
-                        " +++ Force rebuild: Missing image for size {0}x{1} (jpg)",
-                        resize.Width,
-                        resize.Height);
+                    Console.WriteLine(format: " +++ Force rebuild: Missing image for size {0}x{1} (jpg)", resize.Width, resize.Height);
+
                     return true;
                 }
 
-                // Moving this to a separate program
-                //try
-                //{
-                //    byte[] bytes = Alphaleonis.Win32.Filesystem.File.ReadAllBytes(resizedFileName);
-
-                //    if (!ImageHelpers.IsValidJpegImage(bytes, "Existing: " + resizedFileName))
-                //    {
-                //        Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is not a valid jpg", resize.Width,
-                //                          resize.Height);
-                //        return true;
-                //    }
-                //}
-                //catch( Exception exception)
-                //{
-                //    Console.WriteLine(" +++ Force rebuild: image for size {0}x{1} is missing/corrupt - Exception: {2}", resize.Width,
-                //                      resize.Height, exception.Message);
-                //    return true;
-                //}
-                if (resize.Width == Settings.Default.ThumbnailSize)
+                if (resize.Width == imageSettings.ThumbnailSize)
                 {
-                    resizedFileName = Path.Combine(
-                        Settings.Default.ImagesOutputPath,
-                        HashNaming.PathifyHash(photoToProcess.PathHash),
-                        ImageExtraction.IndividualResizeFileName(photoToProcess, resize, "png"));
+                    resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
+                                                   HashNaming.PathifyHash(photoToProcess.PathHash),
+                                                   ImageExtraction.IndividualResizeFileName(photoToProcess, resize, extension: "png"));
+
                     if (!File.Exists(resizedFileName))
                     {
-                        Console.WriteLine(
-                            " +++ Force rebuild: Missing image for size {0}x{1} (png)",
-                            resize.Width,
-                            resize.Height);
+                        Console.WriteLine(format: " +++ Force rebuild: Missing image for size {0}x{1} (png)", resize.Width, resize.Height);
+
                         return true;
                     }
                 }
@@ -150,9 +123,8 @@ namespace OutputBuilderClient
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                await ConsoleOutput.Line(
-                    " +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version
-                    + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                await ConsoleOutput.Line(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion + ")");
+
                 return true;
             }
 

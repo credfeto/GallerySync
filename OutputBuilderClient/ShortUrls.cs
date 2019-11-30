@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Alphaleonis.Win32.Filesystem;
-using OutputBuilderClient.Properties;
-using Twaddle.Gallery.ObjectModel;
+using System.IO;
+using Images;
+using ObjectModel;
 
 namespace OutputBuilderClient
 {
     internal static class ShortUrls
     {
-        private static readonly ConcurrentDictionary<string, string> ShorternedUrls =
-            new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> ShorternedUrls = new ConcurrentDictionary<string, string>();
 
-        public static int Count { get { return ShorternedUrls.Count; } }
+        public static int Count => ShorternedUrls.Count;
 
         public static bool TryAdd(string longUrl, string shortUrl)
         {
@@ -25,41 +24,49 @@ namespace OutputBuilderClient
 
         public static void Load()
         {
-            var logPath = Settings.Default.ShortNamesFile;
+            string logPath = Settings.ShortNamesFile;
 
             if (File.Exists(logPath))
             {
-                Console.WriteLine("Loading Existing Short Urls:");
-                var lines = File.ReadAllLines(logPath);
+                Console.WriteLine(value: "Loading Existing Short Urls:");
+                string[] lines = File.ReadAllLines(logPath);
 
-                foreach (var line in lines)
+                foreach (string line in lines)
                 {
-                    if (!line.StartsWith(@"http://", StringComparison.OrdinalIgnoreCase)
-                        && !line.StartsWith(@"https://", StringComparison.OrdinalIgnoreCase))
+                    if (!line.StartsWith(value: @"http://", StringComparison.OrdinalIgnoreCase) && !line.StartsWith(value: @"https://", StringComparison.OrdinalIgnoreCase))
+                    {
                         continue;
+                    }
 
-                    var process = line.Trim().Split('\t');
+                    string[] process = line.Trim()
+                        .Split(separator: '\t');
+
                     if (process.Length != 2)
+                    {
                         continue;
+                    }
 
-                    if (ShortUrls.TryAdd(process[0], process[1]))
+                    if (TryAdd(process[0], process[1]))
                     {
                         //Console.WriteLine("Loaded Short Url {0} for {1}", process[1], process[0]);
                     }
                 }
 
-                Console.WriteLine("Total Known Short Urls: {0}", ShortUrls.Count);
+                Console.WriteLine(format: "Total Known Short Urls: {0}", Count);
                 Console.WriteLine();
             }
         }
 
-        public static void LogShortUrl(string url, string shortUrl)
+        public static void LogShortUrl(string url, string shortUrl, ISettings imageSettings)
         {
-            if (!ShortUrls.TryAdd(url, shortUrl)) return;
+            if (!TryAdd(url, shortUrl))
+            {
+                return;
+            }
 
-            var logPath = Path.Combine(Settings.Default.ImagesOutputPath, "ShortUrls.csv");
+            string logPath = Path.Combine(imageSettings.ImagesOutputPath, path2: "ShortUrls.csv");
 
-            var text = new[] {String.Format("{0}\t{1}", url, shortUrl)};
+            string[] text = {string.Format(format: "{0}\t{1}", url, shortUrl)};
 
             File.AppendAllLines(logPath, text);
         }
@@ -67,12 +74,13 @@ namespace OutputBuilderClient
         public static bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
         {
             // ONly want to generate a short URL, IF the photo has already been uploaded AND is public
-            if (sourcePhoto.UrlSafePath.StartsWith("private/", StringComparison.OrdinalIgnoreCase))
+            if (sourcePhoto.UrlSafePath.StartsWith(value: "private/", StringComparison.OrdinalIgnoreCase))
+            {
                 return false;
+            }
 
-            return String.IsNullOrWhiteSpace(shortUrl)
-                   || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url)
-                   || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
+            return string.IsNullOrWhiteSpace(shortUrl) || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url) ||
+                   StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
         }
     }
 }

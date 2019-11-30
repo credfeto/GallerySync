@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Twaddle.Gallery.ObjectModel
+namespace ObjectModel
 {
     [Serializable]
-    [DebuggerDisplay("Extension: {Extension}, Hash:{Hash}")]
+    [DebuggerDisplay(value: "Extension: {Extension}, Hash:{Hash}")]
     public class ComponentFile
     {
         public string Extension { get; set; }

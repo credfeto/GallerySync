@@ -9,15 +9,18 @@ namespace FileNaming
     {
         public static async Task<string> HashFile(string filename)
         {
-            var bytes = await FileHelpers.ReadAllBytes(filename);
+            byte[] bytes = await FileHelpers.ReadAllBytes(filename);
+
             return HashBytes(bytes);
         }
 
         public static string HashBytes(byte[] bytes)
         {
-            using (var hasher = SHA512.Create())
+            using (SHA512 hasher = SHA512.Create())
             {
-                return BitConverter.ToString(hasher.ComputeHash(bytes)).Replace("-", string.Empty).ToLowerInvariant();
+                return BitConverter.ToString(hasher.ComputeHash(bytes))
+                    .Replace(oldValue: "-", string.Empty)
+                    .ToLowerInvariant();
             }
         }
     }
