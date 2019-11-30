@@ -20,7 +20,14 @@
         <AssemblyTitle>Gallery.Scanner</AssemblyTitle>
         <Description>Photo Gallery Directory Scanner</Description>
     </PropertyGroup>
+    <PropertyGroup>
+        <CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    </PropertyGroup>
     <ItemGroup>
-        <Folder Include="Properties"/>
+        <PackageReference Include="AsyncFixer" Version="1.1.6" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.0.0.9566" PrivateAssets="All"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="2.2.0" PrivateAssets="All"/>
+        <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All"/>
     </ItemGroup>
 </Project>

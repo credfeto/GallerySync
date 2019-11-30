@@ -194,12 +194,12 @@ namespace UploadData
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null) && !ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(lhs, objB: null))
             {
                 return false;
             }
 
-            if (!ReferenceEquals(lhs, objB: null) && ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(rhs, objB: null))
             {
                 return false;
             }
@@ -220,12 +220,12 @@ namespace UploadData
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null) && !ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(lhs, objB: null))
             {
                 return false;
             }
 
-            if (!ReferenceEquals(lhs, objB: null) && ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(rhs, objB: null))
             {
                 return false;
             }
@@ -246,12 +246,12 @@ namespace UploadData
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null) && !ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(lhs, objB: null))
             {
                 return false;
             }
 
-            if (!ReferenceEquals(lhs, objB: null) && ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(rhs, objB: null))
             {
                 return false;
             }
@@ -272,12 +272,12 @@ namespace UploadData
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null) && !ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(lhs, objB: null))
             {
                 return false;
             }
 
-            if (!ReferenceEquals(lhs, objB: null) && ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(rhs, objB: null))
             {
                 return false;
             }
@@ -298,12 +298,12 @@ namespace UploadData
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null) && !ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(lhs, objB: null))
             {
                 return false;
             }
 
-            if (!ReferenceEquals(lhs, objB: null) && ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(rhs, objB: null))
             {
                 return false;
             }

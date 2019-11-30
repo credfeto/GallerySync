@@ -24,7 +24,6 @@ namespace Images
 {
     public static class ImageExtraction
     {
-
         /// <summary>
         ///     Gets the copyright declaration.
         /// </summary>
@@ -41,16 +40,12 @@ namespace Images
             }
         }
 
-        public static async Task<List<ImageSize>> BuildImages(
-            IImageLoader loader,
-
-            Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl, ISettings settings)
+        public static async Task<List<ImageSize>> BuildImages(IImageLoader loader, Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl, ISettings settings)
         {
             List<ImageSize> sizes = new List<ImageSize>();
 
-            string rawExtension = sourcePhoto.ImageExtension.TrimStart('.')
+            string rawExtension = sourcePhoto.ImageExtension.TrimStart(trimChar: '.')
                 .ToUpperInvariant();
-
 
             if (loader.SupportedExtensions.Contains(rawExtension))
             {
@@ -76,16 +71,18 @@ namespace Images
                             ApplyWatermark(resized, shortUrl, settings);
 
                             long quality = settings.JpegOutputQuality;
-                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality, url, shortUrl, sourcePhoto.BasePath, sourcePhoto.Metadata, creationDate, settings);
+                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
 
                             if (!ImageHelpers.IsValidJpegImage(resizedBytes, "In memory image to be saved as: " + resizedFileName))
                             {
-                                throw new Exception(string.Format(format: "File {0} produced an invalid image", filename));
+                                throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
                             }
 
                             await WriteImage(resizedFileName, resizedBytes, creationDate);
 
-                            if (!ImageHelpers.IsValidJpegImage(File.ReadAllBytes(resizedFileName), "Saved resize image: " + resizedFileName))
+                            byte[] resizedData = await File.ReadAllBytesAsync(resizedFileName);
+
+                            if (!ImageHelpers.IsValidJpegImage(resizedData, "Saved resize image: " + resizedFileName))
                             {
                                 Console.WriteLine(format: "Error: File {0} produced an invalid image", resizedFileName);
 
@@ -126,8 +123,8 @@ namespace Images
         public static string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized, string extension)
         {
             string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), resized.Width, resized.Height))
-                .TrimEnd('/')
-                .TrimStart('-');
+                .TrimEnd(trimChar: '/')
+                .TrimStart(trimChar: '-');
 
             return basePath + "." + extension;
         }
@@ -140,8 +137,8 @@ namespace Images
         public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized, string extension)
         {
             string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), resized.Width, resized.Height))
-                .TrimEnd('/')
-                .TrimStart('-');
+                .TrimEnd(trimChar: '/')
+                .TrimStart(trimChar: '-');
 
             return basePath + "." + extension;
         }
@@ -157,21 +154,13 @@ namespace Images
         /// </param>
         /// <param name="url"></param>
         /// <param name="shortUrl"></param>
-        /// <param name="filePath"></param>
         /// <param name="metadata"></param>
         /// <param name="creationDate"></param>
         /// <returns>
         ///     Block of bytes representing the image.
         /// </returns>
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Is fallback position where it retries.")]
-        public static byte[] SaveImageAsJpegBytes(Image<Rgba32> image,
-                                                  long compressionQuality,
-                                                  string url,
-                                                  string shortUrl,
-                                                  string filePath,
-                                                  List<PhotoMetadata> metadata,
-                                                  DateTime creationDate,
-                                                  ISettings settings)
+        public static byte[] SaveImageAsJpegBytes(Image<Rgba32> image, long compressionQuality, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
@@ -244,7 +233,7 @@ namespace Images
                 int width = watermark.Width;
                 int height = watermark.Height;
 
-                using (Image<Rgba32> qr = QrCode.EncodeUrl(url, watermark.Height))
+                using (Image<Rgba32> qr = QrCode.EncodeUrl(url))
                 {
                     if (qr != null)
                     {
@@ -367,7 +356,7 @@ namespace Images
 
             if (string.IsNullOrWhiteSpace(title))
             {
-                string[] fragments = path.Split('\\')
+                string[] fragments = path.Split(separator: '\\')
                     .Where(predicate: candidate => !string.IsNullOrWhiteSpace(candidate))
                     .ToArray();
 
@@ -437,7 +426,7 @@ namespace Images
 
             if (!converters.Any())
             {
-                throw new ApplicationException(message: "No registered converters!");
+                throw new AbortProcessingException(message: "No registered converters!");
             }
 
             return converters;
@@ -618,7 +607,7 @@ namespace Images
 
         private static int[] StandardImageSizesWithThumbnailSize(ISettings settings)
         {
-            return settings.ImageMaximumDimensions.Split(',')
+            return settings.ImageMaximumDimensions.Split(separator: ',')
                 .Select(selector: value => Convert.ToInt32(value))
                 .Concat(new[] {settings.ThumbnailSize})
                 .Distinct()

@@ -21,7 +21,7 @@ using StorageHelpers;
 
 namespace OutputBuilderClient
 {
-    internal class Program
+    internal static class Program
     {
         private static readonly SemaphoreSlim Sempahore = new SemaphoreSlim(initialCount: 1);
 
@@ -49,8 +49,9 @@ namespace OutputBuilderClient
                 System.Diagnostics.Process.GetCurrentProcess()
                     .PriorityClass = ProcessPriorityClass.BelowNormal;
             }
-            catch (Exception)
+            catch
             {
+                // Don't care'
             }
         }
 
@@ -204,7 +205,7 @@ namespace OutputBuilderClient
                 sourcePhoto.Metadata = targetPhoto.Metadata;
             }
 
-            bool buildImages = targetPhoto == null || rebuild || targetPhoto != null && !targetPhoto.ImageSizes.HasAny();
+            bool buildImages = targetPhoto == null || rebuild || !targetPhoto.ImageSizes.HasAny();
 
             List<string> filesCreated = new List<string>();
 
@@ -228,6 +229,7 @@ namespace OutputBuilderClient
 
                 if (buildImages)
                 {
+                    //?
                 }
 
                 await PhotoMetadataRepository.Store(targetPhoto);

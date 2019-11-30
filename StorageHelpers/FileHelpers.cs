@@ -36,9 +36,11 @@ namespace StorageHelpers
             }
             catch (IOException)
             {
+                // Don't care
             }
             catch (UnauthorizedAccessException)
             {
+                // Don't care
             }
         }
 

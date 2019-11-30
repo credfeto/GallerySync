@@ -43,18 +43,18 @@ namespace OutputBuilderClient.Metadata
         /// <param name="document">
         ///     The XML document.
         /// </param>
-        /// <param name="nameSpaceManager">
+        /// <param name="nameManager">
         ///     The name space manager.
         /// </param>
         /// <returns>
         ///     The value at the specified doc.
         /// </returns>
-        public override string Read(XmlDocument document, XmlNamespaceManager nameSpaceManager)
+        public override string Read(XmlDocument document, XmlNamespaceManager nameManager)
         {
             Contract.Requires(document != null);
-            Contract.Requires(nameSpaceManager != null);
+            Contract.Requires(nameManager != null);
 
-            XmlAttribute imageNode = document.SelectSingleNode(this._pathToItem, nameSpaceManager) as XmlAttribute;
+            XmlAttribute imageNode = document.SelectSingleNode(this._pathToItem, nameManager) as XmlAttribute;
 
             if (imageNode == null)
             {

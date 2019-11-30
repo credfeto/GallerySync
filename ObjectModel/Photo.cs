@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ObjectModel
 {
@@ -10,6 +11,7 @@ namespace ObjectModel
     {
         public int Version { get; set; }
 
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1056:UriPropertiesShouldNotBeStrings", Justification = "Serialized as string")]
         public string UrlSafePath { get; set; }
 
         public string BasePath { get; set; }
@@ -24,6 +26,7 @@ namespace ObjectModel
 
         public List<ImageSize> ImageSizes { get; set; }
 
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1056:UriPropertiesShouldNotBeStrings", Justification = "Serialized as string")]
         public string ShortUrl { get; set; }
     }
 }

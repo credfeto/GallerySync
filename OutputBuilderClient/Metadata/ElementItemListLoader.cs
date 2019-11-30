@@ -68,18 +68,18 @@ namespace OutputBuilderClient.Metadata
         /// <param name="document">
         ///     The XML document.
         /// </param>
-        /// <param name="nameSpaceManager">
+        /// <param name="nameManager">
         ///     The name space manager.
         /// </param>
         /// <returns>
         ///     The value at the specified document location.
         /// </returns>
-        public string Read(XmlDocument document, XmlNamespaceManager nameSpaceManager)
+        public string Read(XmlDocument document, XmlNamespaceManager nameManager)
         {
             Contract.Requires(document != null);
-            Contract.Requires(nameSpaceManager != null);
+            Contract.Requires(nameManager != null);
 
-            XmlNodeList imageNodes = document.SelectNodes(this._pathToItem, nameSpaceManager);
+            XmlNodeList imageNodes = document.SelectNodes(this._pathToItem, nameManager);
 
             if (imageNodes == null)
             {

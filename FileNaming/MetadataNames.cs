@@ -34,6 +34,6 @@
 
         public const string Comment = "Comment";
 
-        public static string Title = "Title";
+        public const string Title = "Title";
     }
 }

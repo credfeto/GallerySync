@@ -38,19 +38,20 @@ namespace Upload
 
                     string json = JsonConvert.SerializeObject(itemToPost);
 
-                    StringContent content = new StringContent(json, Encoding.UTF8, jsonMimeType);
-
-                    HttpResponseMessage response = await client.PostAsync(requestUri: "tasks/sync", content);
-                    Console.WriteLine(format: "Status: {0}", response.StatusCode);
-
-                    if (response.IsSuccessStatusCode)
+                    using (StringContent content = new StringContent(json, Encoding.UTF8, jsonMimeType))
                     {
-                        Console.WriteLine(await response.Content.ReadAsStringAsync());
+                        HttpResponseMessage response = await client.PostAsync(requestUri: "tasks/sync", content);
+                        Console.WriteLine(format: "Status: {0}", response.StatusCode);
 
-                        return true;
+                        if (response.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine(await response.Content.ReadAsStringAsync());
+
+                            return true;
+                        }
+
+                        return false;
                     }
-
-                    return false;
                 }
             }
             catch (Exception exception)

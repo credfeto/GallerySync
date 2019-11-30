@@ -22,11 +22,21 @@
         <Description>
         </Description>
     </PropertyGroup>
+    <PropertyGroup>
+        <CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0005"/>
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\FileNaming\FileNaming.csproj"/>
         <ProjectReference Include="..\ObjectModel\ObjectModel.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="AsyncFixer" Version="1.1.6" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.0.0.9566" PrivateAssets="All"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="2.2.0" PrivateAssets="All"/>
+        <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All"/>
     </ItemGroup>
 </Project>

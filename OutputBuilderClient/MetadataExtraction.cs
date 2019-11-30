@@ -108,23 +108,28 @@ namespace OutputBuilderClient
                 using (MemoryStream ms = new MemoryStream(data, writable: false))
                 {
                     TagLib.File.IFileAbstraction fa = new StreamFileAbstraction(fileName, ms, Stream.Null);
-                    TagLib.Image.File file = TagLib.File.Create(fa) as TagLib.Image.File;
 
-                    if (file == null)
+                    using (TagLib.File tlf = TagLib.File.Create(fa))
                     {
-                        return;
-                    }
+                        TagLib.Image.File file = tlf as TagLib.Image.File;
 
-                    ImageTag tag = file.GetTag(TagTypes.XMP) as ImageTag;
+                        if (file == null)
+                        {
+                            return;
+                        }
 
-                    if (tag != null && !tag.IsEmpty)
-                    {
-                        ExtractXmpTagCommon(metadata, tag);
+                        ImageTag tag = file.GetTag(TagTypes.XMP) as ImageTag;
+
+                        if (tag != null && !tag.IsEmpty)
+                        {
+                            ExtractXmpTagCommon(metadata, tag);
+                        }
                     }
                 }
             }
-            catch (Exception)
+            catch
             {
+                // Don't care'
             }
         }
 
@@ -315,7 +320,7 @@ namespace OutputBuilderClient
             }
         }
 
-        private static bool ExtractXmpMetadata(Photo sourcePhoto, List<PhotoMetadata> metadata, string rootFolder)
+        private static void ExtractXmpMetadata(Photo sourcePhoto, List<PhotoMetadata> metadata, string rootFolder)
         {
             ComponentFile xmpFile = sourcePhoto.Files.FirstOrDefault(IsXmp);
 
@@ -324,11 +329,6 @@ namespace OutputBuilderClient
                 string sidecarFileName = Path.Combine(rootFolder, sourcePhoto.BasePath + xmpFile.Extension);
                 ExtractXmpSidecareAlternative(metadata, sidecarFileName);
                 ExtractMetadataFromXmpSideCar(metadata, sidecarFileName);
-
-                if (metadata.Any())
-                {
-                    return true;
-                }
             }
             else
             {
@@ -338,15 +338,8 @@ namespace OutputBuilderClient
                 {
                     ExtractXmpSidecareAlternative(metadata, xmpFileName);
                     ExtractMetadataFromXmpSideCar(metadata, xmpFileName);
-
-                    if (metadata.Any())
-                    {
-                        return true;
-                    }
                 }
             }
-
-            return false;
         }
 
         private static void ExtractXmpSidecareAlternative(List<PhotoMetadata> metadata, string sidecarFileName)
@@ -390,6 +383,7 @@ namespace OutputBuilderClient
             }
             catch
             {
+                // Don't care
             }
         }
 
@@ -538,6 +532,7 @@ namespace OutputBuilderClient
             }
             catch
             {
+                // Don't care
             }
         }
     }

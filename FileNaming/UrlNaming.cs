@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,6 +17,7 @@ namespace FileNaming
 
         private static readonly Regex NoHyphensNextToSlash = new Regex(pattern: @"(\-*/\-*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1055:UriReturnValuesShouldNotBeStrings", Justification = "Its a fragment")]
         public static string BuildUrlSafePath(string basePath)
         {
             string root = RemoveDiacritics(basePath.Trim() + "/", compatNorm: true, NormaliseLWithStroke);
