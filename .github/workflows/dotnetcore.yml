@@ -16,7 +16,7 @@ jobs:
       with:
         dotnet-version: 3.0.100
     - name: Build with dotnet
-      run: dotnet build --configuration Release --source https://www.myget.org/F/credfeto/api/v3/index.json
+      run: dotnet build --configuration Release --source https://www.myget.org/F/credfeto/api/v3/index.json --source nuget.org	https://api.nuget.org/v3/index.json	Yes	false	false
     - name: Pack tool 
       run: dotnet pack --configuration Release -o dist
     - name: publish
