@@ -2,7 +2,7 @@ name: Update packages
 
 on:
   schedule:
-  - cron: "* * * * * *"
+  - cron: "* * * * *"
 
 jobs:
   stale:
