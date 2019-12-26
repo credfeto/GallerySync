@@ -29,10 +29,10 @@ jobs:
             mkdir .update
             cd .update
             nuget.exe install Credfeto.UpdatePackages -ExcludeVersion -Source https://www.myget.org/F/credfeto/api/v3/index.json
-      	    cd ..
+            cd ..
             dotnet .update\tools\Credfeto.UpdatePackages\lib\UpdatePackages.dll -folder "." -prefix "Microsoft.CodeAnalysis.FxCopAnalyzers"
             if [ $? -eq 0 ]
             then
-		dotnet restore --source https://www.myget.org/F/credfeto/api/v3/index.json --source https://api.nuget.org/v3/index.json
+                dotnet restore --source https://www.myget.org/F/credfeto/api/v3/index.json --source https://api.nuget.org/v3/index.json
                 dotnet build --configuration Release --no-restore
-	    fi
+            fi
