@@ -12,8 +12,8 @@ namespace DeleteImageIfCorrupt
         private static int Main(string[] args)
         {
             return AsyncMain(args)
-                .GetAwaiter()
-                .GetResult();
+                   .GetAwaiter()
+                   .GetResult();
         }
 
         private static async Task<int> AsyncMain(string[] args)
@@ -29,7 +29,7 @@ namespace DeleteImageIfCorrupt
                 {
                     byte[] data = await FileHelpers.ReadAllBytes(args[0]);
 
-                    if (IsValidJpegImage(data, args[0]))
+                    if (IsValidJpegImage(data))
                     {
                         return 0;
                     }
@@ -49,7 +49,7 @@ namespace DeleteImageIfCorrupt
             return 0;
         }
 
-        private static bool IsValidJpegImage(byte[] bytes, string context)
+        private static bool IsValidJpegImage(byte[] bytes)
         {
             try
             {
@@ -60,7 +60,6 @@ namespace DeleteImageIfCorrupt
             }
             catch (Exception exception)
             {
-                Console.WriteLine(format: "Error: {0}", context);
                 Console.WriteLine(format: "Error: {0}", exception);
 
                 return false;
