@@ -19,7 +19,8 @@ namespace OutputBuilderClient
         {
             if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                await ConsoleOutput.Line(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                await ConsoleOutput.Line(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion +
+                                         ")");
 
                 return true;
             }
@@ -38,7 +39,8 @@ namespace OutputBuilderClient
 
             foreach (ComponentFile componentFile in targetPhoto.Files)
             {
-                ComponentFile found = sourcePhoto.Files.FirstOrDefault(predicate: candiate => StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension, componentFile.Extension));
+                ComponentFile found =
+                    sourcePhoto.Files.FirstOrDefault(predicate: candiate => StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension, componentFile.Extension));
 
                 if (found != null)
                 {
@@ -123,7 +125,8 @@ namespace OutputBuilderClient
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                await ConsoleOutput.Line(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion + ")");
+                await ConsoleOutput.Line(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version + " Expected: " +
+                                         Constants.CurrentMetadataVersion + ")");
 
                 return true;
             }

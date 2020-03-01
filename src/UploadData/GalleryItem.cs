@@ -54,11 +54,12 @@ namespace UploadData
                 return true;
             }
 
-            return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title && this.Description == other.Description &&
-                   this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location && this.Type == other.Type && this.Previous == other.Previous &&
-                   this.Next == other.Next && this.Last == other.Last && ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes) &&
-                   ItemUpdateHelpers.CollectionEquals(this.Metadata, other.Metadata) && ItemUpdateHelpers.CollectionEquals(this.Keywords, other.Keywords) &&
-                   ItemUpdateHelpers.CollectionEquals(this.Children, other.Children) && ItemUpdateHelpers.CollectionEquals(this.Breadcrumbs, other.Breadcrumbs) && this.First == other.First;
+            return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title &&
+                   this.Description == other.Description && this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location &&
+                   this.Type == other.Type && this.Previous == other.Previous && this.Next == other.Next && this.Last == other.Last &&
+                   ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes) && ItemUpdateHelpers.CollectionEquals(this.Metadata, other.Metadata) &&
+                   ItemUpdateHelpers.CollectionEquals(this.Keywords, other.Keywords) && ItemUpdateHelpers.CollectionEquals(this.Children, other.Children) &&
+                   ItemUpdateHelpers.CollectionEquals(this.Breadcrumbs, other.Breadcrumbs) && this.First == other.First;
         }
 
         public override bool Equals(object obj)

@@ -37,8 +37,8 @@ namespace OutputBuilderClient
             AlterPriority();
 
             return AsyncMain(args)
-                .GetAwaiter()
-                .GetResult();
+                   .GetAwaiter()
+                   .GetResult();
         }
 
         private static void AlterPriority()
@@ -47,7 +47,7 @@ namespace OutputBuilderClient
             try
             {
                 System.Diagnostics.Process.GetCurrentProcess()
-                    .PriorityClass = ProcessPriorityClass.BelowNormal;
+                      .PriorityClass = ProcessPriorityClass.BelowNormal;
             }
             catch
             {
@@ -58,21 +58,21 @@ namespace OutputBuilderClient
         private static async Task<int> AsyncMain(string[] args)
         {
             IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(path: "appsettings.json")
-                .AddCommandLine(args,
-                                new Dictionary<string, string>
-                                {
-                                    {@"-source", @"Source:RootFolder"},
-                                    {@"-output", @"Database:OutputFolder"},
-                                    {@"-imageoutput", @"Output:ImagesOutputPath"},
-                                    {@"-brokenImages", @"Output:BrokenImagesFile"},
-                                    {@"-shortUrls", @"Output:ShortUrls"},
-                                    {@"-watermark", @"Images:Watermark"},
-                                    {@"-thumbnailSize", @"Output:ThumbnailSize"},
-                                    {@"-quality", @"Output:JpegOutputQuality"},
-                                    {@"-resizes", @"Output:ImageMaximumDimensions"}
-                                })
-                .Build();
+                                                                  .AddJsonFile(path: "appsettings.json")
+                                                                  .AddCommandLine(args,
+                                                                                  new Dictionary<string, string>
+                                                                                  {
+                                                                                      {@"-source", @"Source:RootFolder"},
+                                                                                      {@"-output", @"Database:OutputFolder"},
+                                                                                      {@"-imageoutput", @"Output:ImagesOutputPath"},
+                                                                                      {@"-brokenImages", @"Output:BrokenImagesFile"},
+                                                                                      {@"-shortUrls", @"Output:ShortUrls"},
+                                                                                      {@"-watermark", @"Images:Watermark"},
+                                                                                      {@"-thumbnailSize", @"Output:ThumbnailSize"},
+                                                                                      {@"-quality", @"Output:JpegOutputQuality"},
+                                                                                      {@"-resizes", @"Output:ImageMaximumDimensions"}
+                                                                                  })
+                                                                  .Build();
 
             Settings.RootFolder = config.GetValue<string>(key: @"Source:RootFolder");
             Settings.DatabaseOutputFolder = config.GetValue<string>(key: @"Database:OutputFolder");
@@ -163,7 +163,7 @@ namespace OutputBuilderClient
             ConcurrentDictionary<string, bool> items = new ConcurrentDictionary<string, bool>();
 
             await Task.WhenAll(source.Select(selector: sourcePhoto => ProcessSinglePhoto(imageLoader, target, sourcePhoto, items, imageSettings))
-                                   .ToArray());
+                                     .ToArray());
 
             return new HashSet<string>(items.Keys);
         }

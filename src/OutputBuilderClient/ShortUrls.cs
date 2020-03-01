@@ -39,7 +39,7 @@ namespace OutputBuilderClient
                     }
 
                     string[] process = line.Trim()
-                        .Split(separator: '\t');
+                                           .Split(separator: '\t');
 
                     if (process.Length != 2)
                     {

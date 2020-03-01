@@ -65,7 +65,10 @@ namespace StorageHelpers
 
             if (bytes.Length != written.Length)
             {
-                throw new FileContentException(string.Format(format: "File {0} does not contain the bytes that were written (size different Src:{1} != Dest:{2})", path, bytes.Length, written.Length));
+                throw new FileContentException(string.Format(format: "File {0} does not contain the bytes that were written (size different Src:{1} != Dest:{2})",
+                                                             path,
+                                                             bytes.Length,
+                                                             written.Length));
             }
 
             for (int pos = 0; pos < bytes.Length; ++pos)

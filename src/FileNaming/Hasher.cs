@@ -19,8 +19,8 @@ namespace FileNaming
             using (SHA512 hasher = SHA512.Create())
             {
                 return BitConverter.ToString(hasher.ComputeHash(bytes))
-                    .Replace(oldValue: "-", string.Empty)
-                    .ToLowerInvariant();
+                                   .Replace(oldValue: "-", string.Empty)
+                                   .ToLowerInvariant();
             }
         }
     }

@@ -44,10 +44,11 @@ namespace UploadData
                 return true;
             }
 
-            return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title && this.Description == other.Description &&
-                   this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location && this.Rating == other.Rating &&
-                   ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes) && ItemUpdateHelpers.CollectionEquals(this.Children, other.Children) &&
-                   ItemUpdateHelpers.CollectionEquals(this.Metadata, other.Metadata) && ItemUpdateHelpers.CollectionEquals(this.Keywords, other.Keywords);
+            return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title &&
+                   this.Description == other.Description && this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location &&
+                   this.Rating == other.Rating && ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes) &&
+                   ItemUpdateHelpers.CollectionEquals(this.Children, other.Children) && ItemUpdateHelpers.CollectionEquals(this.Metadata, other.Metadata) &&
+                   ItemUpdateHelpers.CollectionEquals(this.Keywords, other.Keywords);
         }
 
         public override bool Equals(object obj)

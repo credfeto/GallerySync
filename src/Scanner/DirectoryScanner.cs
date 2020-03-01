@@ -57,18 +57,18 @@ namespace Scanner
 
             var grouped = from record in raw
                           let extension = Path.GetExtension(record)
-                              .ToLowerInvariant()
+                                              .ToLowerInvariant()
                           where context.ExtensionsToRetrieveInOrderOfPrecendence.Contains(extension)
                           group record by Path.GetFileNameWithoutExtension(record)
-                              .ToLowerInvariant()
+                                              .ToLowerInvariant()
                           into matches
                           where context.HasRequiredExtensionMatch(matches)
                           select new
                                  {
                                      BaseName = matches.Key,
                                      Items = matches.OrderByDescending(keySelector: match => ExtensionScore(context.ExtensionsToRetrieveInOrderOfPrecendence, match))
-                                         .ThenBy(Path.GetExtension)
-                                         .Select(selector: match => Path.GetFileName(match))
+                                                    .ThenBy(Path.GetExtension)
+                                                    .Select(selector: match => Path.GetFileName(match))
                                  };
 
             foreach (var fileGroup in grouped)
@@ -81,7 +81,7 @@ namespace Scanner
                                                    RelativeFolder = folder.Substring(context.BaseFolder.Length + 1),
                                                    LocalFileName = file,
                                                    AlternateFileNames = fileGroup.Items.Skip(count: 1)
-                                                       .ToList()
+                                                                                 .ToList()
                                                });
             }
         }
@@ -95,11 +95,11 @@ namespace Scanner
         private static Task FindSubFolders(string folder, Context context)
         {
             string[] folders = Directory.GetDirectories(folder, searchPattern: "*")
-                .Where(predicate: subFolder => !IsSkipFolderName(subFolder.Substring(folder.Length + 1)))
-                .ToArray();
+                                        .Where(predicate: subFolder => !IsSkipFolderName(subFolder.Substring(folder.Length + 1)))
+                                        .ToArray();
 
             return Task.WhenAll(folders.Select(selector: subFolder => ScanSubFolder(subFolder, context))
-                                    .ToArray());
+                                       .ToArray());
         }
 
         private static bool IsSkipFolderName(string folder)

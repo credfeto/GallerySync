@@ -4,7 +4,13 @@ namespace OutputBuilderClient
 {
     internal class ImageSettings : ISettings
     {
-        public ImageSettings(string defaultShortUrl, int thumbnailSize, string imageMaximumDimensions, string rootFolder, string imagesOutputPath, long jpegOutputQuality, string watermarkImage)
+        public ImageSettings(string defaultShortUrl,
+                             int thumbnailSize,
+                             string imageMaximumDimensions,
+                             string rootFolder,
+                             string imagesOutputPath,
+                             long jpegOutputQuality,
+                             string watermarkImage)
         {
             this.DefaultShortUrl = defaultShortUrl;
             this.ThumbnailSize = thumbnailSize;

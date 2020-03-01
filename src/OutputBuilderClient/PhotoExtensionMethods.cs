@@ -37,7 +37,7 @@ namespace OutputBuilderClient
             }
 
             return Task.WhenAll(sourcePhoto.Files.Where(predicate: s => string.IsNullOrWhiteSpace(s.Hash))
-                                    .Select(sourcePhoto.SetFileHash));
+                                           .Select(sourcePhoto.SetFileHash));
         }
 
         private static async Task SetFileHash(this Photo sourcePhoto, ComponentFile file)

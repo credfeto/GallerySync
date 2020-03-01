@@ -28,11 +28,11 @@
         <ProjectReference Include="..\Scanner\Scanner.csproj"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="ImageLoader.Core" Version="0.1.1"/>
-        <PackageReference Include="ImageLoader.Interfaces" Version="0.1.1"/>
-        <PackageReference Include="ImageLoader.Photoshop" Version="0.1.1"/>
-        <PackageReference Include="ImageLoader.Raw" Version="0.1.1"/>
-        <PackageReference Include="ImageLoader.Standard" Version="0.1.1"/>
+        <PackageReference Include="ImageLoader.Core" Version="0.2.0.24"/>
+        <PackageReference Include="ImageLoader.Interfaces" Version="0.2.0.24"/>
+        <PackageReference Include="ImageLoader.Photoshop" Version="0.2.0.24"/>
+        <PackageReference Include="ImageLoader.Raw" Version="0.2.0.24"/>
+        <PackageReference Include="ImageLoader.Standard" Version="0.2.0.24"/>
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.2"/>
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.2"/>
         <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.2"/>

@@ -13,7 +13,7 @@ using ObjectModel;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.MetaData.Profiles.Exif;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Quantization;
@@ -40,12 +40,18 @@ namespace Images
             }
         }
 
-        public static async Task<List<ImageSize>> BuildImages(IImageLoader loader, Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl, ISettings settings)
+        public static async Task<List<ImageSize>> BuildImages(IImageLoader loader,
+                                                              Photo sourcePhoto,
+                                                              List<string> filesCreated,
+                                                              DateTime creationDate,
+                                                              string url,
+                                                              string shortUrl,
+                                                              ISettings settings)
         {
             List<ImageSize> sizes = new List<ImageSize>();
 
             string rawExtension = sourcePhoto.ImageExtension.TrimStart(trimChar: '.')
-                .ToUpperInvariant();
+                                             .ToUpperInvariant();
 
             if (loader.SupportedExtensions.Contains(rawExtension))
             {
@@ -66,7 +72,9 @@ namespace Images
                     {
                         using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
                         {
-                            string resizedFileName = Path.Combine(settings.ImagesOutputPath, HashNaming.PathifyHash(sourcePhoto.PathHash), IndividualResizeFileName(sourcePhoto, resized));
+                            string resizedFileName = Path.Combine(settings.ImagesOutputPath,
+                                                                  HashNaming.PathifyHash(sourcePhoto.PathHash),
+                                                                  IndividualResizeFileName(sourcePhoto, resized));
 
                             ApplyWatermark(resized, shortUrl, settings);
 
@@ -123,8 +131,8 @@ namespace Images
         public static string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized, string extension)
         {
             string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), resized.Width, resized.Height))
-                .TrimEnd(trimChar: '/')
-                .TrimStart(trimChar: '-');
+                                       .TrimEnd(trimChar: '/')
+                                       .TrimStart(trimChar: '-');
 
             return basePath + "." + extension;
         }
@@ -137,8 +145,8 @@ namespace Images
         public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized, string extension)
         {
             string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), resized.Width, resized.Height))
-                .TrimEnd(trimChar: '/')
-                .TrimStart(trimChar: '-');
+                                       .TrimEnd(trimChar: '/')
+                                       .TrimStart(trimChar: '-');
 
             return basePath + "." + extension;
         }
@@ -160,7 +168,13 @@ namespace Images
         ///     Block of bytes representing the image.
         /// </returns>
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Is fallback position where it retries.")]
-        public static byte[] SaveImageAsJpegBytes(Image<Rgba32> image, long compressionQuality, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
+        public static byte[] SaveImageAsJpegBytes(Image<Rgba32> image,
+                                                  long compressionQuality,
+                                                  string url,
+                                                  string shortUrl,
+                                                  List<PhotoMetadata> metadata,
+                                                  DateTime creationDate,
+                                                  ISettings settings)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
@@ -226,7 +240,8 @@ namespace Images
                 return;
             }
 
-            using (Image<Rgba32> watermark = Image.Load(watermarkFilename))
+            using (Image<Rgba32> watermark = Image.Load(watermarkFilename)
+                                                  .CloneAs<Rgba32>())
             {
                 watermark.Mutate(operation: pc => { pc.BackgroundColor(Rgba32.Transparent); });
 
@@ -254,7 +269,14 @@ namespace Images
                             return;
                         }
 
-                        imageToAddWatermarkTo.Mutate(operation: pc => { pc.DrawImage(qr, PixelBlenderMode.Over, opacity: 1, new Point(qrXPos, qrYPos)); });
+                        imageToAddWatermarkTo.Mutate(operation: pc =>
+                                                                {
+                                                                    pc.DrawImage(qr,
+                                                                                 new Point(qrXPos, qrYPos),
+                                                                                 PixelColorBlendingMode.Overlay,
+                                                                                 PixelAlphaCompositionMode.SrcOver,
+                                                                                 opacity: 1);
+                                                                });
                     }
                 }
 
@@ -266,7 +288,10 @@ namespace Images
                 int x = imageToAddWatermarkTo.Width - width;
                 int y = imageToAddWatermarkTo.Height - height;
 
-                imageToAddWatermarkTo.Mutate(operation: pc => { pc.DrawImage(watermark, PixelBlenderMode.Over, opacity: 1, new Point(x, y)); });
+                imageToAddWatermarkTo.Mutate(operation: pc =>
+                                                        {
+                                                            pc.DrawImage(watermark, new Point(x, y), PixelColorBlendingMode.Overlay, PixelAlphaCompositionMode.SrcOver, opacity: 1);
+                                                        });
             }
         }
 
@@ -357,8 +382,8 @@ namespace Images
             if (string.IsNullOrWhiteSpace(title))
             {
                 string[] fragments = path.Split(separator: '\\')
-                    .Where(predicate: candidate => !string.IsNullOrWhiteSpace(candidate))
-                    .ToArray();
+                                         .Where(predicate: candidate => !string.IsNullOrWhiteSpace(candidate))
+                                         .ToArray();
 
                 if (fragments.Length > 0)
                 {
@@ -499,7 +524,7 @@ namespace Images
 
             using (MemoryStream ms = new MemoryStream())
             {
-                JpegEncoder encoder = new JpegEncoder {IgnoreMetadata = true, Quality = (int) compression};
+                JpegEncoder encoder = new JpegEncoder {Quality = (int) compression};
 
                 image.SaveAsJpeg(ms, encoder);
 
@@ -526,14 +551,12 @@ namespace Images
 
             using (MemoryStream ms = new MemoryStream())
             {
-                JpegEncoder encoder = new JpegEncoder {IgnoreMetadata = true, Quality = 75};
+                JpegEncoder encoder = new JpegEncoder {Quality = 75};
 
                 image.SaveAsJpeg(ms, encoder);
 
                 return ms.ToArray();
             }
-
-            //return image.ToByteArray(MagickFormat.Jpeg);
         }
 
         private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
@@ -561,7 +584,7 @@ namespace Images
 
         private static void SetExifMetadata(Image<Rgba32> image, DateTime creationDate, string description, string copyright, string licensing, string credit, string program)
         {
-            ExifProfile exifProfile = image.MetaData.ExifProfile;
+            ExifProfile exifProfile = image.Metadata.ExifProfile;
 
             if (exifProfile == null)
             {
@@ -608,11 +631,11 @@ namespace Images
         private static int[] StandardImageSizesWithThumbnailSize(ISettings settings)
         {
             return settings.ImageMaximumDimensions.Split(separator: ',')
-                .Select(selector: value => Convert.ToInt32(value))
-                .Concat(new[] {settings.ThumbnailSize})
-                .Distinct()
-                .OrderByDescending(keySelector: x => x)
-                .ToArray();
+                           .Select(selector: value => Convert.ToInt32(value))
+                           .Concat(new[] {settings.ThumbnailSize})
+                           .Distinct()
+                           .OrderByDescending(keySelector: x => x)
+                           .ToArray();
         }
     }
 }

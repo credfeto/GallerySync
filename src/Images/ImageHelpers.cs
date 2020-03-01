@@ -53,17 +53,17 @@ namespace Images
                     return;
 
                 case 90: // Rotate 90 degrees clockwise
-                    image.Mutate(ctx => ctx.Rotate(90));
+                    image.Mutate(operation: ctx => ctx.Rotate(degrees: 90));
 
                     return;
 
                 case 180: // Rotate upside down
-                    image.Mutate(ctx => ctx.Rotate(180));
+                    image.Mutate(operation: ctx => ctx.Rotate(degrees: 180));
 
                     return;
 
                 case 270: // Rotate 90 degrees anti-clockwise
-                    image.Mutate(ctx => ctx.Rotate(270));
+                    image.Mutate(operation: ctx => ctx.Rotate(degrees: 270));
 
                     return;
 

@@ -27,7 +27,7 @@ namespace FileNaming
                 if (DateTime.TryParse(datePart, out DateTime date))
                 {
                     string fieldEnd = name.Remove(startIndex: 0, match.Value.Length)
-                        .TrimStart(NamePrefixStripCharacters.ToCharArray());
+                                          .TrimStart(NamePrefixStripCharacters.ToCharArray());
 
                     return string.IsNullOrEmpty(fieldEnd)
                         ? string.Format(CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), date)

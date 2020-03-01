@@ -25,7 +25,10 @@ namespace OutputBuilderClient
                 fileGroup.Add(file.Replace(extension, newValue: ".xmp"));
             }
 
-            FileEntry entry = new FileEntry {Folder = folder, RelativeFolder = folder.Substring(Settings.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup};
+            FileEntry entry = new FileEntry
+                              {
+                                  Folder = folder, RelativeFolder = folder.Substring(Settings.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup
+                              };
 
             string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
@@ -40,12 +43,12 @@ namespace OutputBuilderClient
                               Files = fileGroup.Select(selector: x => new ComponentFile
                                                                       {
                                                                           Extension = Path.GetExtension(x)
-                                                                              .TrimStart(trimChar: '.'),
+                                                                                          .TrimStart(trimChar: '.'),
                                                                           Hash = string.Empty,
                                                                           LastModified = new DateTime(year: 2014, month: 1, day: 1),
                                                                           FileSize = 1000
                                                                       })
-                                  .ToList()
+                                               .ToList()
                           };
 
             List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo);

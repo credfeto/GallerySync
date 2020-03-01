@@ -70,33 +70,33 @@ namespace OutputBuilderClient
         public static void ExtractMetadataFromImage(List<PhotoMetadata> metadata, string fileName)
         {
             TryIgnore(action: () =>
-            {
-                ExifReader reader = new ExifReader(fileName);
+                              {
+                                  ExifReader reader = new ExifReader(fileName);
 
-                TryIgnore(action: () => ExtractXmpDateTime(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpDateTime(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpExposureTime(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpExposureTime(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpFNumber(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpFNumber(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpAperture(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpAperture(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpFocalLength(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpFocalLength(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpGpsLocation(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpGpsLocation(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpIsoSpeed(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpIsoSpeed(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpArtist(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpArtist(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpCopyright(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpCopyright(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpCameraMake(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpCameraMake(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpCameraModel(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpCameraModel(metadata, reader));
 
-                TryIgnore(action: () => ExtractXmpUserComment(metadata, reader));
-            });
+                                  TryIgnore(action: () => ExtractXmpUserComment(metadata, reader));
+                              });
         }
 
         public static void ExtractMetadataFromXmp(List<PhotoMetadata> metadata, string fileName)
@@ -412,10 +412,10 @@ namespace OutputBuilderClient
                 else
                 {
                     IOrderedEnumerable<string> allKeywords = existing.Value.Replace(oldChar: ';', newChar: ',')
-                        .Split(separator: ',')
-                        .Concat(tag.Keywords)
-                        .Distinct()
-                        .OrderBy(keySelector: x => x);
+                                                                     .Split(separator: ',')
+                                                                     .Concat(tag.Keywords)
+                                                                     .Distinct()
+                                                                     .OrderBy(keySelector: x => x);
                     keywords = string.Join(separator: ",", allKeywords);
                     metadata.Remove(existing);
                 }
@@ -460,7 +460,9 @@ namespace OutputBuilderClient
 
             if (tag.FocalLength.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.FocalLength, MetadataFormatting.FormatFocalLength(tag.FocalLength.Value, (int) tag.FocalLengthIn35mmFilm.GetValueOrDefault(defaultValue: 0)));
+                AppendMetadata(metadata,
+                               MetadataNames.FocalLength,
+                               MetadataFormatting.FormatFocalLength(tag.FocalLength.Value, (int) tag.FocalLengthIn35mmFilm.GetValueOrDefault(defaultValue: 0)));
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Make))

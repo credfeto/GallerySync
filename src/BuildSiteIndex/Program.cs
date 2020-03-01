@@ -43,7 +43,9 @@ namespace BuildSiteIndex
             new EventDesc
             {
                 Name = "Linkfest",
-                PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(linkfest-harlow)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                PathMatch =
+                    new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(linkfest-harlow)-",
+                              RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = "[Linkfest](http://www.linkfestharlow.co.uk/), a free music festival in Harlow Town Park at the bandstand."
             },
             new EventDesc
@@ -85,8 +87,8 @@ namespace BuildSiteIndex
             Console.WriteLine(value: "BuildSiteIndex");
 
             IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(path: "appsettings.json")
-                .Build();
+                                                                  .AddJsonFile(path: "appsettings.json")
+                                                                  .Build();
 
             Settings.WebServerBaseAddress = config[key: @"WebServerBaseAddress"];
             Settings.QueueFolder = config[key: @"QueueFolder"];
@@ -133,7 +135,7 @@ namespace BuildSiteIndex
             try
             {
                 Process.GetCurrentProcess()
-                    .PriorityClass = ProcessPriorityClass.BelowNormal;
+                       .PriorityClass = ProcessPriorityClass.BelowNormal;
             }
             catch
             {
@@ -158,11 +160,11 @@ namespace BuildSiteIndex
                 Console.WriteLine(format: "Item: {0}", path);
 
                 string[] pathFragments = path.Split(separator: '/')
-                    .Where(IsNotEmpty)
-                    .ToArray();
+                                             .Where(IsNotEmpty)
+                                             .ToArray();
                 string[] breadcrumbFragments = breadcrumbs.Split(separator: '\\')
-                    .Where(IsNotEmpty)
-                    .ToArray();
+                                                          .Where(IsNotEmpty)
+                                                          .ToArray();
 
                 await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
@@ -239,8 +241,8 @@ namespace BuildSiteIndex
         private static async Task BuildEvents(Dictionary<string, GalleryEntry> contents)
         {
             foreach (GalleryEntry folder in contents.Values.Where(UnderAlbumsFolder)
-                .Where(HasPhotoChildren)
-                .ToList())
+                                                    .Where(HasPhotoChildren)
+                                                    .ToList())
             {
                 if (IsUnderHiddenItem(folder.Path))
                 {
@@ -273,31 +275,32 @@ namespace BuildSiteIndex
                     Group pathStart = pathMatch.Groups[groupnum: 0];
 
                     string pathRest = folder.Path.Substring(pathStart.Length)
-                        .Trim()
-                        .TrimEnd(trimChar: '/');
+                                            .Trim()
+                                            .TrimEnd(trimChar: '/');
 
                     if (string.IsNullOrWhiteSpace(pathRest))
                     {
                         pathRest = title.ToString()
-                            .Trim();
+                                        .Trim();
                     }
 
                     string date = year + "-" + month + "-" + day;
                     string titleDate = (date + " MTR").ReformatTitle(DateFormat.LongDate)
-                        .Replace(oldValue: " - MTR", string.Empty);
+                                                      .Replace(oldValue: " - MTR", string.Empty);
 
                     foreach (GalleryEntry sourcePhoto in folder.Children.Where(IsImage))
                     {
-                        string path = EnsureTerminatedPath(UrlNaming.BuildUrlSafePath("/" + EVENTS_ROOT + "/" + found.Name + "/" + year + "/" + date + "/" + pathRest + "/" + sourcePhoto.Title));
+                        string path = EnsureTerminatedPath(
+                            UrlNaming.BuildUrlSafePath("/" + EVENTS_ROOT + "/" + found.Name + "/" + year + "/" + date + "/" + pathRest + "/" + sourcePhoto.Title));
                         string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + EVENTS_TITLE + "\\" + found.Name + "\\" + year + "\\" + titleDate + "\\" +
                                                                          folder.Title.Replace(titleDate + " - ", string.Empty) + "\\" + sourcePhoto.Title);
 
                         string[] pathFragments = path.Split(separator: '/')
-                            .Where(IsNotEmpty)
-                            .ToArray();
+                                                     .Where(IsNotEmpty)
+                                                     .ToArray();
                         string[] breadcrumbFragments = breadcrumbs.Split(separator: '\\')
-                            .Where(IsNotEmpty)
-                            .ToArray();
+                                                                  .Where(IsNotEmpty)
+                                                                  .ToArray();
 
                         await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
@@ -396,24 +399,24 @@ namespace BuildSiteIndex
                     string sourcePhotoFullPath = EnsureTerminatedPath("/" + ALBUMS_ROOT + "/" + sourcePhoto.UrlSafePath);
                     string sourcePhotoBreadcrumbs = EnsureTerminatedBreadcrumbs("\\" + ALBUMS_TITLE + "\\" + sourcePhoto.BasePath);
                     string[] sourcePhotoPathFragments = sourcePhotoFullPath.Split(separator: '/')
-                        .Where(IsNotEmpty)
-                        .ToArray();
+                                                                           .Where(IsNotEmpty)
+                                                                           .ToArray();
                     string[] sourcePhotoBreadcrumbFragments = sourcePhotoBreadcrumbs.Split(separator: '\\')
-                        .Where(IsNotEmpty)
-                        .ToArray();
+                                                                                    .Where(IsNotEmpty)
+                                                                                    .ToArray();
 
                     string keywordLower = UrlNaming.BuildUrlSafePath(keyword.Keyword.ToLowerInvariant())
-                        .TrimEnd("/".ToArray())
-                        .TrimStart("-".ToArray())
-                        .TrimEnd("-".ToArray());
+                                                   .TrimEnd("/".ToArray())
+                                                   .TrimStart("-".ToArray())
+                                                   .TrimEnd("-".ToArray());
 
                     string firstKeywordCharLower = keywordLower.Substring(startIndex: 0, length: 1)
-                        .ToLowerInvariant();
+                                                               .ToLowerInvariant();
                     string firstKeywordCharUpper = keywordLower.Substring(startIndex: 0, length: 1)
-                        .ToUpperInvariant();
+                                                               .ToUpperInvariant();
 
-                    string path = EnsureTerminatedPath("/" + KEYWORDS_ROOT + "/" + firstKeywordCharLower + "/" + keywordLower + "/" + sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] +
-                                                       "-" + sourcePhotoPathFragments.Last());
+                    string path = EnsureTerminatedPath("/" + KEYWORDS_ROOT + "/" + firstKeywordCharLower + "/" + keywordLower + "/" +
+                                                       sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] + "-" + sourcePhotoPathFragments.Last());
 
                     string title = sourcePhotoBreadcrumbFragments.Last();
                     string parentTitle = sourcePhotoBreadcrumbFragments[sourcePhotoBreadcrumbFragments.Length - 2]
@@ -427,11 +430,11 @@ namespace BuildSiteIndex
                     string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + KEYWORDS_TITLE + "\\" + firstKeywordCharUpper + "\\" + keyword.Keyword + "\\" + title);
 
                     string[] pathFragments = path.Split(separator: '/')
-                        .Where(IsNotEmpty)
-                        .ToArray();
+                                                 .Where(IsNotEmpty)
+                                                 .ToArray();
                     string[] breadcrumbFragments = breadcrumbs.Split(separator: '\\')
-                        .Where(IsNotEmpty)
-                        .ToArray();
+                                                              .Where(IsNotEmpty)
+                                                              .ToArray();
 
                     await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
 
@@ -447,7 +450,7 @@ namespace BuildSiteIndex
         private static void RemoveObeseKeywordEntries(Dictionary<string, KeywordEntry> keywords)
         {
             foreach (KeyValuePair<string, KeywordEntry> keywordEntry in keywords.Where(predicate: entry => entry.Value.Photos.Count > MAX_PHOTOS_PER_KEYWORD)
-                .ToList())
+                                                                                .ToList())
             {
                 Console.WriteLine(format: "Removing over-sized probably generic keyword '{0}'", keywordEntry.Value.Keyword);
                 keywords.Remove(keywordEntry.Key);
@@ -461,12 +464,12 @@ namespace BuildSiteIndex
             if (keywordMetadata != null)
             {
                 foreach (string keyword in keywordMetadata.Value.Replace(oldChar: ';', newChar: ',')
-                    .Split(separator: ',')
-                    .Where(predicate: candidate => !string.IsNullOrWhiteSpace(candidate)))
+                                                          .Split(separator: ',')
+                                                          .Where(predicate: candidate => !string.IsNullOrWhiteSpace(candidate)))
                 {
                     string safe = UrlNaming.BuildUrlSafePath(keyword.ToLowerInvariant())
-                        .TrimStart("-".ToArray())
-                        .TrimEnd("-".ToArray());
+                                           .TrimStart("-".ToArray())
+                                           .TrimEnd("-".ToArray());
 
                     if (!keywords.TryGetValue(safe, out KeywordEntry entry))
                     {
@@ -635,8 +638,10 @@ namespace BuildSiteIndex
                                            Previous = previousItem,
                                            Next = nextItem,
                                            Last = lastItem,
-                                           Children = (from childRecord in parentRecord.Children where !IsHiddenItem(childRecord) orderby childRecord.Path select CreateGalleryChildItem(childRecord))
-                                               .ToList(),
+                                           Children = (from childRecord in parentRecord.Children
+                                                       where !IsHiddenItem(childRecord)
+                                                       orderby childRecord.Path
+                                                       select CreateGalleryChildItem(childRecord)).ToList(),
                                            Breadcrumbs = ExtractItemPreadcrumbs(contents, parentRecord)
                                        }).ToList(),
                        deletedItems = new List<string>()
@@ -648,8 +653,8 @@ namespace BuildSiteIndex
             List<GalleryChildItem> items = new List<GalleryChildItem>();
 
             string[] breadcrumbFragments = parentRecord.Path.Split(separator: '/')
-                .Where(IsNotEmpty)
-                .ToArray();
+                                                       .Where(IsNotEmpty)
+                                                       .ToArray();
 
             for (int folderLevel = 1; folderLevel < breadcrumbFragments.Length; ++folderLevel)
             {
@@ -694,12 +699,12 @@ namespace BuildSiteIndex
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
         {
             List<string> oldItems = oldData.items.Select(selector: r => r.Path)
-                .ToList();
+                                           .ToList();
             List<string> newItems = data.items.Select(selector: r => r.Path)
-                .ToList();
+                                        .ToList();
 
             List<string> deletedItems = oldItems.Where(predicate: oldItem => !newItems.Contains(oldItem))
-                .ToList();
+                                                .ToList();
 
             if (oldData.deletedItems != null)
             {
@@ -724,7 +729,7 @@ namespace BuildSiteIndex
         private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
         {
             return data.items.OrderBy(StrictTypeOrdering)
-                .ThenBy(keySelector: candidate => candidate.Path);
+                       .ThenBy(keySelector: candidate => candidate.Path);
         }
 
         private static int StrictTypeOrdering(GalleryItem candidate)
@@ -818,9 +823,9 @@ namespace BuildSiteIndex
         private static GalleryChildItem GetNextItem(List<GalleryEntry> siblings, GalleryEntry parentRecord, GalleryChildItem lastItem)
         {
             GalleryChildItem candidate = siblings.SkipWhile(predicate: x => x != parentRecord)
-                .Skip(count: 1)
-                .Select(CreateGalleryChildItem)
-                .FirstOrDefault(predicate: item => !IsHiddenItem(item));
+                                                 .Skip(count: 1)
+                                                 .Select(CreateGalleryChildItem)
+                                                 .FirstOrDefault(predicate: item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, lastItem);
         }
@@ -838,7 +843,7 @@ namespace BuildSiteIndex
         private static GalleryChildItem GetFirstItem(List<GalleryEntry> siblings, GalleryEntry parentRecord)
         {
             GalleryChildItem candidate = siblings.Select(CreateGalleryChildItem)
-                .FirstOrDefault(predicate: item => !IsHiddenItem(item));
+                                                 .FirstOrDefault(predicate: item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, parentRecord);
         }
@@ -872,7 +877,7 @@ namespace BuildSiteIndex
         private static GalleryChildItem GetLastItem(List<GalleryEntry> siblings, GalleryEntry parentRecord)
         {
             GalleryChildItem candidate = siblings.Select(CreateGalleryChildItem)
-                .LastOrDefault(predicate: item => !IsHiddenItem(item));
+                                                 .LastOrDefault(predicate: item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, parentRecord);
         }
@@ -880,8 +885,8 @@ namespace BuildSiteIndex
         private static GalleryChildItem GetPreviousItem(List<GalleryEntry> siblings, GalleryEntry parentRecord, GalleryChildItem firstItem)
         {
             GalleryChildItem candidate = siblings.TakeWhile(predicate: x => x != parentRecord)
-                .Select(CreateGalleryChildItem)
-                .LastOrDefault(predicate: item => !IsHiddenItem(item));
+                                                 .Select(CreateGalleryChildItem)
+                                                 .LastOrDefault(predicate: item => !IsHiddenItem(item));
 
             return SkipKnownItem(candidate, firstItem);
         }
@@ -973,8 +978,8 @@ namespace BuildSiteIndex
                                    ImageSizes = sourcePhoto.ImageSizes,
                                    Rating = rating,
                                    Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                                       .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
-                                       .ToList(),
+                                                         .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                                         .ToList(),
                                    Keywords = keywords,
                                    DateCreated = dateCreated,
                                    DateUpdated = dateUpdated
@@ -1007,8 +1012,8 @@ namespace BuildSiteIndex
                                    ImageSizes = sourcePhoto.ImageSizes,
                                    Rating = rating,
                                    Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                                       .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
-                                       .ToList(),
+                                                         .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                                         .ToList(),
                                    Keywords = keywords,
                                    DateCreated = dateCreated,
                                    DateUpdated = dateUpdated
@@ -1047,8 +1052,8 @@ namespace BuildSiteIndex
                                    ImageSizes = sourcePhoto.ImageSizes,
                                    Rating = rating,
                                    Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                                       .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
-                                       .ToList(),
+                                                         .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                                         .ToList(),
                                    Keywords = keywords,
                                    DateCreated = dateCreated,
                                    DateUpdated = dateUpdated
@@ -1062,9 +1067,9 @@ namespace BuildSiteIndex
             if (kwd != null)
             {
                 return kwd.Value.Replace(oldChar: ';', newChar: ',')
-                    .Split(separator: ',')
-                    .Where(IsValidKeywordName)
-                    .ToList();
+                          .Split(separator: ',')
+                          .Where(IsValidKeywordName)
+                          .ToList();
             }
 
             return new List<string>();
@@ -1079,7 +1084,13 @@ namespace BuildSiteIndex
         {
             string[] notPublishable =
             {
-                MetadataNames.Title, MetadataNames.DateTaken, MetadataNames.Keywords, MetadataNames.Rating, MetadataNames.Latitude, MetadataNames.Longitude, MetadataNames.Comment
+                MetadataNames.Title,
+                MetadataNames.DateTaken,
+                MetadataNames.Keywords,
+                MetadataNames.Rating,
+                MetadataNames.Latitude,
+                MetadataNames.Longitude,
+                MetadataNames.Comment
             };
 
             return notPublishable.All(predicate: item => !StringComparer.InvariantCultureIgnoreCase.Equals(item, metadata.Name));

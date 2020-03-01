@@ -39,8 +39,8 @@ namespace UploadData
             }
 
             return this.Type == other.Type && this.Location == other.Location && this.DateUpdated == other.DateUpdated && this.DateCreated == other.DateCreated &&
-                   this.Description == other.Description && this.Title == other.Title && this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() &&
-                   ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes);
+                   this.Description == other.Description && this.Title == other.Title && this.Path == other.Path &&
+                   this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes);
         }
 
         public override bool Equals(object obj)

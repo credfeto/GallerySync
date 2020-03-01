@@ -19,7 +19,7 @@ namespace OutputBuilderClient
             get
             {
                 return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
-                    .ToArray();
+                           .ToArray();
             }
         }
 
@@ -46,8 +46,8 @@ namespace OutputBuilderClient
             TaskFactory<ComponentFile> factory = Task<ComponentFile>.Factory;
 
             Task<ComponentFile>[] tasks = entry.AlternateFileNames.Concat(new[] {entry.LocalFileName})
-                .Select(selector: fileName => ReadComponentFile(factory, Path.Combine(entry.Folder, fileName)))
-                .ToArray();
+                                               .Select(selector: fileName => ReadComponentFile(factory, Path.Combine(entry.Folder, fileName)))
+                                               .ToArray();
 
             Photo item = new Photo
                          {
@@ -59,7 +59,7 @@ namespace OutputBuilderClient
                          };
 
             await Task.WhenAll(tasks)
-                .ContinueWith(continuationAction: t => componentFiles.AddRange(t.Result));
+                      .ContinueWith(continuationAction: t => componentFiles.AddRange(t.Result));
 
             //Console.WriteLine("Found: {0}", basePath);
 

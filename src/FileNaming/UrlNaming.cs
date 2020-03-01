@@ -23,16 +23,17 @@ namespace FileNaming
             string root = RemoveDiacritics(basePath.Trim() + "/", compatNorm: true, NormaliseLWithStroke);
             root = RemoveApostrophes(root);
 
-            return NoHyphensNextToSlash.Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), REPLACEMENT_CHAR), REPLACEMENT_CHAR),
-                                                replacement: "/")
-                .TrimEnd(REPLACEMENT_CHAR.ToCharArray())
-                .ToLowerInvariant();
+            return NoHyphensNextToSlash
+                   .Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), REPLACEMENT_CHAR), REPLACEMENT_CHAR),
+                            replacement: "/")
+                   .TrimEnd(REPLACEMENT_CHAR.ToCharArray())
+                   .ToLowerInvariant();
         }
 
         private static string RemoveApostrophes(string root)
         {
             return root.Replace(oldValue: "'s", newValue: "s")
-                .Replace(oldValue: "'S", newValue: "S");
+                       .Replace(oldValue: "'S", newValue: "S");
         }
 
         private static IEnumerable<char> RemoveDiacriticsEnum(string src, bool compatNorm, Func<char, char> customFolding)

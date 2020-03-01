@@ -18,8 +18,8 @@ namespace OutputBuilderClient
         public static string[] AllBrokenImages()
         {
             return Items.OrderBy(keySelector: item => item.Key)
-                .Select(FormatEntry)
-                .ToArray();
+                        .Select(FormatEntry)
+                        .ToArray();
         }
 
         private static string FormatEntry(KeyValuePair<string, Exception> item)

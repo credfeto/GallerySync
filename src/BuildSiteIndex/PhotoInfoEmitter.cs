@@ -25,7 +25,7 @@ namespace BuildSiteIndex
             get
             {
                 return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
-                    .ToArray();
+                           .ToArray();
             }
         }
 

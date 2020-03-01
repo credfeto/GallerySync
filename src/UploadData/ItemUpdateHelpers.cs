@@ -210,7 +210,7 @@ namespace UploadData
             }
 
             return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => candidate == lhsItem))
-                .All(predicate: rhsItem => rhsItem != null);
+                      .All(predicate: rhsItem => rhsItem != null);
         }
 
         public static bool CollectionEquals(List<GalleryEntry> lhs, List<GalleryEntry> rhs)
@@ -236,7 +236,7 @@ namespace UploadData
             }
 
             return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => ReferenceItemEquals(candidate, lhsItem)))
-                .All(predicate: rhsItem => rhsItem != null);
+                      .All(predicate: rhsItem => rhsItem != null);
         }
 
         public static bool CollectionEquals(List<GalleryChildItem> lhs, List<GalleryChildItem> rhs)
@@ -262,7 +262,7 @@ namespace UploadData
             }
 
             return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => ReferenceItemEquals(candidate, lhsItem)))
-                .All(predicate: rhsItem => rhsItem != null);
+                      .All(predicate: rhsItem => rhsItem != null);
         }
 
         public static bool CollectionEquals(List<PhotoMetadata> lhs, List<PhotoMetadata> rhs)
@@ -288,7 +288,7 @@ namespace UploadData
             }
 
             return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => candidate == lhsItem))
-                .All(predicate: rhsItem => rhsItem != null);
+                      .All(predicate: rhsItem => rhsItem != null);
         }
 
         public static bool CollectionEquals(List<string> lhs, List<string> rhs)
@@ -314,7 +314,7 @@ namespace UploadData
             }
 
             return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => candidate == lhsItem))
-                .All(predicate: rhsItem => rhsItem != null);
+                      .All(predicate: rhsItem => rhsItem != null);
         }
     }
 }

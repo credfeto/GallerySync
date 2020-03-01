@@ -53,8 +53,8 @@ namespace UploadData
             unchecked
             {
                 return (Normalize(this.Latitude)
-                            .GetHashCode() * 397) ^ Normalize(this.Longitude)
-                           .GetHashCode();
+                    .GetHashCode() * 397) ^ Normalize(this.Longitude)
+                    .GetHashCode();
             }
         }
 
