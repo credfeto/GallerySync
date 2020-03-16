@@ -20,14 +20,7 @@ namespace OutputBuilderClient
             this._basePath = basePath;
         }
 
-        public Photo[] Photos
-        {
-            get
-            {
-                return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
-                           .ToArray();
-            }
-        }
+        public Photo[] Photos => this.OrderedPhotos();
 
         public async Task FileFound(FileEntry entry)
         {
@@ -38,6 +31,12 @@ namespace OutputBuilderClient
             Photo photo = JsonConvert.DeserializeObject<Photo>(Encoding.UTF8.GetString(bytes));
 
             this._photos.Add(photo);
+        }
+
+        private Photo[] OrderedPhotos()
+        {
+            return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
+                       .ToArray();
         }
     }
 }
