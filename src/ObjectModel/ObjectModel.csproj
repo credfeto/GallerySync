@@ -1,33 +1,33 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
-        <LangVersion>latest</LangVersion>
-        <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
-        <WarningsAsErrors/>
-        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-        <Features>strict;flow-analysis</Features>
-        <PackAsTool>true</PackAsTool>
-        <IsPackable>true</IsPackable>
-        <Nullable>disable</Nullable>
-    </PropertyGroup>
-    <PropertyGroup>
-        <Company>Mark Ridgwell</Company>
-        <Copyright>Mark Ridgwell</Copyright>
-        <Product>Photo Gallery</Product>
-        <NeutralLanguage>en-GB</NeutralLanguage>
-    </PropertyGroup>
-    <PropertyGroup>
-        <AssemblyTitle>Gallery.ObjectModel</AssemblyTitle>
-        <Description>Photo Galler Object Model</Description>
-    </PropertyGroup>
-    <PropertyGroup>
-        <CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="AsyncFixer" Version="1.1.6" PrivateAssets="All"/>
-        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All"/>
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.4.0.15306" PrivateAssets="All"/>
-        <PackageReference Include="Roslynator.Analyzers" Version="2.3.0" PrivateAssets="All"/>
-        <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All"/>
-    </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+    <WarningsAsErrors />
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <Features>strict;flow-analysis</Features>
+    <PackAsTool>true</PackAsTool>
+    <IsPackable>true</IsPackable>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Company>Mark Ridgwell</Company>
+    <Copyright>Mark Ridgwell</Copyright>
+    <Product>Photo Gallery</Product>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyTitle>Gallery.ObjectModel</AssemblyTitle>
+    <Description>Photo Galler Object Model</Description>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AsyncFixer" Version="1.1.6" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.5.0.15942" PrivateAssets="All" />
+    <PackageReference Include="Roslynator.Analyzers" Version="2.3.0" PrivateAssets="All" />
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All" />
+  </ItemGroup>
 </Project>
