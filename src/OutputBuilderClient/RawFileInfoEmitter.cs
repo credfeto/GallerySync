@@ -14,14 +14,7 @@ namespace OutputBuilderClient
     {
         private readonly ConcurrentBag<Photo> _photos = new ConcurrentBag<Photo>();
 
-        public Photo[] Photos
-        {
-            get
-            {
-                return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
-                           .ToArray();
-            }
-        }
+        public Photo[] Photos => this.OrderedPhotos();
 
         public async Task FileFound(FileEntry entry)
         {
@@ -30,6 +23,12 @@ namespace OutputBuilderClient
             Photo item = await CreatePhotoRecord(entry, basePath);
 
             this.Store(item);
+        }
+
+        private Photo[] OrderedPhotos()
+        {
+            return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
+                       .ToArray();
         }
 
         private void Store(Photo photo)
