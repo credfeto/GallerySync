@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Credfeto.Gallery.DeleteCorruptImage</id>
+    <version>0.0.0.1-do-not-use</version>
+    <authors>Credfeto</authors>
+    <description>nuget galley corrupt image deletion tool</description>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+  </metadata>
+</package>

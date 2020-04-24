@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Credfeto.Gallery.SiteIndexBuilder</id>
+    <version>0.0.0.1-do-not-use</version>
+    <authors>Credfeto</authors>
+    <description>nuget galley site index builder tool</description>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+  </metadata>
+</package>
