@@ -60,7 +60,7 @@ jobs:
          cd src
          dotnet publish BuildSiteIndex --configuration Release -o ../prepublish/BuildSiteIndex/lib /p:Version=${{ env.BUILD_VERSION }} --no-restore --no-build
     - name: pack BuildSiteIndex tool
-      run: nuget pack prepublish/uildSiteIndex/package.nuspec -tool -outputdirectory dist -version ${{ env.BUILD_VERSION }}
+      run: nuget pack prepublish/BuildSiteIndex/package.nuspec -tool -outputdirectory dist -version ${{ env.BUILD_VERSION }}
     - name: Publish DeleteImageIfCorrupt
       run: |
          cd src
