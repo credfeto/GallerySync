@@ -30,35 +30,16 @@ namespace OutputBuilderClient
             GC.GetTotalMemory(forceFullCollection: true);
         }
 
-        private static int Main(string[] args)
+        private static async Task<int> Main(string[] args)
         {
             Console.WriteLine(value: "OutputBuilderClient");
 
             AlterPriority();
 
-            return AsyncMain(args)
-                   .GetAwaiter()
-                   .GetResult();
-        }
+            int ret;
 
-        private static void AlterPriority()
-        {
-            // TODO: Move to a common Library
-            try
-            {
-                System.Diagnostics.Process.GetCurrentProcess()
-                      .PriorityClass = ProcessPriorityClass.BelowNormal;
-            }
-            catch
-            {
-                // Don't care'
-            }
-        }
-
-        private static async Task<int> AsyncMain(string[] args)
-        {
             IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                                                                  .AddJsonFile(path: "appsettings.json")
+                                                                  .AddJsonFile(path: "appsettings.json", optional:true)
                                                                   .AddCommandLine(args,
                                                                                   new Dictionary<string, string>
                                                                                   {
@@ -101,40 +82,58 @@ namespace OutputBuilderClient
                 {
                     await StandaloneMetadata.ReadMetadata(args[0]);
 
-                    return 0;
+                    ret = 0;
                 }
                 catch (Exception exception)
                 {
                     Console.WriteLine(format: "Error: {0}", exception.Message);
                     Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
 
-                    return 1;
+                    ret = 1;
                 }
             }
+            else
+            {
+                int retval;
 
-            int retval;
+                try
+                {
+                    ShortUrls.Load();
 
+                    IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
+
+                    await ProcessGallery(imageSettings, imageLoader);
+
+                    retval = 0;
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine(format: "Error: {0}", exception.Message);
+                    Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
+
+                    retval = 1;
+                }
+
+                await DumpBrokenImages();
+
+                ret = retval;
+            }
+
+            return ret;
+        }
+
+        private static void AlterPriority()
+        {
+            // TODO: Move to a common Library
             try
             {
-                ShortUrls.Load();
-
-                IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
-
-                await ProcessGallery(imageSettings, imageLoader);
-
-                retval = 0;
+                System.Diagnostics.Process.GetCurrentProcess()
+                      .PriorityClass = ProcessPriorityClass.BelowNormal;
             }
-            catch (Exception exception)
+            catch
             {
-                Console.WriteLine(format: "Error: {0}", exception.Message);
-                Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
-
-                retval = 1;
+                // Don't care'
             }
-
-            await DumpBrokenImages();
-
-            return retval;
         }
 
         private static ServiceCollection RegisterServices()
