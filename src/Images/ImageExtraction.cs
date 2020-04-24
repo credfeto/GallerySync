@@ -53,7 +53,7 @@ namespace Images
             string rawExtension = sourcePhoto.ImageExtension.TrimStart(trimChar: '.')
                                              .ToUpperInvariant();
 
-            if (loader.SupportedExtensions.Any(predicate: ext => StringComparer.InvariantCultureIgnoreCase.Equals(ext, rawExtension))
+            if (loader.SupportedExtensions.Any(predicate: ext => StringComparer.InvariantCultureIgnoreCase.Equals(ext, rawExtension)))
             {
                 int[] imageSizes = StandardImageSizesWithThumbnailSize(settings);
 

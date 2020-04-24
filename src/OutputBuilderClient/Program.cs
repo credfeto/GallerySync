@@ -102,6 +102,8 @@ namespace OutputBuilderClient
 
                     IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
 
+                    Console.WriteLine($"Supported Extensions: {string.Join(", ", imageLoader.SupportedExtensions)}");
+
                     await ProcessGallery(imageSettings, imageLoader);
 
                     retval = 0;
