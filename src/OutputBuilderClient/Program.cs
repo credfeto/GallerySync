@@ -38,37 +38,49 @@ namespace OutputBuilderClient
 
             int ret;
 
+            const string rootFolder = @"Source:RootFolder";
+
+            const string databaseOutputFolder = @"Database:OutputFolder";
+            const string outputShortUrls = @"Output:ShortUrls";
+            const string outputImages = @"Output:ImagesOutputPath";
+            const string outputBrokenImages = @"Output:BrokenImagesFile";
+            const string watermark = @"Images:Watermark";
+
+            const string outputJpegQuality = @"Output:JpegOutputQuality";
+            const string outputMaximumDimensions = @"Output:ImageMaximumDimensions";
+            const string outputThumbnailSize = @"Output:ThumbnailSize";
+
             IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                                                                  .AddJsonFile(path: "appsettings.json", optional:true)
+                                                                  .AddJsonFile(path: "appsettings.json", optional: true)
                                                                   .AddCommandLine(args,
                                                                                   new Dictionary<string, string>
                                                                                   {
-                                                                                      {@"-source", @"Source:RootFolder"},
-                                                                                      {@"-output", @"Database:OutputFolder"},
-                                                                                      {@"-imageoutput", @"Output:ImagesOutputPath"},
-                                                                                      {@"-brokenImages", @"Output:BrokenImagesFile"},
-                                                                                      {@"-shortUrls", @"Output:ShortUrls"},
-                                                                                      {@"-watermark", @"Images:Watermark"},
-                                                                                      {@"-thumbnailSize", @"Output:ThumbnailSize"},
-                                                                                      {@"-quality", @"Output:JpegOutputQuality"},
-                                                                                      {@"-resizes", @"Output:ImageMaximumDimensions"}
+                                                                                      {@"-source", rootFolder},
+                                                                                      {@"-output", databaseOutputFolder},
+                                                                                      {@"-imageoutput", outputImages},
+                                                                                      {@"-brokenImages", outputBrokenImages},
+                                                                                      {@"-shortUrls", outputShortUrls},
+                                                                                      {@"-watermark", watermark},
+                                                                                      {@"-thumbnailSize", outputThumbnailSize},
+                                                                                      {@"-quality", outputJpegQuality},
+                                                                                      {@"-resizes", outputMaximumDimensions}
                                                                                   })
                                                                   .Build();
 
-            Settings.RootFolder = config.GetValue<string>(key: @"Source:RootFolder");
-            Settings.DatabaseOutputFolder = config.GetValue<string>(key: @"Database:OutputFolder");
-            Settings.ShortNamesFile = config.GetValue<string>(key: @"Output:ShortUrls");
-            Settings.BrokenImagesFile = config.GetValue<string>(key: @"Output:BrokenImagesFile");
+            Settings.RootFolder = config.GetValue<string>(rootFolder);
+            Settings.DatabaseOutputFolder = config.GetValue<string>(databaseOutputFolder);
+            Settings.ShortNamesFile = config.GetValue<string>(outputShortUrls);
+            Settings.BrokenImagesFile = config.GetValue<string>(outputBrokenImages);
             Settings.BitlyApiUser = config.GetValue<string>(key: @"UrlShortener:BitlyApiUser");
             Settings.BitlyApiKey = config.GetValue<string>(key: @"UrlShortener:BitlyApiKey");
 
-            ISettings imageSettings = new ImageSettings(thumbnailSize: config.GetValue(key: @"Output:ThumbnailSize", defaultValue: 150),
+            ISettings imageSettings = new ImageSettings(thumbnailSize: config.GetValue(outputThumbnailSize, defaultValue: 150),
                                                         defaultShortUrl: @"https://www.markridgwell.co.uk",
-                                                        imageMaximumDimensions: config.GetValue(key: @"Output:ImageMaximumDimensions", defaultValue: @"400,600,800,1024,1600"),
+                                                        imageMaximumDimensions: config.GetValue(outputMaximumDimensions, defaultValue: @"400,600,800,1024,1600"),
                                                         rootFolder: Settings.RootFolder,
-                                                        imagesOutputPath: config.GetValue<string>(key: @"Output:ImagesOutputPath"),
-                                                        jpegOutputQuality: config.GetValue(key: @"Output:JpegOutputQuality", defaultValue: 100),
-                                                        watermarkImage: config.GetValue<string>(key: @"Images:Watermark"));
+                                                        imagesOutputPath: config.GetValue<string>(outputImages),
+                                                        jpegOutputQuality: config.GetValue(outputJpegQuality, defaultValue: 100),
+                                                        watermarkImage: config.GetValue<string>(watermark));
 
             ServiceCollection serviceCollection = RegisterServices();
 
@@ -102,7 +114,7 @@ namespace OutputBuilderClient
 
                     IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
 
-                    Console.WriteLine($"Supported Extensions: {string.Join(", ", imageLoader.SupportedExtensions)}");
+                    Console.WriteLine($"Supported Extensions: {string.Join(separator: ", ", imageLoader.SupportedExtensions)}");
 
                     await ProcessGallery(imageSettings, imageLoader);
 
