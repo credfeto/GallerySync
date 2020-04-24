@@ -63,6 +63,7 @@ namespace Images
                 {
                     if (sourceBitmap == null)
                     {
+                        Console.WriteLine($"Could not load : {filename}");
                         return null;
                     }
 
@@ -208,6 +209,7 @@ namespace Images
             Contract.Requires(!string.IsNullOrEmpty(fileName));
             Contract.Requires(data != null);
 
+            Console.WriteLine($"---> Output to {fileName}");
             EnsureFolderExistsForFile(fileName);
 
             await FileHelpers.WriteAllBytes(fileName, data);
