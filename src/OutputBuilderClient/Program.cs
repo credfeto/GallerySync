@@ -75,6 +75,7 @@ namespace OutputBuilderClient
             Settings.BitlyApiKey = config.GetValue<string>(key: @"UrlShortener:BitlyApiKey");
 
             ISettings imageSettings = new ImageSettings(thumbnailSize: config.GetValue(outputThumbnailSize, defaultValue: 150),
+                                                        shortUrlsPath: Settings.ShortNamesFile,
                                                         defaultShortUrl: @"https://www.markridgwell.co.uk",
                                                         imageMaximumDimensions: config.GetValue(outputMaximumDimensions, defaultValue: @"400,600,800,1024,1600"),
                                                         rootFolder: Settings.RootFolder,
@@ -408,7 +409,7 @@ namespace OutputBuilderClient
 
                     tracking.Add(counter);
 
-                    await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), false);
+                    await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), commit: false);
                 }
                 else
                 {
@@ -419,7 +420,7 @@ namespace OutputBuilderClient
                         ++counter.Impressions;
                         ++counter.TotalImpressionsEver;
 
-                        await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), false);
+                        await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), commit: false);
                     }
                 }
 

@@ -13,7 +13,8 @@ namespace OutputBuilderClient
                              string rootFolder,
                              string imagesOutputPath,
                              long jpegOutputQuality,
-                             string watermarkImage)
+                             string watermarkImage,
+                             string shortUrlsPath)
         {
             this.DefaultShortUrl = defaultShortUrl;
             this.ThumbnailSize = thumbnailSize;
@@ -25,6 +26,7 @@ namespace OutputBuilderClient
             this.ImagesOutputPath = imagesOutputPath;
             this.JpegOutputQuality = jpegOutputQuality;
             this.WatermarkImage = watermarkImage;
+            this.ShortUrlsPath = shortUrlsPath;
         }
 
         public int ThumbnailSize { get; }
@@ -38,6 +40,8 @@ namespace OutputBuilderClient
         public long JpegOutputQuality { get; }
 
         public string WatermarkImage { get; set; }
+
+        public string ShortUrlsPath { get; }
 
         public object DefaultShortUrl { get; }
     }

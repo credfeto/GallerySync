@@ -64,11 +64,9 @@ namespace OutputBuilderClient
                 return;
             }
 
-            string logPath = Path.Combine(imageSettings.ImagesOutputPath, path2: "ShortUrls.csv");
-
             string[] text = {string.Format(format: "{0}\t{1}", url, shortUrl)};
 
-            File.AppendAllLines(logPath, text);
+            File.AppendAllLines(imageSettings.ShortUrlsPath, text);
         }
 
         public static bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)

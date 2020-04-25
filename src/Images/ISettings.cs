@@ -17,5 +17,7 @@ namespace Images
         string WatermarkImage { get; set; }
 
         object DefaultShortUrl { get; }
+
+        string ShortUrlsPath { get; }
     }
 }
