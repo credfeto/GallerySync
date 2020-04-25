@@ -59,6 +59,7 @@ namespace Images
 
                 string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
+                Console.WriteLine($"Loading image: {filename}");
                 using (Image<Rgba32> sourceBitmap = await loader.LoadImageAsync(filename))
                 {
                     if (sourceBitmap == null)

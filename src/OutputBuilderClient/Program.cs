@@ -238,6 +238,11 @@ namespace OutputBuilderClient
                 DateTime creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
 
                 sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(imageLoader, sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
+
+                foreach (ImageSize imageSize in sourcePhoto.ImageSizes)
+                {
+                    await ConsoleOutput.Line($" Built: {imageSize.Height}x{imageSize.Width}");
+                }
             }
             else
             {
