@@ -53,18 +53,20 @@ namespace Images
             string rawExtension = sourcePhoto.ImageExtension.TrimStart(trimChar: '.')
                                              .ToUpperInvariant();
 
-            if (loader.SupportedExtensions.Any(predicate: ext => StringComparer.InvariantCultureIgnoreCase.Equals(ext, rawExtension)))
+            string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
+
+            if (loader.CanLoad(filename))
             {
                 IReadOnlyList<int> imageSizes = StandardImageSizesWithThumbnailSize(settings);
 
-                string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
-
                 Console.WriteLine($"Loading image: {filename}");
+
                 using (Image<Rgba32> sourceBitmap = await loader.LoadImageAsync(filename))
                 {
                     if (sourceBitmap == null)
                     {
                         Console.WriteLine($"Could not load : {filename}");
+
                         return null;
                     }
 
@@ -76,6 +78,7 @@ namespace Images
                     foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
                     {
                         Console.WriteLine($"Creating Dimension: {dimension}");
+
                         using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
                         {
                             string resizedFileName = Path.Combine(settings.ImagesOutputPath,
@@ -637,8 +640,7 @@ namespace Images
 
         private static IReadOnlyList<int> StandardImageSizesWithThumbnailSize(ISettings settings)
         {
-            return settings.ImageMaximumDimensions
-                           .Concat(new[] {settings.ThumbnailSize})
+            return settings.ImageMaximumDimensions.Concat(new[] {settings.ThumbnailSize})
                            .Distinct()
                            .OrderByDescending(keySelector: x => x)
                            .ToArray();

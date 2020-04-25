@@ -28,18 +28,18 @@
     <ProjectReference Include="..\Scanner\Scanner.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="ImageLoader.Core" Version="0.2.1.72-master" />
-    <PackageReference Include="ImageLoader.Interfaces" Version="0.2.1.72-master" />
-    <PackageReference Include="ImageLoader.Photoshop" Version="0.2.1.72-master" />
-    <PackageReference Include="ImageLoader.Raw" Version="0.2.1.72-master" />
-    <PackageReference Include="ImageLoader.Standard" Version="0.2.1.72-master" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.3" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+      <PackageReference Include="ImageLoader.Core" Version="0.2.1.73-master"/>
+      <PackageReference Include="ImageLoader.Interfaces" Version="0.2.1.73-master"/>
+      <PackageReference Include="ImageLoader.Photoshop" Version="0.2.1.73-master"/>
+      <PackageReference Include="ImageLoader.Raw" Version="0.2.1.73-master"/>
+      <PackageReference Include="ImageLoader.Standard" Version="0.2.1.73-master"/>
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.3"/>
+      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.3"/>
+      <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.1.3"/>
+      <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.3"/>
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.3"/>
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.3"/>
+      <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
   </ItemGroup>
   <PropertyGroup>
     <CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
