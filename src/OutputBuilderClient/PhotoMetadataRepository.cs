@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ObjectModel;
 using Scanner;
 using StorageHelpers;
@@ -12,9 +13,9 @@ namespace OutputBuilderClient
 {
     internal static class PhotoMetadataRepository
     {
-        public static async Task<Photo[]> LoadRepositoryAsync(string baseFolder)
+        public static async Task<Photo[]> LoadRepositoryAsync(string baseFolder, ILogger logging)
         {
-            await ConsoleOutput.LineAsync(formatString: "Loading Repository from {0}...", baseFolder);
+            logging.LogInformation($"Loading Repository from {baseFolder}...");
             string[] scores = {".info"};
 
             List<string> sidecarFiles = new List<string>();
@@ -25,15 +26,15 @@ namespace OutputBuilderClient
             {
                 long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
-                await ConsoleOutput.LineAsync(formatString: "{0} : Files Found: {1}", baseFolder, filesFound);
+                logging.LogInformation($"{baseFolder} : Files Found: {filesFound}");
             }
 
             return emitter.Photos;
         }
 
-        public static async Task<Photo[]> LoadEmptyRepositoryAsync(string baseFolder)
+        public static async Task<Photo[]> LoadEmptyRepositoryAsync(string baseFolder, ILogger logging)
         {
-            await ConsoleOutput.LineAsync(formatString: "Loading Repository from {0}...", baseFolder);
+            logging.LogInformation($"Loading Repository from {baseFolder}...");
 
             RawFileInfoEmitter emitter = new RawFileInfoEmitter();
 
@@ -43,7 +44,7 @@ namespace OutputBuilderClient
 
             long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
 
-            await ConsoleOutput.LineAsync(formatString: "{0} : Files Found: {1}", baseFolder, filesFound);
+            logging.LogInformation($"{baseFolder} : Files Found: {filesFound}");
 
             return emitter.Photos;
         }

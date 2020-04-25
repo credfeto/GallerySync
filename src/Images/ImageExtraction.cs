@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using FileNaming;
 using ImageLoader.Interfaces;
+using Microsoft.Extensions.Logging;
 using ObjectModel;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -46,7 +47,8 @@ namespace Images
                                                                    DateTime creationDate,
                                                                    string url,
                                                                    string shortUrl,
-                                                                   ISettings settings)
+                                                                   ISettings settings,
+                                                                   ILogger logging)
         {
             List<ImageSize> sizes = new List<ImageSize>();
 
@@ -59,25 +61,25 @@ namespace Images
             {
                 IReadOnlyList<int> imageSizes = StandardImageSizesWithThumbnailSize(settings);
 
-                Console.WriteLine($"Loading image: {filename}");
+                logging.LogInformation($"Loading image: {filename}");
 
                 using (Image<Rgba32> sourceBitmap = await loader.LoadImageAsync(filename))
                 {
                     if (sourceBitmap == null)
                     {
-                        Console.WriteLine($"Could not load : {filename}");
+                        logging.LogWarning($"Could not load : {filename}");
 
                         return null;
                     }
 
-                    Console.WriteLine($"Loaded: {filename}");
+                    logging.LogInformation($"Loaded: {filename}");
 
                     int sourceImageWidth = sourceBitmap.Width;
-                    Console.WriteLine($"Using Image Width: {sourceBitmap.Width}");
+                    logging.LogInformation($"Using Image Width: {sourceBitmap.Width}");
 
                     foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
                     {
-                        Console.WriteLine($"Creating Dimension: {dimension}");
+                        logging.LogDebug($"Creating Dimension: {dimension}");
 
                         using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
                         {
@@ -101,7 +103,7 @@ namespace Images
 
                             if (!ImageHelpers.IsValidJpegImage(resizedData, "Saved resize image: " + resizedFileName))
                             {
-                                Console.WriteLine(format: "Error: File {0} produced an invalid image", resizedFileName);
+                                logging.LogError($"Error: File {resizedFileName} produced an invalid image");
 
                                 throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
                             }
@@ -126,7 +128,7 @@ namespace Images
             }
             else
             {
-                Console.WriteLine(format: "No image converter for {0}", rawExtension);
+                logging.LogInformation($"No image converter for {rawExtension}");
             }
 
             return sizes;
@@ -134,7 +136,7 @@ namespace Images
 
         public static string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized)
         {
-            return IndividualResizeFileName(sourcePhoto, resized, extension: "jpg");
+            return IndividualResizeFileName(sourcePhoto, resized, extension: @"jpg");
         }
 
         public static string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized, string extension)

@@ -4,23 +4,24 @@ using System.Linq;
 using System.Threading.Tasks;
 using FileNaming;
 using Images;
+using Microsoft.Extensions.Logging;
 using ObjectModel;
 
 namespace OutputBuilderClient
 {
     internal static class RebuildDetection
     {
-        public static async Task<bool> NeedsFullResizedImageRebuildAsync(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings)
+        public static async Task<bool> NeedsFullResizedImageRebuildAsync(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings, ILogger logging)
         {
-            return await MetadataVersionRequiresRebuildAsync(targetPhoto) || await HaveFilesChangedAsync(sourcePhoto, targetPhoto) || HasMissingResizes(targetPhoto, imageSettings);
+            return MetadataVersionRequiresRebuild(targetPhoto, logging) || await HaveFilesChangedAsync(sourcePhoto, targetPhoto, logging) ||
+                   HasMissingResizes(targetPhoto, imageSettings, logging);
         }
 
-        public static async Task<bool> MetadataVersionOutOfDateAsync(Photo targetPhoto)
+        public static bool MetadataVersionOutOfDate(Photo targetPhoto, ILogger logging)
         {
             if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                await ConsoleOutput.LineAsync(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " +
-                                              Constants.CurrentMetadataVersion + ")");
+                logging.LogInformation($" +++ Metadata update: Metadata version out of date. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
 
                 return true;
             }
@@ -28,11 +29,11 @@ namespace OutputBuilderClient
             return false;
         }
 
-        public static async Task<bool> HaveFilesChangedAsync(Photo sourcePhoto, Photo targetPhoto)
+        public static async Task<bool> HaveFilesChangedAsync(Photo sourcePhoto, Photo targetPhoto, ILogger logging)
         {
             if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
             {
-                await ConsoleOutput.LineAsync(formatString: " +++ Metadata update: File count changed");
+                logging.LogInformation(message: " +++ Metadata update: File count changed");
 
                 return true;
             }
@@ -46,7 +47,7 @@ namespace OutputBuilderClient
                 {
                     if (componentFile.FileSize != found.FileSize)
                     {
-                        await ConsoleOutput.LineAsync(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
+                        logging.LogInformation($" +++ Metadata update: File size changed (File: {found.Extension})");
 
                         return true;
                     }
@@ -65,14 +66,14 @@ namespace OutputBuilderClient
 
                     if (componentFile.Hash != found.Hash)
                     {
-                        await ConsoleOutput.LineAsync(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
+                        logging.LogInformation($" +++ Metadata update: File hash changed (File: {found.Extension})");
 
                         return true;
                     }
                 }
                 else
                 {
-                    await ConsoleOutput.LineAsync(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
+                    logging.LogInformation($" +++ Metadata update: File missing (File: {componentFile.Extension})");
 
                     return true;
                 }
@@ -81,7 +82,7 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static bool HasMissingResizes(Photo photoToProcess, ISettings imageSettings)
+        private static bool HasMissingResizes(Photo photoToProcess, ISettings imageSettings, ILogger logging)
         {
             if (photoToProcess.ImageSizes == null)
             {
@@ -98,7 +99,7 @@ namespace OutputBuilderClient
 
                 if (!File.Exists(resizedFileName))
                 {
-                    Console.WriteLine(format: " +++ Force rebuild: Missing image for size {0}x{1} (jpg)", resize.Width, resize.Height);
+                    logging.LogInformation($" +++ Force rebuild: Missing image for size {resize.Width}x{resize.Height} (jpg)");
 
                     return true;
                 }
@@ -111,7 +112,7 @@ namespace OutputBuilderClient
 
                     if (!File.Exists(resizedFileName))
                     {
-                        Console.WriteLine(format: " +++ Force rebuild: Missing image for size {0}x{1} (png)", resize.Width, resize.Height);
+                        logging.LogInformation($" +++ Force rebuild: Missing image for size {resize.Width}x{resize.Height} (png)");
 
                         return true;
                     }
@@ -121,12 +122,11 @@ namespace OutputBuilderClient
             return false;
         }
 
-        public static async Task<bool> MetadataVersionRequiresRebuildAsync(Photo targetPhoto)
+        public static bool MetadataVersionRequiresRebuild(Photo targetPhoto, ILogger logging)
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                await ConsoleOutput.LineAsync(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version + " Expected: " +
-                                              Constants.CurrentMetadataVersion + ")");
+                logging.LogInformation($" +++ Metadata update: Metadata version Requires rebuild. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
 
                 return true;
             }

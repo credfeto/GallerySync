@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using FileNaming;
+using Microsoft.Extensions.Logging;
 using ObjectModel;
 using Scanner;
 
@@ -12,7 +12,7 @@ namespace OutputBuilderClient
 {
     internal static class StandaloneMetadata
     {
-        public static async Task<List<PhotoMetadata>> ReadMetadataAsync(string filename)
+        public static IReadOnlyList<PhotoMetadata> ReadMetadata(string filename, ILogger logging)
         {
             string folder = Path.GetDirectoryName(filename);
             string file = Path.GetFileName(filename);
@@ -53,7 +53,10 @@ namespace OutputBuilderClient
 
             List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo);
 
-            await Task.WhenAll(metadata.Select(selector: item => ConsoleOutput.LineAsync(formatString: "{0} = {1}", item.Name, item.Value)));
+            foreach (PhotoMetadata item in metadata)
+            {
+                logging.LogInformation($"{item.Name} = {item.Value}");
+            }
 
             return metadata;
         }

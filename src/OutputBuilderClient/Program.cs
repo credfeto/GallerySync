@@ -16,8 +16,11 @@ using ImageLoader.Standard;
 using Images;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ObjectModel;
+using Serilog;
 using StorageHelpers;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace OutputBuilderClient
 {
@@ -36,7 +39,15 @@ namespace OutputBuilderClient
 
             AlterPriority();
 
-            int ret;
+            ServiceCollection serviceCollection = RegisterServices();
+
+            ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+
+            ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+
+            loggerFactory.AddSerilog();
+
+            ILogger logging = loggerFactory.CreateLogger(categoryName: "OutputBuilderClient");
 
             const string rootFolder = @"Source:RootFolder";
 
@@ -93,58 +104,29 @@ namespace OutputBuilderClient
                 Console.WriteLine($"Resize: {resize}");
             }
 
-            ServiceCollection serviceCollection = RegisterServices();
-
-            ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
-
-            if (args.Length == 1)
+            try
             {
                 ShortUrls.Load();
 
-                try
-                {
-                    await StandaloneMetadata.ReadMetadataAsync(args[0]);
+                IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
 
-                    ret = 0;
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine(format: "Error: {0}", exception.Message);
-                    Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
+                Console.WriteLine($"Supported Extensions: {string.Join(separator: ", ", imageLoader.SupportedExtensions)}");
 
-                    ret = 1;
-                }
+                await ProcessGalleryAsync(imageSettings, imageLoader, logging);
+
+                return 0;
             }
-            else
+            catch (Exception exception)
             {
-                int retval;
+                Console.WriteLine(format: "Error: {0}", exception.Message);
+                Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
 
-                try
-                {
-                    ShortUrls.Load();
-
-                    IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
-
-                    Console.WriteLine($"Supported Extensions: {string.Join(separator: ", ", imageLoader.SupportedExtensions)}");
-
-                    await ProcessGalleryAsync(imageSettings, imageLoader);
-
-                    retval = 0;
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine(format: "Error: {0}", exception.Message);
-                    Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
-
-                    retval = 1;
-                }
-
-                await DumpBrokenImagesAsync();
-
-                ret = retval;
+                return 1;
             }
-
-            return ret;
+            finally
+            {
+                await DumpBrokenImagesAsync(logging);
+            }
         }
 
         private static void AlterPriority()
@@ -165,6 +147,13 @@ namespace OutputBuilderClient
         {
             ServiceCollection serviceCollection = new ServiceCollection();
 
+            Log.Logger = new LoggerConfiguration().Enrich.FromLogContext()
+                                                  .WriteTo.Console()
+                                                  .CreateLogger();
+
+            serviceCollection.AddOptions()
+                             .AddLogging();
+
             ImageLoaderCoreSetup.Configure(serviceCollection);
             ImageLoaderStandardSetup.Configure(serviceCollection);
             ImageLoaderRawSetup.Configure(serviceCollection);
@@ -173,36 +162,36 @@ namespace OutputBuilderClient
             return serviceCollection;
         }
 
-        private static Task DumpBrokenImagesAsync()
+        private static async Task DumpBrokenImagesAsync(ILogger logging)
         {
             string[] images = BrokenImages.AllBrokenImages();
 
-            File.WriteAllLines(Settings.BrokenImagesFile, images, Encoding.UTF8);
+            await File.WriteAllLinesAsync(Settings.BrokenImagesFile, images, Encoding.UTF8);
 
-            return ConsoleOutput.LineAsync(formatString: "Broken Images: {0}", images.Length);
+            logging.LogInformation($"Broken Images: {images.Length}");
         }
 
-        private static async Task<HashSet<string>> ProcessAsync(IImageLoader imageLoader, Photo[] source, Photo[] target, ISettings imageSettings)
+        private static async Task<HashSet<string>> ProcessAsync(IImageLoader imageLoader, Photo[] source, Photo[] target, ISettings imageSettings, ILogger logging)
         {
             ConcurrentDictionary<string, bool> items = new ConcurrentDictionary<string, bool>();
 
-            await Task.WhenAll(source.Select(selector: sourcePhoto => ProcessSinglePhotoAsync(imageLoader, target, sourcePhoto, items, imageSettings))
+            await Task.WhenAll(source.Select(selector: sourcePhoto => ProcessSinglePhotoAsync(imageLoader, target, sourcePhoto, items, imageSettings, logging))
                                      .ToArray());
 
             return new HashSet<string>(items.Keys);
         }
 
-        private static async Task ProcessGalleryAsync(ISettings imageSettings, IImageLoader imageLoader)
+        private static async Task ProcessGalleryAsync(ISettings imageSettings, IImageLoader imageLoader, ILogger logging)
         {
-            Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepositoryAsync(Settings.RootFolder);
-            Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepositoryAsync(Settings.DatabaseOutputFolder);
+            Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepositoryAsync(Settings.RootFolder, logging);
+            Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepositoryAsync(Settings.DatabaseOutputFolder, logging);
 
             Photo[][] results = await Task.WhenAll(sourceTask, targetTask);
 
             Photo[] source = results[0];
             Photo[] target = results[1];
 
-            await ProcessAsync(imageLoader, source, target, imageSettings);
+            await ProcessAsync(imageLoader, source, target, imageSettings, logging);
         }
 
         private static async Task ProcessOneFileAsync(IImageLoader imageLoader,
@@ -212,9 +201,10 @@ namespace OutputBuilderClient
                                                       bool rebuildMetadata,
                                                       string url,
                                                       string shortUrl,
-                                                      ISettings imageSettings)
+                                                      ISettings imageSettings,
+                                                      ILogger logging)
         {
-            await ConsoleOutput.LineAsync(rebuild ? "Rebuild: {0}" : "Build: {0}", sourcePhoto.UrlSafePath);
+            logging.LogInformation(rebuild ? $"Rebuild: {sourcePhoto.UrlSafePath}" : $"Build: {sourcePhoto.UrlSafePath}");
 
             await targetPhoto.UpdateFileHashesAsync(sourcePhoto);
 
@@ -235,23 +225,23 @@ namespace OutputBuilderClient
 
             if (buildImages)
             {
-                await ConsoleOutput.LineAsync(formatString: "Build images:");
+                logging.LogInformation(message: "Build images:");
                 DateTime creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
 
                 try
                 {
-                    sourcePhoto.ImageSizes = await ImageExtraction.BuildImagesAsync(imageLoader, sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
+                    sourcePhoto.ImageSizes = await ImageExtraction.BuildImagesAsync(imageLoader, sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings, logging);
                 }
                 catch (Exception exception)
                 {
-                    await ConsoleOutput.LineAsync($" Failed to load image: {sourcePhoto.UrlSafePath}: {exception.Message}");
+                    logging.LogInformation($" Failed to load image: {sourcePhoto.UrlSafePath}: {exception.Message}");
 
                     throw;
                 }
             }
             else
             {
-                await ConsoleOutput.LineAsync(formatString: "Not building images");
+                logging.LogInformation(message: "Not building images");
                 sourcePhoto.ImageSizes = targetPhoto.ImageSizes;
             }
 
@@ -279,7 +269,8 @@ namespace OutputBuilderClient
                                                           Photo[] target,
                                                           Photo sourcePhoto,
                                                           ConcurrentDictionary<string, bool> items,
-                                                          ISettings imageSettings)
+                                                          ISettings imageSettings,
+                                                          ILogger logging)
         {
             ForceGarbageCollection();
 
@@ -287,8 +278,8 @@ namespace OutputBuilderClient
             {
                 Photo targetPhoto = target.FirstOrDefault(predicate: item => item.PathHash == sourcePhoto.PathHash);
                 bool build = targetPhoto == null;
-                bool rebuild = targetPhoto != null && await RebuildDetection.NeedsFullResizedImageRebuildAsync(sourcePhoto, targetPhoto, imageSettings);
-                bool rebuildMetadata = targetPhoto != null && await RebuildDetection.MetadataVersionOutOfDateAsync(targetPhoto);
+                bool rebuild = targetPhoto != null && await RebuildDetection.NeedsFullResizedImageRebuildAsync(sourcePhoto, targetPhoto, imageSettings, logging);
+                bool rebuildMetadata = targetPhoto != null && RebuildDetection.MetadataVersionOutOfDate(targetPhoto, logging);
 
                 string url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
                 string shortUrl;
@@ -306,7 +297,7 @@ namespace OutputBuilderClient
                             ShortUrls.LogShortUrl(url, shortUrl, imageSettings);
 
                             rebuild = true;
-                            await ConsoleOutput.LineAsync(formatString: " +++ Force rebuild: missing shortcut URL.  New short url: {0}", shortUrl);
+                            logging.LogInformation($" +++ Force rebuild: missing shortcut URL.  New short url: {shortUrl}");
                         }
                     }
                 }
@@ -314,7 +305,7 @@ namespace OutputBuilderClient
                 {
                     if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                     {
-                        await ConsoleOutput.LineAsync(formatString: "* Reusing existing short url: {0}", shortUrl);
+                        logging.LogInformation($"* Reusing existing short url: {shortUrl}");
                     }
                 }
 
@@ -329,11 +320,11 @@ namespace OutputBuilderClient
 
                 if (build || rebuild || rebuildMetadata)
                 {
-                    await ProcessOneFileAsync(imageLoader, sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl, imageSettings);
+                    await ProcessOneFileAsync(imageLoader, sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl, imageSettings, logging);
                 }
                 else
                 {
-                    await ConsoleOutput.LineAsync(formatString: "Unchanged: {0}", targetPhoto.UrlSafePath);
+                    logging.LogInformation($"Unchanged: {targetPhoto.UrlSafePath}");
                 }
 
                 items.TryAdd(sourcePhoto.PathHash, value: true);
