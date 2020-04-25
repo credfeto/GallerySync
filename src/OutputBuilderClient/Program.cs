@@ -234,6 +234,7 @@ namespace OutputBuilderClient
 
             if (buildImages)
             {
+                await ConsoleOutput.LineAsync(formatString: "Build images:");
                 DateTime creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
 
                 try
