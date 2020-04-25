@@ -82,6 +82,16 @@ namespace OutputBuilderClient
                                                         jpegOutputQuality: config.GetValue(outputJpegQuality, defaultValue: 100),
                                                         watermarkImage: config.GetValue<string>(watermark));
 
+            Console.WriteLine($"Source: {Settings.RootFolder}");
+            Console.WriteLine($"Output: {Settings.DatabaseOutputFolder}");
+            Console.WriteLine($"Images: {imageSettings.RootFolder}");
+            Console.WriteLine($"Thumb:  {imageSettings.ThumbnailSize}");
+
+            foreach (int resize in imageSettings.ImageMaximumDimensions)
+            {
+                Console.WriteLine($"Resize: {resize}");
+            }
+
             ServiceCollection serviceCollection = RegisterServices();
 
             ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
@@ -224,12 +234,14 @@ namespace OutputBuilderClient
 
             if (buildImages)
             {
+                await ConsoleOutput.Line("Build images:");
                 DateTime creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
 
                 sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(imageLoader, sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
             }
             else
             {
+                await ConsoleOutput.Line(formatString: "Not building images");
                 sourcePhoto.ImageSizes = targetPhoto.ImageSizes;
             }
 

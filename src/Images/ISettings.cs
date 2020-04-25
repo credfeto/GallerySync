@@ -1,10 +1,12 @@
-﻿namespace Images
+﻿using System.Collections.Generic;
+
+namespace Images
 {
     public interface ISettings
     {
         int ThumbnailSize { get; }
 
-        string ImageMaximumDimensions { get; }
+        IReadOnlyList<int> ImageMaximumDimensions { get; }
 
         string RootFolder { get; }
 

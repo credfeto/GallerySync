@@ -1,4 +1,7 @@
-﻿using Images;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Images;
 
 namespace OutputBuilderClient
 {
@@ -14,7 +17,10 @@ namespace OutputBuilderClient
         {
             this.DefaultShortUrl = defaultShortUrl;
             this.ThumbnailSize = thumbnailSize;
-            this.ImageMaximumDimensions = imageMaximumDimensions;
+            this.ImageMaximumDimensions = imageMaximumDimensions.Split(separator: ',')
+                                                                .Select(selector: value => Convert.ToInt32(value))
+                                                                .Distinct()
+                                                                .ToArray();
             this.RootFolder = rootFolder;
             this.ImagesOutputPath = imagesOutputPath;
             this.JpegOutputQuality = jpegOutputQuality;
@@ -23,7 +29,7 @@ namespace OutputBuilderClient
 
         public int ThumbnailSize { get; }
 
-        public string ImageMaximumDimensions { get; }
+        public IReadOnlyList<int> ImageMaximumDimensions { get; }
 
         public string RootFolder { get; }
 

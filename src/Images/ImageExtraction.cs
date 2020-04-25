@@ -55,7 +55,7 @@ namespace Images
 
             if (loader.SupportedExtensions.Any(predicate: ext => StringComparer.InvariantCultureIgnoreCase.Equals(ext, rawExtension)))
             {
-                int[] imageSizes = StandardImageSizesWithThumbnailSize(settings);
+                IReadOnlyList<int> imageSizes = StandardImageSizesWithThumbnailSize(settings);
 
                 string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
@@ -67,10 +67,14 @@ namespace Images
                         return null;
                     }
 
+                    Console.WriteLine($"Loaded: {filename}");
+
                     int sourceImageWidth = sourceBitmap.Width;
+                    Console.WriteLine("Using Image Width: {sourceBitmap.Widt}");
 
                     foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
                     {
+                        Console.WriteLine($"Creating Dimension: {dimension}");
                         using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
                         {
                             string resizedFileName = Path.Combine(settings.ImagesOutputPath,
@@ -630,10 +634,9 @@ namespace Images
             SetExifMetadata(image, creationDate, description, copyright, licensing, credit, program);
         }
 
-        private static int[] StandardImageSizesWithThumbnailSize(ISettings settings)
+        private static IReadOnlyList<int> StandardImageSizesWithThumbnailSize(ISettings settings)
         {
-            return settings.ImageMaximumDimensions.Split(separator: ',')
-                           .Select(selector: value => Convert.ToInt32(value))
+            return settings.ImageMaximumDimensions
                            .Concat(new[] {settings.ThumbnailSize})
                            .Distinct()
                            .OrderByDescending(keySelector: x => x)
