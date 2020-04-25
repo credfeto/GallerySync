@@ -10,17 +10,17 @@ namespace OutputBuilderClient
 {
     internal static class RebuildDetection
     {
-        public static async Task<bool> NeedsFullResizedImageRebuild(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings)
+        public static async Task<bool> NeedsFullResizedImageRebuildAsync(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings)
         {
-            return await MetadataVersionRequiresRebuild(targetPhoto) || await HaveFilesChanged(sourcePhoto, targetPhoto) || HasMissingResizes(targetPhoto, imageSettings);
+            return await MetadataVersionRequiresRebuildAsync(targetPhoto) || await HaveFilesChangedAsync(sourcePhoto, targetPhoto) || HasMissingResizes(targetPhoto, imageSettings);
         }
 
-        public static async Task<bool> MetadataVersionOutOfDate(Photo targetPhoto)
+        public static async Task<bool> MetadataVersionOutOfDateAsync(Photo targetPhoto)
         {
             if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                await ConsoleOutput.Line(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " + Constants.CurrentMetadataVersion +
-                                         ")");
+                await ConsoleOutput.LineAsync(" +++ Metadata update: Metadata version out of date. (Current: " + targetPhoto.Version + " Expected: " +
+                                              Constants.CurrentMetadataVersion + ")");
 
                 return true;
             }
@@ -28,11 +28,11 @@ namespace OutputBuilderClient
             return false;
         }
 
-        public static async Task<bool> HaveFilesChanged(Photo sourcePhoto, Photo targetPhoto)
+        public static async Task<bool> HaveFilesChangedAsync(Photo sourcePhoto, Photo targetPhoto)
         {
             if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
             {
-                await ConsoleOutput.Line(formatString: " +++ Metadata update: File count changed");
+                await ConsoleOutput.LineAsync(formatString: " +++ Metadata update: File count changed");
 
                 return true;
             }
@@ -46,7 +46,7 @@ namespace OutputBuilderClient
                 {
                     if (componentFile.FileSize != found.FileSize)
                     {
-                        await ConsoleOutput.Line(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
+                        await ConsoleOutput.LineAsync(" +++ Metadata update: File size changed (File: " + found.Extension + ")");
 
                         return true;
                     }
@@ -60,19 +60,19 @@ namespace OutputBuilderClient
                     {
                         string filename = Path.Combine(Settings.RootFolder, sourcePhoto.BasePath + componentFile.Extension);
 
-                        found.Hash = await Hasher.HashFile(filename);
+                        found.Hash = await Hasher.HashFileAsync(filename);
                     }
 
                     if (componentFile.Hash != found.Hash)
                     {
-                        await ConsoleOutput.Line(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
+                        await ConsoleOutput.LineAsync(" +++ Metadata update: File hash changed (File: " + found.Extension + ")");
 
                         return true;
                     }
                 }
                 else
                 {
-                    await ConsoleOutput.Line(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
+                    await ConsoleOutput.LineAsync(" +++ Metadata update: File missing (File: " + componentFile.Extension + ")");
 
                     return true;
                 }
@@ -121,12 +121,12 @@ namespace OutputBuilderClient
             return false;
         }
 
-        public static async Task<bool> MetadataVersionRequiresRebuild(Photo targetPhoto)
+        public static async Task<bool> MetadataVersionRequiresRebuildAsync(Photo targetPhoto)
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                await ConsoleOutput.Line(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version + " Expected: " +
-                                         Constants.CurrentMetadataVersion + ")");
+                await ConsoleOutput.LineAsync(" +++ Metadata update: Metadata version Requires rebuild. (Current: " + targetPhoto.Version + " Expected: " +
+                                              Constants.CurrentMetadataVersion + ")");
 
                 return true;
             }

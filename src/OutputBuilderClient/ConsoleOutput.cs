@@ -8,7 +8,7 @@ namespace OutputBuilderClient
     {
         private static readonly SemaphoreSlim ConsoleSempahore = new SemaphoreSlim(initialCount: 1);
 
-        internal static async Task Line(string formatString, params object[] parameters)
+        internal static async Task LineAsync(string formatString, params object[] parameters)
         {
             string text = string.Format(formatString, parameters);
 

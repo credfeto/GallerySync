@@ -7,9 +7,9 @@ namespace FileNaming
 {
     public static class Hasher
     {
-        public static async Task<string> HashFile(string filename)
+        public static async Task<string> HashFileAsync(string filename)
         {
-            byte[] bytes = await FileHelpers.ReadAllBytes(filename);
+            byte[] bytes = await FileHelpers.ReadAllBytesAsync(filename);
 
             return HashBytes(bytes);
         }

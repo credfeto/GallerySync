@@ -22,11 +22,11 @@ namespace BuildSiteIndex
 
         public Photo[] Photos => this.OrderedPhotos();
 
-        public async Task FileFound(FileEntry entry)
+        public async Task FileFoundAsync(FileEntry entry)
         {
             string fullPath = Path.Combine(this._basePath, entry.RelativeFolder, entry.LocalFileName);
 
-            byte[] bytes = await FileHelpers.ReadAllBytes(fullPath);
+            byte[] bytes = await FileHelpers.ReadAllBytesAsync(fullPath);
 
             Photo photo = JsonConvert.DeserializeObject<Photo>(Encoding.UTF8.GetString(bytes));
 

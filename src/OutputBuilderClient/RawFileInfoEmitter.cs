@@ -16,11 +16,11 @@ namespace OutputBuilderClient
 
         public Photo[] Photos => this.OrderedPhotos();
 
-        public async Task FileFound(FileEntry entry)
+        public async Task FileFoundAsync(FileEntry entry)
         {
             string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
-            Photo item = await CreatePhotoRecord(entry, basePath);
+            Photo item = await CreatePhotoRecordAsync(entry, basePath);
 
             this.Store(item);
         }
@@ -36,7 +36,7 @@ namespace OutputBuilderClient
             this._photos.Add(photo);
         }
 
-        private static async Task<Photo> CreatePhotoRecord(FileEntry entry, string basePath)
+        private static async Task<Photo> CreatePhotoRecordAsync(FileEntry entry, string basePath)
         {
             string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
@@ -45,7 +45,7 @@ namespace OutputBuilderClient
             TaskFactory<ComponentFile> factory = Task<ComponentFile>.Factory;
 
             Task<ComponentFile>[] tasks = entry.AlternateFileNames.Concat(new[] {entry.LocalFileName})
-                                               .Select(selector: fileName => ReadComponentFile(factory, Path.Combine(entry.Folder, fileName)))
+                                               .Select(selector: fileName => ReadComponentFileAsync(factory, Path.Combine(entry.Folder, fileName)))
                                                .ToArray();
 
             Photo item = new Photo
@@ -57,20 +57,19 @@ namespace OutputBuilderClient
                              Files = componentFiles
                          };
 
-            await Task.WhenAll(tasks)
-                      .ContinueWith(continuationAction: t => componentFiles.AddRange(t.Result));
+            ComponentFile[] results = await Task.WhenAll(tasks);
 
-            //Console.WriteLine("Found: {0}", basePath);
+            componentFiles.AddRange(results);
 
             return item;
         }
 
-        private static Task<ComponentFile> ReadComponentFile(TaskFactory<ComponentFile> factory, string fileName)
+        private static Task<ComponentFile> ReadComponentFileAsync(TaskFactory<ComponentFile> factory, string fileName)
         {
-            return factory.StartNew(function: () => ReadComponentFileAsync(fileName));
+            return factory.StartNew(function: () => ReadComponentFile(fileName));
         }
 
-        private static ComponentFile ReadComponentFileAsync(string fileName)
+        private static ComponentFile ReadComponentFile(string fileName)
         {
             FileInfo info = new FileInfo(fileName);
             string extension = info.Extension.ToLowerInvariant();

@@ -12,7 +12,7 @@ namespace OutputBuilderClient
 {
     internal static class StandaloneMetadata
     {
-        public static async Task<List<PhotoMetadata>> ReadMetadata(string filename)
+        public static async Task<List<PhotoMetadata>> ReadMetadataAsync(string filename)
         {
             string folder = Path.GetDirectoryName(filename);
             string file = Path.GetFileName(filename);
@@ -53,7 +53,7 @@ namespace OutputBuilderClient
 
             List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo);
 
-            await Task.WhenAll(metadata.Select(selector: item => ConsoleOutput.Line(formatString: "{0} = {1}", item.Name, item.Value)));
+            await Task.WhenAll(metadata.Select(selector: item => ConsoleOutput.LineAsync(formatString: "{0} = {1}", item.Name, item.Value)));
 
             return metadata;
         }

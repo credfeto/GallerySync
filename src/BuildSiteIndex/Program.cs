@@ -82,7 +82,7 @@ namespace BuildSiteIndex
 
         private static readonly SemaphoreSlim EntrySemaphore = new SemaphoreSlim(initialCount: 1);
 
-        private static int Main(string[] args)
+        private static async Task<int> Main(string[] args)
         {
             Console.WriteLine(value: "BuildSiteIndex");
 
@@ -114,9 +114,7 @@ namespace BuildSiteIndex
 
             try
             {
-                ProcessGallery()
-                    .GetAwaiter()
-                    .GetResult();
+                await ProcessGalleryAsync();
 
                 return 0;
             }
@@ -143,13 +141,13 @@ namespace BuildSiteIndex
             }
         }
 
-        private static async Task ProcessGallery()
+        private static async Task ProcessGalleryAsync()
         {
             Dictionary<string, GalleryEntry> contents = new Dictionary<string, GalleryEntry>();
 
-            Photo[] target = await LoadRepository(Settings.DatabaseInputFolder);
+            Photo[] target = await LoadRepositoryAsync(Settings.DatabaseInputFolder);
 
-            await AppendRootEntry(contents);
+            await AppendRootEntryAsync(contents);
 
             Dictionary<string, KeywordEntry> keywords = new Dictionary<string, KeywordEntry>();
 
@@ -166,7 +164,7 @@ namespace BuildSiteIndex
                                                           .Where(IsNotEmpty)
                                                           .ToArray();
 
-                await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
+                await EnsureParentFoldersExistAsync(pathFragments, breadcrumbFragments, contents);
 
                 string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
@@ -177,7 +175,7 @@ namespace BuildSiteIndex
                     title = breadcrumbFragments[breadcrumbFragments.Length - 1];
                 }
 
-                await AppendPhotoEntry(contents, parentLevel, path, title, sourcePhoto);
+                await AppendPhotoEntryAsync(contents, parentLevel, path, title, sourcePhoto);
 
                 if (!IsUnderHiddenItem(path))
                 {
@@ -188,38 +186,38 @@ namespace BuildSiteIndex
             Console.WriteLine(format: "Found {0} items total", contents.Count);
             Console.WriteLine(format: "Found {0} keyword items total", keywords.Count);
 
-            await Task.WhenAll(BuildEvents(contents), BuildGalleryItemsForKeywords(keywords, contents));
+            await Task.WhenAll(BuildEventsAsync(contents), BuildGalleryItemsForKeywordsAsync(keywords, contents));
 
             AddCoordinatesFromChildren(contents);
-            await ProcessSiteIndex(contents);
+            await ProcessSiteIndexAsync(contents);
 
-            List<UploadQueueItem> queuedItems = await LoadQueuedItems();
-            await UploadQueuedItems(queuedItems);
+            List<UploadQueueItem> queuedItems = await LoadQueuedItemsAsync();
+            await UploadQueuedItemsAsync(queuedItems);
         }
 
-        private static async Task<List<UploadQueueItem>> LoadQueuedItems()
+        private static async Task<List<UploadQueueItem>> LoadQueuedItemsAsync()
         {
             IEnumerable<string> files = Directory.EnumerateFiles(Settings.QueueFolder, searchPattern: "*.queue");
 
             ConcurrentBag<UploadQueueItem> loaded = new ConcurrentBag<UploadQueueItem>();
 
-            await Task.WhenAll(files.Select(selector: file => LoadOneQueuedFile(file, loaded)));
+            await Task.WhenAll(files.Select(selector: file => LoadOneQueuedFileAsync(file, loaded)));
 
             Console.WriteLine(format: "Found {0} queued items total", loaded.Count);
 
             return loaded.ToList();
         }
 
-        private static async Task LoadOneQueuedFile(string file, ConcurrentBag<UploadQueueItem> loaded)
+        private static async Task LoadOneQueuedFileAsync(string file, ConcurrentBag<UploadQueueItem> loaded)
         {
-            byte[] bytes = await FileHelpers.ReadAllBytes(file);
+            byte[] bytes = await FileHelpers.ReadAllBytesAsync(file);
 
             UploadQueueItem item = JsonConvert.DeserializeObject<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
 
             loaded.Add(item);
         }
 
-        private static async Task<Photo[]> LoadRepository(string baseFolder)
+        private static async Task<Photo[]> LoadRepositoryAsync(string baseFolder)
         {
             Console.WriteLine(format: "Loading Repository from {0}...", baseFolder);
             string[] scores = {".info"};
@@ -230,7 +228,7 @@ namespace BuildSiteIndex
 
             if (Directory.Exists(baseFolder))
             {
-                long filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
                 Console.WriteLine(format: "{0} : Files Found: {1}", baseFolder, filesFound);
             }
@@ -238,7 +236,7 @@ namespace BuildSiteIndex
             return emitter.Photos;
         }
 
-        private static async Task BuildEvents(Dictionary<string, GalleryEntry> contents)
+        private static async Task BuildEventsAsync(Dictionary<string, GalleryEntry> contents)
         {
             foreach (GalleryEntry folder in contents.Values.Where(UnderAlbumsFolder)
                                                     .Where(HasPhotoChildren)
@@ -302,13 +300,13 @@ namespace BuildSiteIndex
                                                                   .Where(IsNotEmpty)
                                                                   .ToArray();
 
-                        await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
+                        await EnsureParentFoldersExistAsync(pathFragments, breadcrumbFragments, contents);
 
                         string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
                         Console.WriteLine(format: "Item: {0}", path);
 
-                        await AppendVirtualEntryPhotoForGalleryEntry(contents, parentLevel, path, sourcePhoto.Path, sourcePhoto.Title, sourcePhoto);
+                        await AppendVirtualEntryPhotoForGalleryEntryAsync(contents, parentLevel, path, sourcePhoto.Path, sourcePhoto.Title, sourcePhoto);
                     }
                 }
             }
@@ -334,14 +332,14 @@ namespace BuildSiteIndex
             return candiate.ImageSizes != null && candiate.ImageSizes.Any();
         }
 
-        private static async Task UploadQueuedItems(List<UploadQueueItem> inputSession)
+        private static async Task UploadQueuedItemsAsync(List<UploadQueueItem> inputSession)
         {
             LoadContext context = new LoadContext();
 
             // Only upload creates and updates.
             foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType != UploadType.DeleteItem))
             {
-                if (await PerformUpload(item, context))
+                if (await PerformUploadAsync(item, context))
                 {
                     return;
                 }
@@ -352,7 +350,7 @@ namespace BuildSiteIndex
             {
                 foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType == UploadType.DeleteItem))
                 {
-                    if (await PerformUpload(item, context))
+                    if (await PerformUploadAsync(item, context))
                     {
                         return;
                     }
@@ -360,7 +358,7 @@ namespace BuildSiteIndex
             }
         }
 
-        private static async Task<bool> PerformUpload(UploadQueueItem item, LoadContext context)
+        private static async Task<bool> PerformUploadAsync(UploadQueueItem item, LoadContext context)
         {
             if (context.Increment())
             {
@@ -369,7 +367,7 @@ namespace BuildSiteIndex
                 return true;
             }
 
-            if (await UploadOneItem(item))
+            if (await UploadOneItemAsync(item))
             {
                 RemoveQueuedItem(item);
             }
@@ -387,8 +385,7 @@ namespace BuildSiteIndex
             FileHelpers.DeleteFile(filename);
         }
 
-        //[Conditional("SUPPORT_KEYWORDS")]
-        private static async Task BuildGalleryItemsForKeywords(Dictionary<string, KeywordEntry> keywords, Dictionary<string, GalleryEntry> contents)
+        private static async Task BuildGalleryItemsForKeywordsAsync(Dictionary<string, KeywordEntry> keywords, Dictionary<string, GalleryEntry> contents)
         {
             RemoveObeseKeywordEntries(keywords);
 
@@ -436,13 +433,13 @@ namespace BuildSiteIndex
                                                               .Where(IsNotEmpty)
                                                               .ToArray();
 
-                    await EnsureParentFoldersExist(pathFragments, breadcrumbFragments, contents);
+                    await EnsureParentFoldersExistAsync(pathFragments, breadcrumbFragments, contents);
 
                     string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
                     Console.WriteLine(format: "Item: {0}", path);
 
-                    await AppendVirtualEntry(contents, parentLevel, path, sourcePhotoFullPath, title, sourcePhoto);
+                    await AppendVirtualEntryAsync(contents, parentLevel, path, sourcePhotoFullPath, title, sourcePhoto);
                 }
             }
         }
@@ -554,7 +551,7 @@ namespace BuildSiteIndex
             return !string.IsNullOrWhiteSpace(arg);
         }
 
-        private static async Task ProcessSiteIndex(Dictionary<string, GalleryEntry> contents)
+        private static async Task ProcessSiteIndexAsync(Dictionary<string, GalleryEntry> contents)
         {
             GallerySiteIndex data = ProduceSiteIndex(contents);
 
@@ -565,7 +562,7 @@ namespace BuildSiteIndex
             if (!_ignoreExisting && File.Exists(outputFilename))
             {
                 Console.WriteLine(value: "Previous Json file exists");
-                byte[] originalBytes = await FileHelpers.ReadAllBytes(outputFilename);
+                byte[] originalBytes = await FileHelpers.ReadAllBytesAsync(outputFilename);
                 string decoded = Encoding.UTF8.GetString(originalBytes);
 
                 if (decoded == json)
@@ -591,22 +588,22 @@ namespace BuildSiteIndex
                     List<string> deletedItems = FindDeletedItems(oldData, data);
                     data.deletedItems.AddRange(deletedItems.OrderBy(keySelector: x => x));
 
-                    await Task.WhenAll(QueueUploadChanges(data, oldData), QueueUploadItemsToDelete(data, deletedItems));
+                    await Task.WhenAll(QueueUploadChangesAsync(data, oldData), QueueUploadItemsToDeleteAsync(data, deletedItems));
                 }
                 else
                 {
-                    await QueueUploadAllItems(data);
+                    await QueueUploadAllItemsAsync(data);
                 }
             }
             else
             {
-                await QueueUploadAllItems(data);
+                await QueueUploadAllItemsAsync(data);
             }
 
             ExtensionMethods.RotateLastGenerations(outputFilename);
 
             byte[] encoded = Encoding.UTF8.GetBytes(json);
-            await FileHelpers.WriteAllBytes(outputFilename, encoded);
+            await FileHelpers.WriteAllBytesAsync(outputFilename, encoded);
         }
 
         private static GallerySiteIndex ProduceSiteIndex(Dictionary<string, GalleryEntry> contents)
@@ -691,9 +688,9 @@ namespace BuildSiteIndex
             return path.StartsWith(value: "/albums/private/", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static Task QueueUploadItemsToDelete(GallerySiteIndex data, List<string> deletedItems)
+        private static Task QueueUploadItemsToDeleteAsync(GallerySiteIndex data, List<string> deletedItems)
         {
-            return Task.WhenAll(deletedItems.Select(selector: path => QueueUploadOneItem(data, new GalleryItem {Path = path}, UploadType.DeleteItem)));
+            return Task.WhenAll(deletedItems.Select(selector: path => QueueUploadOneItemAsync(data, new GalleryItem {Path = path}, UploadType.DeleteItem)));
         }
 
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
@@ -720,10 +717,10 @@ namespace BuildSiteIndex
             return deletedItems;
         }
 
-        private static Task QueueUploadAllItems(GallerySiteIndex data)
+        private static Task QueueUploadAllItemsAsync(GallerySiteIndex data)
         {
             return Task.WhenAll(UploadOrdering(data)
-                                    .Select(selector: item => QueueUploadOneItem(data, item, UploadType.NewItem)));
+                                    .Select(selector: item => QueueUploadOneItemAsync(data, item, UploadType.NewItem)));
         }
 
         private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
@@ -738,23 +735,23 @@ namespace BuildSiteIndex
             return candidate.Type == "photo" ? 1 : 2;
         }
 
-        private static Task QueueUploadChanges(GallerySiteIndex data, GallerySiteIndex oldData)
+        private static Task QueueUploadChangesAsync(GallerySiteIndex data, GallerySiteIndex oldData)
         {
             return Task.WhenAll(UploadOrdering(data)
-                                    .Select(selector: item => QueueOneNewOrModifiedItem(data, oldData, item)));
+                                    .Select(selector: item => QueueOneNewOrModifiedItemAsync(data, oldData, item)));
         }
 
-        private static async Task QueueOneNewOrModifiedItem(GallerySiteIndex data, GallerySiteIndex oldData, GalleryItem item)
+        private static async Task QueueOneNewOrModifiedItemAsync(GallerySiteIndex data, GallerySiteIndex oldData, GalleryItem item)
         {
             GalleryItem oldItem = oldData.items.FirstOrDefault(predicate: candidate => candidate.Path == item.Path);
 
             if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
             {
-                await QueueUploadOneItem(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem);
+                await QueueUploadOneItemAsync(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem);
             }
         }
 
-        private static Task QueueUploadOneItem(GallerySiteIndex data, GalleryItem item, UploadType uploadType)
+        private static Task QueueUploadOneItemAsync(GallerySiteIndex data, GalleryItem item, UploadType uploadType)
         {
             string key = BuildUploadQueueHash(item);
 
@@ -764,7 +761,7 @@ namespace BuildSiteIndex
 
             string json = JsonConvert.SerializeObject(queueItem);
 
-            return FileHelpers.WriteAllBytes(filename, Encoding.UTF8.GetBytes(json));
+            return FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(json));
         }
 
         private static string BuildQueueItemFileName(string key)
@@ -782,7 +779,7 @@ namespace BuildSiteIndex
             return BuildUploadQueueHash(item.Item);
         }
 
-        private static async Task<bool> UploadOneItem(UploadQueueItem item)
+        private static async Task<bool> UploadOneItemAsync(UploadQueueItem item)
         {
             // TODO - move the intialization etc somewhere else.
             UploadHelper uh = new UploadHelper(new Uri(Settings.WebServerBaseAddress));
@@ -797,7 +794,7 @@ namespace BuildSiteIndex
 
             do
             {
-                uploaded = await uh.UploadItem(itemToPost, progressText, item.UploadType);
+                uploaded = await uh.UploadItemAsync(itemToPost, progressText, item.UploadType);
                 ++retry;
             } while (!uploaded && retry < maxRetries);
 
@@ -947,7 +944,7 @@ namespace BuildSiteIndex
             return new List<GalleryEntry>();
         }
 
-        private static Task AppendPhotoEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path, string title, Photo sourcePhoto)
+        private static Task AppendPhotoEntryAsync(Dictionary<string, GalleryEntry> contents, string parentLevel, string path, string title, Photo sourcePhoto)
         {
             ExtractDates(sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
 
@@ -964,29 +961,34 @@ namespace BuildSiteIndex
                 keywords = new List<string>();
             }
 
-            return AppendEntry(contents,
-                               parentLevel,
-                               path,
-                               new GalleryEntry
-                               {
-                                   Path = path,
-                                   OriginalAlbumPath = null,
-                                   Title = title,
-                                   Description = description,
-                                   Children = new List<GalleryEntry>(),
-                                   Location = location,
-                                   ImageSizes = sourcePhoto.ImageSizes,
-                                   Rating = rating,
-                                   Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                                                         .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
-                                                         .ToList(),
-                                   Keywords = keywords,
-                                   DateCreated = dateCreated,
-                                   DateUpdated = dateUpdated
-                               });
+            return AppendEntryAsync(contents,
+                                    parentLevel,
+                                    path,
+                                    new GalleryEntry
+                                    {
+                                        Path = path,
+                                        OriginalAlbumPath = null,
+                                        Title = title,
+                                        Description = description,
+                                        Children = new List<GalleryEntry>(),
+                                        Location = location,
+                                        ImageSizes = sourcePhoto.ImageSizes,
+                                        Rating = rating,
+                                        Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                                                              .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                                              .ToList(),
+                                        Keywords = keywords,
+                                        DateCreated = dateCreated,
+                                        DateUpdated = dateUpdated
+                                    });
         }
 
-        private static Task AppendVirtualEntry(Dictionary<string, GalleryEntry> contents, string parentLevel, string path, string originalPath, string title, Photo sourcePhoto)
+        private static Task AppendVirtualEntryAsync(Dictionary<string, GalleryEntry> contents,
+                                                    string parentLevel,
+                                                    string path,
+                                                    string originalPath,
+                                                    string title,
+                                                    Photo sourcePhoto)
         {
             ExtractDates(sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
 
@@ -998,34 +1000,34 @@ namespace BuildSiteIndex
 
             List<string> keywords = ExtractKeywords(sourcePhoto);
 
-            return AppendEntry(contents,
-                               parentLevel,
-                               path,
-                               new GalleryEntry
-                               {
-                                   Path = path,
-                                   OriginalAlbumPath = originalPath,
-                                   Title = title,
-                                   Description = description,
-                                   Children = new List<GalleryEntry>(),
-                                   Location = location,
-                                   ImageSizes = sourcePhoto.ImageSizes,
-                                   Rating = rating,
-                                   Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                                                         .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
-                                                         .ToList(),
-                                   Keywords = keywords,
-                                   DateCreated = dateCreated,
-                                   DateUpdated = dateUpdated
-                               });
+            return AppendEntryAsync(contents,
+                                    parentLevel,
+                                    path,
+                                    new GalleryEntry
+                                    {
+                                        Path = path,
+                                        OriginalAlbumPath = originalPath,
+                                        Title = title,
+                                        Description = description,
+                                        Children = new List<GalleryEntry>(),
+                                        Location = location,
+                                        ImageSizes = sourcePhoto.ImageSizes,
+                                        Rating = rating,
+                                        Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                                                              .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                                              .ToList(),
+                                        Keywords = keywords,
+                                        DateCreated = dateCreated,
+                                        DateUpdated = dateUpdated
+                                    });
         }
 
-        private static Task AppendVirtualEntryPhotoForGalleryEntry(Dictionary<string, GalleryEntry> contents,
-                                                                   string parentLevel,
-                                                                   string path,
-                                                                   string originalPath,
-                                                                   string title,
-                                                                   GalleryEntry sourcePhoto)
+        private static Task AppendVirtualEntryPhotoForGalleryEntryAsync(Dictionary<string, GalleryEntry> contents,
+                                                                        string parentLevel,
+                                                                        string path,
+                                                                        string originalPath,
+                                                                        string title,
+                                                                        GalleryEntry sourcePhoto)
         {
             DateTime dateCreated = sourcePhoto.DateCreated;
             DateTime dateUpdated = sourcePhoto.DateUpdated;
@@ -1038,26 +1040,26 @@ namespace BuildSiteIndex
 
             List<string> keywords = sourcePhoto.Keywords;
 
-            return AppendEntry(contents,
-                               parentLevel,
-                               path,
-                               new GalleryEntry
-                               {
-                                   Path = path,
-                                   OriginalAlbumPath = originalPath,
-                                   Title = title,
-                                   Description = description,
-                                   Children = new List<GalleryEntry>(),
-                                   Location = location,
-                                   ImageSizes = sourcePhoto.ImageSizes,
-                                   Rating = rating,
-                                   Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
-                                                         .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
-                                                         .ToList(),
-                                   Keywords = keywords,
-                                   DateCreated = dateCreated,
-                                   DateUpdated = dateUpdated
-                               });
+            return AppendEntryAsync(contents,
+                                    parentLevel,
+                                    path,
+                                    new GalleryEntry
+                                    {
+                                        Path = path,
+                                        OriginalAlbumPath = originalPath,
+                                        Title = title,
+                                        Description = description,
+                                        Children = new List<GalleryEntry>(),
+                                        Location = location,
+                                        ImageSizes = sourcePhoto.ImageSizes,
+                                        Rating = rating,
+                                        Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
+                                                              .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
+                                                              .ToList(),
+                                        Keywords = keywords,
+                                        DateCreated = dateCreated,
+                                        DateUpdated = dateUpdated
+                                    });
         }
 
         private static List<string> ExtractKeywords(Photo sourcePhoto)
@@ -1181,7 +1183,7 @@ namespace BuildSiteIndex
             return location;
         }
 
-        private static async Task EnsureParentFoldersExist(string[] pathFragments, string[] breadcrumbFragments, Dictionary<string, GalleryEntry> contents)
+        private static async Task EnsureParentFoldersExistAsync(string[] pathFragments, string[] breadcrumbFragments, Dictionary<string, GalleryEntry> contents)
         {
             for (int folderLevel = 1; folderLevel < pathFragments.Length; ++folderLevel)
             {
@@ -1191,26 +1193,26 @@ namespace BuildSiteIndex
                 {
                     string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(folderLevel - 1)));
 
-                    await AppendEntry(contents,
-                                      parentLevel,
-                                      level,
-                                      new GalleryEntry
-                                      {
-                                          Path = level,
-                                          OriginalAlbumPath = null,
-                                          Title = breadcrumbFragments[folderLevel - 1]
-                                              .ReformatTitle(DateFormat.LongDate),
-                                          Description = string.Empty,
-                                          Location = null,
-                                          Children = new List<GalleryEntry>(),
-                                          DateCreated = DateTime.MaxValue,
-                                          DateUpdated = DateTime.MinValue
-                                      });
+                    await AppendEntryAsync(contents,
+                                           parentLevel,
+                                           level,
+                                           new GalleryEntry
+                                           {
+                                               Path = level,
+                                               OriginalAlbumPath = null,
+                                               Title = breadcrumbFragments[folderLevel - 1]
+                                                   .ReformatTitle(DateFormat.LongDate),
+                                               Description = string.Empty,
+                                               Location = null,
+                                               Children = new List<GalleryEntry>(),
+                                               DateCreated = DateTime.MaxValue,
+                                               DateUpdated = DateTime.MinValue
+                                           });
                 }
             }
         }
 
-        private static async Task AppendEntry(Dictionary<string, GalleryEntry> contents, string parentPath, string itemPath, GalleryEntry entry)
+        private static async Task AppendEntryAsync(Dictionary<string, GalleryEntry> contents, string parentPath, string itemPath, GalleryEntry entry)
         {
             await EntrySemaphore.WaitAsync();
 
@@ -1241,7 +1243,7 @@ namespace BuildSiteIndex
             }
         }
 
-        private static async Task AppendRootEntry(Dictionary<string, GalleryEntry> contents)
+        private static async Task AppendRootEntryAsync(Dictionary<string, GalleryEntry> contents)
         {
             GalleryEntry entry = new GalleryEntry
                                  {

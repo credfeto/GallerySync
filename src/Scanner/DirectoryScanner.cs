@@ -9,23 +9,26 @@ namespace Scanner
 {
     public static class DirectoryScanner
     {
-        public static async Task<long> ScanFolder(string baseFolder, IFileEmitter fileEmitter, List<string> extensionsToRetrieveInOrderOfPrecendence, List<string> sidecarFiles)
+        public static async Task<long> ScanFolderAsync(string baseFolder,
+                                                       IFileEmitter fileEmitter,
+                                                       List<string> extensionsToRetrieveInOrderOfPrecendence,
+                                                       List<string> sidecarFiles)
         {
             Context context = new Context(baseFolder, fileEmitter, extensionsToRetrieveInOrderOfPrecendence, sidecarFiles);
 
-            await StartScanning(context);
+            await StartScanningAsync(context);
 
-            long filesFound = await ProcessEntries(context);
+            long filesFound = await ProcessEntriesAsync(context);
 
             return filesFound;
         }
 
-        private static Task StartScanning(Context context)
+        private static Task StartScanningAsync(Context context)
         {
-            return ScanSubFolder(context.BaseFolder, context);
+            return ScanSubFolderAsync(context.BaseFolder, context);
         }
 
-        private static async Task<long> ProcessEntries(Context context)
+        private static async Task<long> ProcessEntriesAsync(Context context)
         {
             long filesFound = 0L;
             bool more = true;
@@ -37,16 +40,16 @@ namespace Scanner
                 if (more)
                 {
                     ++filesFound;
-                    await context.FileEmitter.FileFound(entry);
+                    await context.FileEmitter.FileFoundAsync(entry);
                 }
             }
 
             return filesFound;
         }
 
-        private static async Task ScanSubFolder(string folder, Context context)
+        private static async Task ScanSubFolderAsync(string folder, Context context)
         {
-            await FindSubFolders(folder, context);
+            await FindSubFoldersAsync(folder, context);
 
             FindFiles(folder, context);
         }
@@ -92,13 +95,13 @@ namespace Scanner
                                       .ToLowerInvariant());
         }
 
-        private static Task FindSubFolders(string folder, Context context)
+        private static Task FindSubFoldersAsync(string folder, Context context)
         {
             string[] folders = Directory.GetDirectories(folder, searchPattern: "*")
                                         .Where(predicate: subFolder => !IsSkipFolderName(subFolder.Substring(folder.Length + 1)))
                                         .ToArray();
 
-            return Task.WhenAll(folders.Select(selector: subFolder => ScanSubFolder(subFolder, context))
+            return Task.WhenAll(folders.Select(selector: subFolder => ScanSubFolderAsync(subFolder, context))
                                        .ToArray());
         }
 

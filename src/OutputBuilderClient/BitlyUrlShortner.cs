@@ -26,7 +26,7 @@ namespace OutputBuilderClient
         ///     The shortened version of the URL.
         /// </returns>
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Many possible exceptions")]
-        public static async Task<Uri> Shorten(Uri url)
+        public static async Task<Uri> ShortenAsync(Uri url)
         {
             Contract.Requires(url != null);
             Contract.Ensures(Contract.Result<Uri>() != null);

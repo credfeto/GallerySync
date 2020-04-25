@@ -4,6 +4,6 @@ namespace Scanner
 {
     public interface IFileEmitter
     {
-        Task FileFound(FileEntry entry);
+        Task FileFoundAsync(FileEntry entry);
     }
 }

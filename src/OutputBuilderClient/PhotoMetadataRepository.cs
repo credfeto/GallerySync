@@ -12,9 +12,9 @@ namespace OutputBuilderClient
 {
     internal static class PhotoMetadataRepository
     {
-        public static async Task<Photo[]> LoadRepository(string baseFolder)
+        public static async Task<Photo[]> LoadRepositoryAsync(string baseFolder)
         {
-            await ConsoleOutput.Line(formatString: "Loading Repository from {0}...", baseFolder);
+            await ConsoleOutput.LineAsync(formatString: "Loading Repository from {0}...", baseFolder);
             string[] scores = {".info"};
 
             List<string> sidecarFiles = new List<string>();
@@ -23,17 +23,17 @@ namespace OutputBuilderClient
 
             if (Directory.Exists(baseFolder))
             {
-                long filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder, emitter, scores.ToList(), sidecarFiles);
 
-                await ConsoleOutput.Line(formatString: "{0} : Files Found: {1}", baseFolder, filesFound);
+                await ConsoleOutput.LineAsync(formatString: "{0} : Files Found: {1}", baseFolder, filesFound);
             }
 
             return emitter.Photos;
         }
 
-        public static async Task<Photo[]> LoadEmptyRepository(string baseFolder)
+        public static async Task<Photo[]> LoadEmptyRepositoryAsync(string baseFolder)
         {
-            await ConsoleOutput.Line(formatString: "Loading Repository from {0}...", baseFolder);
+            await ConsoleOutput.LineAsync(formatString: "Loading Repository from {0}...", baseFolder);
 
             RawFileInfoEmitter emitter = new RawFileInfoEmitter();
 
@@ -41,14 +41,14 @@ namespace OutputBuilderClient
 
             string[] sidecarFiles = {".xmp"};
 
-            long filesFound = await DirectoryScanner.ScanFolder(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
+            long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
 
-            await ConsoleOutput.Line(formatString: "{0} : Files Found: {1}", baseFolder, filesFound);
+            await ConsoleOutput.LineAsync(formatString: "{0} : Files Found: {1}", baseFolder, filesFound);
 
             return emitter.Photos;
         }
 
-        public static Task Store(Photo photo)
+        public static Task StoreAsync(Photo photo)
         {
             string safeUrl = photo.UrlSafePath.Replace(oldChar: '/', Path.DirectorySeparatorChar);
             safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
@@ -58,7 +58,7 @@ namespace OutputBuilderClient
 
             string txt = JsonConvert.SerializeObject(photo);
 
-            return FileHelpers.WriteAllBytes(outputPath, Encoding.UTF8.GetBytes(txt));
+            return FileHelpers.WriteAllBytesAsync(outputPath, Encoding.UTF8.GetBytes(txt));
         }
     }
 }

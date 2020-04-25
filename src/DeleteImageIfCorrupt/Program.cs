@@ -9,14 +9,7 @@ namespace DeleteImageIfCorrupt
 {
     internal static class Program
     {
-        private static int Main(string[] args)
-        {
-            return AsyncMain(args)
-                   .GetAwaiter()
-                   .GetResult();
-        }
-
-        private static async Task<int> AsyncMain(string[] args)
+        private static async Task<int> Main(string[] args)
         {
             if (args.Length != 1)
             {
@@ -27,7 +20,7 @@ namespace DeleteImageIfCorrupt
             {
                 try
                 {
-                    byte[] data = await FileHelpers.ReadAllBytes(args[0]);
+                    byte[] data = await FileHelpers.ReadAllBytesAsync(args[0]);
 
                     if (IsValidJpegImage(data))
                     {

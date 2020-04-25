@@ -6,13 +6,13 @@ namespace StorageHelpers
 {
     public static class FileHelpers
     {
-        public static Task WriteAllBytes(string fileName, byte[] bytes)
+        public static Task WriteAllBytesAsync(string fileName, byte[] bytes)
         {
             const int maxRetries = 5;
 
             EnsureFolderExists(fileName);
 
-            return WriteWithRetries(fileName, bytes, maxRetries);
+            return WriteWithRetriesAsync(fileName, bytes, maxRetries);
         }
 
         private static void EnsureFolderExists(string fileName)
@@ -59,9 +59,9 @@ namespace StorageHelpers
             }
         }
 
-        private static async Task VerifyContent(string path, byte[] bytes)
+        private static async Task VerifyContentAsync(string path, byte[] bytes)
         {
-            byte[] written = await ReadAllBytes(path);
+            byte[] written = await ReadAllBytesAsync(path);
 
             if (bytes.Length != written.Length)
             {
@@ -84,11 +84,11 @@ namespace StorageHelpers
             }
         }
 
-        private static async Task WriteContent(string path, byte[] bytes)
+        private static async Task WriteContentAsync(string path, byte[] bytes)
         {
             if (File.Exists(path))
             {
-                byte[] existingBytes = await ReadAllBytes(path);
+                byte[] existingBytes = await ReadAllBytesAsync(path);
 
                 if (AreSame(existingBytes, bytes))
                 {
@@ -96,9 +96,9 @@ namespace StorageHelpers
                 }
             }
 
-            await WriteNoVerify(path, bytes);
+            await WriteNoVerifyAsync(path, bytes);
 
-            await VerifyContent(path, bytes);
+            await VerifyContentAsync(path, bytes);
         }
 
         private static bool AreSame(byte[] existingBytes, byte[] bytesToWrite)
@@ -119,12 +119,12 @@ namespace StorageHelpers
             return true;
         }
 
-        private static Task WriteNoVerify(string path, byte[] bytes)
+        private static Task WriteNoVerifyAsync(string path, byte[] bytes)
         {
-            return Task.Run(action: () => File.WriteAllBytes(path, bytes));
+            return File.WriteAllBytesAsync(path, bytes);
         }
 
-        private static async Task WriteWithRetries(string fileName, byte[] data, int maxRetries)
+        private static async Task WriteWithRetriesAsync(string fileName, byte[] data, int maxRetries)
         {
             int retries = 0;
 
@@ -134,7 +134,7 @@ namespace StorageHelpers
 
                 try
                 {
-                    await WriteContent(fileName, data);
+                    await WriteContentAsync(fileName, data);
 
                     return;
                 }
@@ -155,9 +155,9 @@ namespace StorageHelpers
             }
         }
 
-        public static Task<byte[]> ReadAllBytes(string filename)
+        public static Task<byte[]> ReadAllBytesAsync(string filename)
         {
-            return Task.Run(function: () => File.ReadAllBytes(filename));
+            return File.ReadAllBytesAsync(filename);
         }
     }
 }

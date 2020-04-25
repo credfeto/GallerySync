@@ -24,7 +24,7 @@ namespace Upload
             this._timeout = timeout;
         }
 
-        public async Task<bool> UploadItem(GallerySiteIndex itemToPost, string progressText, UploadType uploadType)
+        public async Task<bool> UploadItemAsync(GallerySiteIndex itemToPost, string progressText, UploadType uploadType)
         {
             try
             {

@@ -21,7 +21,7 @@ namespace OutputBuilderClient
             targetPhoto.ShortUrl = sourcePhoto.ShortUrl;
         }
 
-        public static Task UpdateFileHashes(this Photo targetPhoto, Photo sourcePhoto)
+        public static Task UpdateFileHashesAsync(this Photo targetPhoto, Photo sourcePhoto)
         {
             if (targetPhoto != null)
             {
@@ -37,14 +37,14 @@ namespace OutputBuilderClient
             }
 
             return Task.WhenAll(sourcePhoto.Files.Where(predicate: s => string.IsNullOrWhiteSpace(s.Hash))
-                                           .Select(sourcePhoto.SetFileHash));
+                                           .Select(sourcePhoto.SetFileHashAsync));
         }
 
-        private static async Task SetFileHash(this Photo sourcePhoto, ComponentFile file)
+        private static async Task SetFileHashAsync(this Photo sourcePhoto, ComponentFile file)
         {
             string filename = Path.Combine(Settings.RootFolder, sourcePhoto.BasePath + file.Extension);
 
-            file.Hash = await Hasher.HashFile(filename);
+            file.Hash = await Hasher.HashFileAsync(filename);
         }
     }
 }

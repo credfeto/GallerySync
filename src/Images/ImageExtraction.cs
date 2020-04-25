@@ -40,13 +40,13 @@ namespace Images
             }
         }
 
-        public static async Task<List<ImageSize>> BuildImages(IImageLoader loader,
-                                                              Photo sourcePhoto,
-                                                              List<string> filesCreated,
-                                                              DateTime creationDate,
-                                                              string url,
-                                                              string shortUrl,
-                                                              ISettings settings)
+        public static async Task<List<ImageSize>> BuildImagesAsync(IImageLoader loader,
+                                                                   Photo sourcePhoto,
+                                                                   List<string> filesCreated,
+                                                                   DateTime creationDate,
+                                                                   string url,
+                                                                   string shortUrl,
+                                                                   ISettings settings)
         {
             List<ImageSize> sizes = new List<ImageSize>();
 
@@ -95,7 +95,7 @@ namespace Images
                                 throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
                             }
 
-                            await WriteImage(resizedFileName, resizedBytes, creationDate);
+                            await WriteImageAsync(resizedFileName, resizedBytes, creationDate);
 
                             byte[] resizedData = await File.ReadAllBytesAsync(resizedFileName);
 
@@ -114,7 +114,7 @@ namespace Images
                                                                HashNaming.PathifyHash(sourcePhoto.PathHash),
                                                                IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
                                 resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
-                                await WriteImage(resizedFileName, resizedBytes, creationDate);
+                                await WriteImageAsync(resizedFileName, resizedBytes, creationDate);
 
                                 filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" + IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
                             }
@@ -212,7 +212,7 @@ namespace Images
         ///     The data to write to the file.
         /// </param>
         /// <param name="creationDate"></param>
-        public static async Task WriteImage(string fileName, byte[] data, DateTime creationDate)
+        public static async Task WriteImageAsync(string fileName, byte[] data, DateTime creationDate)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
             Contract.Requires(data != null);
@@ -220,7 +220,7 @@ namespace Images
             Console.WriteLine($"---> Output to {fileName}");
             EnsureFolderExistsForFile(fileName);
 
-            await FileHelpers.WriteAllBytes(fileName, data);
+            await FileHelpers.WriteAllBytesAsync(fileName, data);
 
             MetadataOutput.SetCreationDate(fileName, creationDate);
         }
