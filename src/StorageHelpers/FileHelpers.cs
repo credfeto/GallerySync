@@ -174,15 +174,13 @@ namespace StorageHelpers
                     string localFile = GetLocalRepoFile(repo, fileName);
 
                     // Stage the file
-                    repo.Index.Add(pathInTheWorkdir: "fileToCommit.txt");
+                    repo.Index.Add(localFile);
                     repo.Index.Write();
 
                     Signature author = new Signature(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", DateTime.UtcNow);
                     Signature committer = author;
 
                     repo.Commit($"Updated {localFile}", author, committer);
-
-                    repo.Network.Push(repo.Head);
                 }
             }
             catch (Exception exception)
