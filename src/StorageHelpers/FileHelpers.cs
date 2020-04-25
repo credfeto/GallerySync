@@ -1,12 +1,19 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using LibGit2Sharp;
+using Polly;
 
 namespace StorageHelpers
 {
     public static class FileHelpers
     {
+        private const int RETRY_ATTEMPTS = 4;
+        private static readonly SemaphoreSlim CommitLock = new SemaphoreSlim(initialCount: 1);
+        private static readonly BufferBlock<Func<Task>> CommitBufferBlock = CreateForProcessing();
+
         public static Task WriteAllBytesAsync(string fileName, byte[] bytes)
         {
             const int maxRetries = 5;
@@ -33,6 +40,7 @@ namespace StorageHelpers
                 if (File.Exists(fileName))
                 {
                     File.Delete(fileName);
+                    CommitBufferBlock.Post(item: () => DoCommitAsync(fileName));
                 }
             }
             catch (IOException)
@@ -151,7 +159,7 @@ namespace StorageHelpers
                     }
 
                     await Task.Delay(millisecondsDelay: 500);
-                    DeleteFile(fileName);
+                    RemoveExistingFile(fileName);
                     await Task.Delay(millisecondsDelay: 1500);
 
                     ++retries;
@@ -159,12 +167,14 @@ namespace StorageHelpers
             }
             finally
             {
-                DoCommit(fileName);
+                CommitBufferBlock.Post(item: () => DoCommitAsync(fileName));
             }
         }
 
-        private static void DoCommit(string fileName)
+        private static async Task DoCommitAsync(string fileName)
         {
+            await CommitLock.WaitAsync();
+
             try
             {
                 string workDir = Path.GetDirectoryName(fileName);
@@ -187,6 +197,10 @@ namespace StorageHelpers
             {
                 Console.WriteLine($"Failed to commit: {exception.Message}");
             }
+            finally
+            {
+                CommitLock.Release();
+            }
         }
 
         private static string GetLocalRepoFile(Repository repo, string fileName)
@@ -204,6 +218,37 @@ namespace StorageHelpers
         public static Task<byte[]> ReadAllBytesAsync(string filename)
         {
             return File.ReadAllBytesAsync(filename);
+        }
+
+        // <summary>
+        /// Creates a buffer block for processing tasks.
+        /// </summary>
+        /// <returns>The buffer block.</returns>
+        public static BufferBlock<Func<Task>> CreateForProcessing()
+        {
+            IAsyncPolicy policy = Policy.Handle<Exception>()
+                                        .RetryAsync(RETRY_ATTEMPTS);
+
+            async Task Execute(Func<Task> action)
+            {
+                try
+                {
+                    await policy.ExecuteAsync(action);
+                }
+                catch
+                {
+                    // Don't break the buffer block by letting exceptions escape.
+                }
+            }
+
+            BufferBlock<Func<Task>> bufferBlock = new BufferBlock<Func<Task>>();
+
+            // link the buffer block to an action block to process the actions submitted to the buffer.
+            // restrict the number of parallel tasks executing to 1
+            // tasks submitted here from consuming all the available CPU time.
+            bufferBlock.LinkTo(new ActionBlock<Func<Task>>(Execute, new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = 1, MaxMessagesPerTask = 1, BoundedCapacity = 1}));
+
+            return bufferBlock;
         }
     }
 }
