@@ -198,13 +198,11 @@ namespace StorageHelpers
                     {
                         if (File.Exists(Path.Combine(repo.Info.WorkingDirectory, alwaysAddFile)))
                         {
-                            repo.Index.Add(alwaysAddFile);
+                            Commands.Stage(repo, alwaysAddFile);
                         }
                     }
 
-                    // Stage the file
-                    repo.Index.Add(localFile);
-                    repo.Index.Write();
+                    Commands.Stage(repo, localFile);
 
                     Signature author = new Signature(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", DateTime.UtcNow);
                     Signature committer = author;
