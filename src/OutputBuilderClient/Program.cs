@@ -237,11 +237,22 @@ namespace OutputBuilderClient
                 await ConsoleOutput.Line("Build images:");
                 DateTime creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
 
-                sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(imageLoader, sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
-
-                foreach (ImageSize imageSize in sourcePhoto.ImageSizes)
+                try
                 {
-                    await ConsoleOutput.Line($" Built: {imageSize.Height}x{imageSize.Width}");
+
+
+                    sourcePhoto.ImageSizes = await ImageExtraction.BuildImages(imageLoader, sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
+
+                    foreach (ImageSize imageSize in sourcePhoto.ImageSizes)
+                    {
+                        await ConsoleOutput.Line($" Built: {imageSize.Height}x{imageSize.Width}");
+                    }
+
+                }
+                catch (Exception exception)
+                {
+                    await ConsoleOutput.Line($" Failed to load image: {sourcePhoto.UrlSafePath}: {exception.Message}");
+                    throw;
                 }
             }
             else
