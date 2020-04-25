@@ -10,9 +10,11 @@ using ImageLoader.Photoshop;
 using ImageLoader.Raw;
 using ImageLoader.Standard;
 using Images;
+using Images.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OutputBuilderClient.Services;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 

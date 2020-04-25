@@ -4,7 +4,7 @@ using ObjectModel;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Images
+namespace Images.Services
 {
     public sealed class ImageFilenameGeneration : IImageFilenameGeneration
     {

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 using ObjectModel;
 using StorageHelpers;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Services
 {
     public sealed class GalleryBuilder : IGalleryBuilder
     {

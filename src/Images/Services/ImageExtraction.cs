@@ -21,7 +21,7 @@ using SixLabors.ImageSharp.Processing.Processors.Quantization;
 using SixLabors.Primitives;
 using StorageHelpers;
 
-namespace Images
+namespace Images.Services
 {
     public sealed class ImageExtraction : IImageExtraction
     {

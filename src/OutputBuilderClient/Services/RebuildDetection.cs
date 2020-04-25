@@ -7,7 +7,7 @@ using Images;
 using Microsoft.Extensions.Logging;
 using ObjectModel;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Services
 {
     public sealed class RebuildDetection : IRebuildDetection
     {
