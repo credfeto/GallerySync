@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using LibGit2Sharp;
 
 namespace StorageHelpers
 {
@@ -126,33 +127,80 @@ namespace StorageHelpers
 
         private static async Task WriteWithRetriesAsync(string fileName, byte[] data, int maxRetries)
         {
-            int retries = 0;
-
-            while (retries < maxRetries)
+            try
             {
-                RemoveExistingFile(fileName);
+                int retries = 0;
 
-                try
+                while (retries < maxRetries)
                 {
-                    await WriteContentAsync(fileName, data);
+                    RemoveExistingFile(fileName);
 
-                    return;
+                    try
+                    {
+                        await WriteContentAsync(fileName, data);
+
+                        return;
+                    }
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine(format: "Error: {0}", exception.Message);
+                        Console.WriteLine(format: "File: {0}", fileName);
+                        Console.WriteLine(format: "Attempt: {0} of {1}", retries + 1, maxRetries);
+                        Console.WriteLine(value: "Stack:");
+                        Console.WriteLine(exception.StackTrace);
+                    }
+
+                    await Task.Delay(millisecondsDelay: 500);
+                    DeleteFile(fileName);
+                    await Task.Delay(millisecondsDelay: 1500);
+
+                    ++retries;
                 }
-                catch (Exception exception)
-                {
-                    Console.WriteLine(format: "Error: {0}", exception.Message);
-                    Console.WriteLine(format: "File: {0}", fileName);
-                    Console.WriteLine(format: "Attempt: {0} of {1}", retries + 1, maxRetries);
-                    Console.WriteLine(value: "Stack:");
-                    Console.WriteLine(exception.StackTrace);
-                }
-
-                await Task.Delay(millisecondsDelay: 500);
-                DeleteFile(fileName);
-                await Task.Delay(millisecondsDelay: 1500);
-
-                ++retries;
             }
+            finally
+            {
+                DoCommit(fileName);
+            }
+        }
+
+        private static void DoCommit(string fileName)
+        {
+            try
+            {
+                string workDir = Path.GetDirectoryName(fileName);
+
+                using (Repository repo = OpenRepository(workDir))
+                {
+                    string localFile = GetLocalRepoFile(repo, fileName);
+
+                    // Stage the file
+                    repo.Index.Add(pathInTheWorkdir: "fileToCommit.txt");
+                    repo.Index.Write();
+
+                    Signature author = new Signature(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", DateTime.UtcNow);
+                    Signature committer = author;
+
+                    repo.Commit($"Updated {localFile}", author, committer);
+
+                    repo.Network.Push(repo.Head);
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"Failed to commit: {exception.Message}");
+            }
+        }
+
+        private static string GetLocalRepoFile(Repository repo, string fileName)
+        {
+            return fileName.Substring(repo.Info.WorkingDirectory.Length);
+        }
+
+        private static Repository OpenRepository(string workDir)
+        {
+            string found = Repository.Discover(workDir);
+
+            return new Repository(found);
         }
 
         public static Task<byte[]> ReadAllBytesAsync(string filename)
