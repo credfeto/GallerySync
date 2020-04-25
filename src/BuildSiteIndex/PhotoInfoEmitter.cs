@@ -2,8 +2,8 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using ObjectModel;
 using Scanner;
 using StorageHelpers;
@@ -28,7 +28,7 @@ namespace BuildSiteIndex
 
             byte[] bytes = await FileHelpers.ReadAllBytesAsync(fullPath);
 
-            Photo photo = JsonConvert.DeserializeObject<Photo>(Encoding.UTF8.GetString(bytes));
+            Photo photo = JsonSerializer.Deserialize<Photo>(Encoding.UTF8.GetString(bytes));
 
             this._photos.Add(photo);
         }

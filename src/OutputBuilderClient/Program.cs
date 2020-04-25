@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ImageLoader.Core;
@@ -15,7 +16,6 @@ using ImageLoader.Standard;
 using Images;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using ObjectModel;
 using StorageHelpers;
 
@@ -379,7 +379,7 @@ namespace OutputBuilderClient
                 {
                     byte[] bytes = await FileHelpers.ReadAllBytesAsync(filename);
 
-                    ShortenerCount[] items = JsonConvert.DeserializeObject<ShortenerCount[]>(Encoding.UTF8.GetString(bytes));
+                    ShortenerCount[] items = JsonSerializer.Deserialize<ShortenerCount[]>(Encoding.UTF8.GetString(bytes));
 
                     tracking.AddRange(items);
                 }
@@ -408,7 +408,7 @@ namespace OutputBuilderClient
 
                     tracking.Add(counter);
 
-                    await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tracking.ToArray())));
+                    await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())));
                 }
                 else
                 {
@@ -419,7 +419,7 @@ namespace OutputBuilderClient
                         ++counter.Impressions;
                         ++counter.TotalImpressionsEver;
 
-                        await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tracking.ToArray())));
+                        await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())));
                     }
                 }
 

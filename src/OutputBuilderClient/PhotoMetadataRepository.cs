@@ -2,8 +2,8 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using ObjectModel;
 using Scanner;
 using StorageHelpers;
@@ -56,7 +56,7 @@ namespace OutputBuilderClient
 
             string outputPath = Path.Combine(Settings.DatabaseOutputFolder, safeUrl);
 
-            string txt = JsonConvert.SerializeObject(photo);
+            string txt = JsonSerializer.Serialize(photo);
 
             return FileHelpers.WriteAllBytesAsync(outputPath, Encoding.UTF8.GetBytes(txt));
         }

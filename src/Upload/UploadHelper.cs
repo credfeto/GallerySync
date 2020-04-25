@@ -2,8 +2,8 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using UploadData;
 
 namespace Upload
@@ -36,7 +36,7 @@ namespace Upload
 
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(jsonMimeType));
 
-                    string json = JsonConvert.SerializeObject(itemToPost);
+                    string json = JsonSerializer.Serialize(itemToPost);
 
                     using (StringContent content = new StringContent(json, Encoding.UTF8, jsonMimeType))
                     {

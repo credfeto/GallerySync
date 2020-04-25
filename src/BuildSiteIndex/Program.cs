@@ -6,14 +6,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FileNaming;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 using ObjectModel;
 using Scanner;
 using StorageHelpers;
@@ -212,7 +210,7 @@ namespace BuildSiteIndex
         {
             byte[] bytes = await FileHelpers.ReadAllBytesAsync(file);
 
-            UploadQueueItem item = JsonConvert.DeserializeObject<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
+            UploadQueueItem item = JsonSerializer.Deserialize<UploadQueueItem>(Encoding.UTF8.GetString(bytes));
 
             loaded.Add(item);
         }
@@ -557,7 +555,7 @@ namespace BuildSiteIndex
 
             string outputFilename = Path.Combine(Settings.OutputFolder, path2: "site.js");
 
-            string json = JsonConvert.SerializeObject(data);
+            string json = JsonSerializer.Serialize(data);
 
             if (!_ignoreExisting && File.Exists(outputFilename))
             {
@@ -576,7 +574,7 @@ namespace BuildSiteIndex
 
                 try
                 {
-                    oldData = JsonConvert.DeserializeObject<GallerySiteIndex>(decoded);
+                    oldData = JsonSerializer.Deserialize<GallerySiteIndex>(decoded);
                 }
                 catch
                 {
@@ -759,7 +757,7 @@ namespace BuildSiteIndex
 
             string filename = BuildQueueItemFileName(key);
 
-            string json = JsonConvert.SerializeObject(queueItem);
+            string json = JsonSerializer.Serialize(queueItem);
 
             return FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(json));
         }
@@ -1298,22 +1296,22 @@ namespace BuildSiteIndex
             public string Description { get; set; }
         }
 
-        public class ConverterContractResolver : DefaultContractResolver
-        {
-            public static readonly ConverterContractResolver Instance = new ConverterContractResolver();
-
-            protected override JsonContract CreateContract(Type objectType)
-            {
-                JsonContract contract = base.CreateContract(objectType);
-
-                // this will only be called once and then cached
-                if (objectType == typeof(DateTime) || objectType == typeof(DateTimeOffset))
-                {
-                    contract.Converter = new JavaScriptDateTimeConverter();
-                }
-
-                return contract;
-            }
-        }
+        // public class ConverterContractResolver : DefaultContractResolver
+        // {
+        //     public static readonly ConverterContractResolver Instance = new ConverterContractResolver();
+        //
+        //     protected override JsonContract CreateContract(Type objectType)
+        //     {
+        //         JsonContract contract = base.CreateContract(objectType);
+        //
+        //         // this will only be called once and then cached
+        //         if (objectType == typeof(DateTime) || objectType == typeof(DateTimeOffset))
+        //         {
+        //             contract.Converter = new JavaScriptDateTimeConverter();
+        //         }
+        //
+        //         return contract;
+        //     }
+        // }
     }
 }
