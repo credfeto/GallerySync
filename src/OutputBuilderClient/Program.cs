@@ -234,6 +234,7 @@ namespace OutputBuilderClient
 
             if (buildImages)
             {
+                await ConsoleOutput.Line(formatString: "Build images:");
                 DateTime creationDate = MetadataHelpers.ExtractCreationDate(sourcePhoto.Metadata);
 
                 try
@@ -243,7 +244,6 @@ namespace OutputBuilderClient
                 catch (Exception exception)
                 {
                     await ConsoleOutput.LineAsync($" Failed to load image: {sourcePhoto.UrlSafePath}: {exception.Message}");
-
                     throw;
                 }
             }
