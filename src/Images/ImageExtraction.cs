@@ -71,7 +71,7 @@ namespace Images
                     Console.WriteLine($"Loaded: {filename}");
 
                     int sourceImageWidth = sourceBitmap.Width;
-                    Console.WriteLine("Using Image Width: {sourceBitmap.Widt}");
+                    Console.WriteLine($"Using Image Width: {sourceBitmap.Width}");
 
                     foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
                     {
