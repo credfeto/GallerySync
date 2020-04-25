@@ -9,19 +9,28 @@ using ObjectModel;
 
 namespace OutputBuilderClient
 {
-    internal static class RebuildDetection
+    public sealed class RebuildDetection : IRebuildDetection
     {
-        public static async Task<bool> NeedsFullResizedImageRebuildAsync(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings, ILogger logging)
+        private readonly IImageFilenameGeneration _imageFilenameGeneration;
+        private readonly ILogger<RebuildDetection> _logging;
+
+        public RebuildDetection(IImageFilenameGeneration imageFilenameGeneration, ILogger<RebuildDetection> logging)
         {
-            return MetadataVersionRequiresRebuild(targetPhoto, logging) || await HaveFilesChangedAsync(sourcePhoto, targetPhoto, logging) ||
-                   HasMissingResizes(targetPhoto, imageSettings, logging);
+            this._imageFilenameGeneration = imageFilenameGeneration;
+            this._logging = logging;
         }
 
-        public static bool MetadataVersionOutOfDate(Photo targetPhoto, ILogger logging)
+        public async Task<bool> NeedsFullResizedImageRebuildAsync(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings, ILogger logging)
+        {
+            return this.MetadataVersionRequiresRebuild(targetPhoto, this._logging) || await this.HaveFilesChangedAsync(sourcePhoto, targetPhoto, this._logging) ||
+                   this.HasMissingResizes(targetPhoto, imageSettings, this._logging);
+        }
+
+        public bool MetadataVersionOutOfDate(Photo targetPhoto, ILogger logging)
         {
             if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                logging.LogInformation($" +++ Metadata update: Metadata version out of date. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
+                this._logging.LogInformation($" +++ Metadata update: Metadata version out of date. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
 
                 return true;
             }
@@ -29,11 +38,11 @@ namespace OutputBuilderClient
             return false;
         }
 
-        public static async Task<bool> HaveFilesChangedAsync(Photo sourcePhoto, Photo targetPhoto, ILogger logging)
+        public async Task<bool> HaveFilesChangedAsync(Photo sourcePhoto, Photo targetPhoto, ILogger logging)
         {
             if (sourcePhoto.Files.Count != targetPhoto.Files.Count)
             {
-                logging.LogInformation(message: " +++ Metadata update: File count changed");
+                this._logging.LogInformation(message: " +++ Metadata update: File count changed");
 
                 return true;
             }
@@ -47,7 +56,7 @@ namespace OutputBuilderClient
                 {
                     if (componentFile.FileSize != found.FileSize)
                     {
-                        logging.LogInformation($" +++ Metadata update: File size changed (File: {found.Extension})");
+                        this._logging.LogInformation($" +++ Metadata update: File size changed (File: {found.Extension})");
 
                         return true;
                     }
@@ -66,7 +75,7 @@ namespace OutputBuilderClient
 
                     if (componentFile.Hash != found.Hash)
                     {
-                        logging.LogInformation($" +++ Metadata update: File hash changed (File: {found.Extension})");
+                        this._logging.LogInformation($" +++ Metadata update: File hash changed (File: {found.Extension})");
 
                         return true;
                     }
@@ -82,11 +91,24 @@ namespace OutputBuilderClient
             return false;
         }
 
-        private static bool HasMissingResizes(Photo photoToProcess, ISettings imageSettings, ILogger logging)
+        public bool MetadataVersionRequiresRebuild(Photo targetPhoto, ILogger logging)
+        {
+            if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
+            {
+                this._logging.LogInformation(
+                    $" +++ Metadata update: Metadata version Requires rebuild. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HasMissingResizes(Photo photoToProcess, ISettings imageSettings, ILogger logging)
         {
             if (photoToProcess.ImageSizes == null)
             {
-                Console.WriteLine(value: " +++ Force rebuild: No image sizes at all!");
+                this._logging.LogInformation(message: " +++ Force rebuild: No image sizes at all!");
 
                 return true;
             }
@@ -95,7 +117,7 @@ namespace OutputBuilderClient
             {
                 string resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
                                                       HashNaming.PathifyHash(photoToProcess.PathHash),
-                                                      ImageExtraction.IndividualResizeFileName(photoToProcess, resize));
+                                                      this._imageFilenameGeneration.IndividualResizeFileName(photoToProcess, resize));
 
                 if (!File.Exists(resizedFileName))
                 {
@@ -108,27 +130,15 @@ namespace OutputBuilderClient
                 {
                     resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
                                                    HashNaming.PathifyHash(photoToProcess.PathHash),
-                                                   ImageExtraction.IndividualResizeFileName(photoToProcess, resize, extension: "png"));
+                                                   this._imageFilenameGeneration.IndividualResizeFileName(photoToProcess, resize, extension: "png"));
 
                     if (!File.Exists(resizedFileName))
                     {
-                        logging.LogInformation($" +++ Force rebuild: Missing image for size {resize.Width}x{resize.Height} (png)");
+                        this._logging.LogInformation($" +++ Force rebuild: Missing image for size {resize.Width}x{resize.Height} (png)");
 
                         return true;
                     }
                 }
-            }
-
-            return false;
-        }
-
-        public static bool MetadataVersionRequiresRebuild(Photo targetPhoto, ILogger logging)
-        {
-            if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
-            {
-                logging.LogInformation($" +++ Metadata update: Metadata version Requires rebuild. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
-
-                return true;
             }
 
             return false;

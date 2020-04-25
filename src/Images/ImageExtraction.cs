@@ -23,8 +23,17 @@ using StorageHelpers;
 
 namespace Images
 {
-    public static class ImageExtraction
+    public sealed class ImageExtraction : IImageExtraction
     {
+        private readonly IImageFilenameGeneration _imageFilenameGeneration;
+        private readonly ILogger<ImageExtraction> _logging;
+
+        public ImageExtraction(IImageFilenameGeneration imageFilenameGeneration, ILogger<ImageExtraction> logging)
+        {
+            this._imageFilenameGeneration = imageFilenameGeneration;
+            this._logging = logging;
+        }
+
         /// <summary>
         ///     Gets the copyright declaration.
         /// </summary>
@@ -41,125 +50,97 @@ namespace Images
             }
         }
 
-        public static async Task<List<ImageSize>> BuildImagesAsync(IImageLoader loader,
-                                                                   Photo sourcePhoto,
-                                                                   List<string> filesCreated,
-                                                                   DateTime creationDate,
-                                                                   string url,
-                                                                   string shortUrl,
-                                                                   ISettings settings,
-                                                                   ILogger logging)
+        public async Task<IReadOnlyList<ImageSize>> BuildImagesAsync(IImageLoader loader,
+                                                                     Photo sourcePhoto,
+                                                                     List<string> filesCreated,
+                                                                     DateTime creationDate,
+                                                                     string url,
+                                                                     string shortUrl,
+                                                                     ISettings settings)
         {
-            List<ImageSize> sizes = new List<ImageSize>();
-
             string rawExtension = sourcePhoto.ImageExtension.TrimStart(trimChar: '.')
                                              .ToUpperInvariant();
 
             string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
-            if (loader.CanLoad(filename))
+            if (!loader.CanLoad(filename))
             {
-                IReadOnlyList<int> imageSizes = StandardImageSizesWithThumbnailSize(settings);
+                this._logging.LogError($"No image converter for {rawExtension}");
 
-                logging.LogInformation($"Loading image: {filename}");
+                return Array.Empty<ImageSize>();
+            }
 
-                using (Image<Rgba32> sourceBitmap = await loader.LoadImageAsync(filename))
+            List<ImageSize> sizes = new List<ImageSize>();
+
+            IReadOnlyList<int> imageSizes = StandardImageSizesWithThumbnailSize(settings);
+
+            this._logging.LogInformation($"Loading image: {filename}");
+
+            using (Image<Rgba32> sourceBitmap = await loader.LoadImageAsync(filename))
+            {
+                if (sourceBitmap == null)
                 {
-                    if (sourceBitmap == null)
+                    this._logging.LogWarning($"Could not load : {filename}");
+
+                    return null;
+                }
+
+                this._logging.LogInformation($"Loaded: {filename}");
+
+                int sourceImageWidth = sourceBitmap.Width;
+                this._logging.LogInformation($"Using Image Width: {sourceBitmap.Width}");
+
+                foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
+                {
+                    this._logging.LogDebug($"Creating Dimension: {dimension}");
+
+                    using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
                     {
-                        logging.LogWarning($"Could not load : {filename}");
+                        string resizedFileName = Path.Combine(settings.ImagesOutputPath,
+                                                              HashNaming.PathifyHash(sourcePhoto.PathHash),
+                                                              this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized));
 
-                        return null;
-                    }
+                        ApplyWatermark(resized, shortUrl, settings);
 
-                    logging.LogInformation($"Loaded: {filename}");
+                        long quality = settings.JpegOutputQuality;
+                        byte[] resizedBytes = this.SaveImageAsJpegBytes(resized, quality, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
 
-                    int sourceImageWidth = sourceBitmap.Width;
-                    logging.LogInformation($"Using Image Width: {sourceBitmap.Width}");
-
-                    foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
-                    {
-                        logging.LogDebug($"Creating Dimension: {dimension}");
-
-                        using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
+                        if (!ImageHelpers.IsValidJpegImage(resizedBytes, "In memory image to be saved as: " + resizedFileName))
                         {
-                            string resizedFileName = Path.Combine(settings.ImagesOutputPath,
-                                                                  HashNaming.PathifyHash(sourcePhoto.PathHash),
-                                                                  IndividualResizeFileName(sourcePhoto, resized));
-
-                            ApplyWatermark(resized, shortUrl, settings);
-
-                            long quality = settings.JpegOutputQuality;
-                            byte[] resizedBytes = SaveImageAsJpegBytes(resized, quality, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
-
-                            if (!ImageHelpers.IsValidJpegImage(resizedBytes, "In memory image to be saved as: " + resizedFileName))
-                            {
-                                throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
-                            }
-
-                            await WriteImageAsync(resizedFileName, resizedBytes, creationDate);
-
-                            byte[] resizedData = await File.ReadAllBytesAsync(resizedFileName);
-
-                            if (!ImageHelpers.IsValidJpegImage(resizedData, "Saved resize image: " + resizedFileName))
-                            {
-                                logging.LogError($"Error: File {resizedFileName} produced an invalid image");
-
-                                throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
-                            }
-
-                            filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" + IndividualResizeFileName(sourcePhoto, resized));
-
-                            if (resized.Width == settings.ThumbnailSize)
-                            {
-                                resizedFileName = Path.Combine(settings.ImagesOutputPath,
-                                                               HashNaming.PathifyHash(sourcePhoto.PathHash),
-                                                               IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
-                                resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
-                                await WriteImageAsync(resizedFileName, resizedBytes, creationDate);
-
-                                filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" + IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
-                            }
-
-                            sizes.Add(new ImageSize {Width = resized.Width, Height = resized.Height});
+                            throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
                         }
+
+                        await this.WriteImageAsync(resizedFileName, resizedBytes, creationDate);
+
+                        byte[] resizedData = await File.ReadAllBytesAsync(resizedFileName);
+
+                        if (!ImageHelpers.IsValidJpegImage(resizedData, "Saved resize image: " + resizedFileName))
+                        {
+                            this._logging.LogError($"Error: File {resizedFileName} produced an invalid image");
+
+                            throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
+                        }
+
+                        filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" + this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized));
+
+                        if (resized.Width == settings.ThumbnailSize)
+                        {
+                            resizedFileName = Path.Combine(settings.ImagesOutputPath,
+                                                           HashNaming.PathifyHash(sourcePhoto.PathHash),
+                                                           this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
+                            resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
+                            await this.WriteImageAsync(resizedFileName, resizedBytes, creationDate);
+
+                            filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
+                                             this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
+                        }
+
+                        sizes.Add(new ImageSize {Width = resized.Width, Height = resized.Height});
                     }
                 }
             }
-            else
-            {
-                logging.LogInformation($"No image converter for {rawExtension}");
-            }
 
             return sizes;
-        }
-
-        public static string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized)
-        {
-            return IndividualResizeFileName(sourcePhoto, resized, extension: @"jpg");
-        }
-
-        public static string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized, string extension)
-        {
-            string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), resized.Width, resized.Height))
-                                       .TrimEnd(trimChar: '/')
-                                       .TrimStart(trimChar: '-');
-
-            return basePath + "." + extension;
-        }
-
-        public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized)
-        {
-            return IndividualResizeFileName(sourcePhoto, resized, extension: "jpg");
-        }
-
-        public static string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized, string extension)
-        {
-            string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), resized.Width, resized.Height))
-                                       .TrimEnd(trimChar: '/')
-                                       .TrimStart(trimChar: '-');
-
-            return basePath + "." + extension;
         }
 
         /// <summary>
@@ -179,13 +160,13 @@ namespace Images
         ///     Block of bytes representing the image.
         /// </returns>
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Is fallback position where it retries.")]
-        public static byte[] SaveImageAsJpegBytes(Image<Rgba32> image,
-                                                  long compressionQuality,
-                                                  string url,
-                                                  string shortUrl,
-                                                  List<PhotoMetadata> metadata,
-                                                  DateTime creationDate,
-                                                  ISettings settings)
+        public byte[] SaveImageAsJpegBytes(Image<Rgba32> image,
+                                           long compressionQuality,
+                                           string url,
+                                           string shortUrl,
+                                           List<PhotoMetadata> metadata,
+                                           DateTime creationDate,
+                                           ISettings settings)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
@@ -214,7 +195,7 @@ namespace Images
         ///     The data to write to the file.
         /// </param>
         /// <param name="creationDate"></param>
-        public static async Task WriteImageAsync(string fileName, byte[] data, DateTime creationDate)
+        public async Task WriteImageAsync(string fileName, byte[] data, DateTime creationDate)
         {
             Contract.Requires(!string.IsNullOrEmpty(fileName));
             Contract.Requires(data != null);
