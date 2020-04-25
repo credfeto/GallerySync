@@ -12,15 +12,14 @@ namespace StorageHelpers
     {
         private const int RETRY_ATTEMPTS = 4;
         private static readonly SemaphoreSlim CommitLock = new SemaphoreSlim(initialCount: 1);
-        private static readonly BufferBlock<Func<Task>> CommitBufferBlock = CreateForProcessing();
 
-        public static Task WriteAllBytesAsync(string fileName, byte[] bytes)
+        public static Task WriteAllBytesAsync(string fileName, byte[] bytes, bool commit)
         {
             const int maxRetries = 5;
 
             EnsureFolderExists(fileName);
 
-            return WriteWithRetriesAsync(fileName, bytes, maxRetries);
+            return WriteWithRetriesAsync(fileName, bytes, maxRetries, commit);
         }
 
         private static void EnsureFolderExists(string fileName)
@@ -40,7 +39,8 @@ namespace StorageHelpers
                 if (File.Exists(fileName))
                 {
                     File.Delete(fileName);
-                    CommitBufferBlock.Post(item: () => DoCommitAsync(fileName));
+
+                    // CommitFileChange(fileName);
                 }
             }
             catch (IOException)
@@ -51,6 +51,11 @@ namespace StorageHelpers
             {
                 // Don't care
             }
+        }
+
+        private static Task CommitFileChangeAsync(string fileName)
+        {
+            return DoCommitAsync(fileName);
         }
 
         private static void RemoveExistingFile(string fileName)
@@ -133,7 +138,7 @@ namespace StorageHelpers
             return File.WriteAllBytesAsync(path, bytes);
         }
 
-        private static async Task WriteWithRetriesAsync(string fileName, byte[] data, int maxRetries)
+        private static async Task WriteWithRetriesAsync(string fileName, byte[] data, int maxRetries, bool commit)
         {
             try
             {
@@ -167,7 +172,10 @@ namespace StorageHelpers
             }
             finally
             {
-                CommitBufferBlock.Post(item: () => DoCommitAsync(fileName));
+                if (commit)
+                {
+                    await CommitFileChangeAsync(fileName);
+                }
             }
         }
 
@@ -185,6 +193,14 @@ namespace StorageHelpers
 
                     // Stage the file
                     repo.Index.Add(localFile);
+
+                    IndexEntry indexFile = repo.Index[localFile];
+
+                    if (indexFile.StageLevel != StageLevel.Ours)
+                    {
+                        return;
+                    }
+
                     repo.Index.Write();
 
                     Signature author = new Signature(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", DateTime.UtcNow);
