@@ -2,15 +2,12 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 using LibGit2Sharp;
-using Polly;
 
 namespace StorageHelpers
 {
     public static class FileHelpers
     {
-        private const int RETRY_ATTEMPTS = 4;
         private static readonly SemaphoreSlim CommitLock = new SemaphoreSlim(initialCount: 1);
 
         public static Task WriteAllBytesAsync(string fileName, byte[] bytes, bool commit)
@@ -98,7 +95,7 @@ namespace StorageHelpers
             }
         }
 
-        private static async Task WriteContentAsync(string path, byte[] bytes)
+        private static async Task<bool> WriteContentAsync(string path, byte[] bytes)
         {
             if (File.Exists(path))
             {
@@ -106,13 +103,15 @@ namespace StorageHelpers
 
                 if (AreSame(existingBytes, bytes))
                 {
-                    return;
+                    return false;
                 }
             }
 
             await WriteNoVerifyAsync(path, bytes);
 
             await VerifyContentAsync(path, bytes);
+
+            return true;
         }
 
         private static bool AreSame(byte[] existingBytes, byte[] bytesToWrite)
@@ -140,6 +139,8 @@ namespace StorageHelpers
 
         private static async Task WriteWithRetriesAsync(string fileName, byte[] data, int maxRetries, bool commit)
         {
+            bool changed = false;
+
             try
             {
                 int retries = 0;
@@ -150,7 +151,7 @@ namespace StorageHelpers
 
                     try
                     {
-                        await WriteContentAsync(fileName, data);
+                        changed = await WriteContentAsync(fileName, data);
 
                         return;
                     }
@@ -172,7 +173,7 @@ namespace StorageHelpers
             }
             finally
             {
-                if (commit)
+                if (changed && commit)
                 {
                     await CommitFileChangeAsync(fileName);
                 }
@@ -193,14 +194,6 @@ namespace StorageHelpers
 
                     // Stage the file
                     repo.Index.Add(localFile);
-
-                    IndexEntry indexFile = repo.Index[localFile];
-
-                    if (indexFile.StageLevel != StageLevel.Ours)
-                    {
-                        return;
-                    }
-
                     repo.Index.Write();
 
                     Signature author = new Signature(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", DateTime.UtcNow);
@@ -234,37 +227,6 @@ namespace StorageHelpers
         public static Task<byte[]> ReadAllBytesAsync(string filename)
         {
             return File.ReadAllBytesAsync(filename);
-        }
-
-        // <summary>
-        /// Creates a buffer block for processing tasks.
-        /// </summary>
-        /// <returns>The buffer block.</returns>
-        public static BufferBlock<Func<Task>> CreateForProcessing()
-        {
-            IAsyncPolicy policy = Policy.Handle<Exception>()
-                                        .RetryAsync(RETRY_ATTEMPTS);
-
-            async Task Execute(Func<Task> action)
-            {
-                try
-                {
-                    await policy.ExecuteAsync(action);
-                }
-                catch
-                {
-                    // Don't break the buffer block by letting exceptions escape.
-                }
-            }
-
-            BufferBlock<Func<Task>> bufferBlock = new BufferBlock<Func<Task>>();
-
-            // link the buffer block to an action block to process the actions submitted to the buffer.
-            // restrict the number of parallel tasks executing to 1
-            // tasks submitted here from consuming all the available CPU time.
-            bufferBlock.LinkTo(new ActionBlock<Func<Task>>(Execute, new ExecutionDataflowBlockOptions {MaxDegreeOfParallelism = 1, MaxMessagesPerTask = 1, BoundedCapacity = 1}));
-
-            return bufferBlock;
         }
     }
 }
