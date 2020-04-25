@@ -184,6 +184,8 @@ namespace StorageHelpers
         {
             await CommitLock.WaitAsync();
 
+            string[] alwaysAddFiles = {"ShortUrls.csv", "ShortUrls.csv.tracking.json"};
+
             try
             {
                 string workDir = Path.GetDirectoryName(fileName);
@@ -191,6 +193,14 @@ namespace StorageHelpers
                 using (Repository repo = OpenRepository(workDir))
                 {
                     string localFile = GetLocalRepoFile(repo, fileName);
+
+                    foreach (string alwaysAddFile in alwaysAddFiles)
+                    {
+                        if (File.Exists(Path.Combine(repo.Info.WorkingDirectory, alwaysAddFile)))
+                        {
+                            repo.Index.Add(alwaysAddFile);
+                        }
+                    }
 
                     // Stage the file
                     repo.Index.Add(localFile);
@@ -204,7 +214,7 @@ namespace StorageHelpers
             }
             catch (Exception exception)
             {
-                Console.WriteLine($"Failed to commit: {exception.Message}");
+                Console.WriteLine($"Failed to commit: {exception.Message} => {fileName}");
             }
             finally
             {
