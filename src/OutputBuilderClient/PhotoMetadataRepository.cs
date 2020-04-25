@@ -58,7 +58,7 @@ namespace OutputBuilderClient
 
             string txt = JsonSerializer.Serialize(photo);
 
-            return FileHelpers.WriteAllBytesAsync(outputPath, Encoding.UTF8.GetBytes(txt), true);
+            return FileHelpers.WriteAllBytesAsync(outputPath, Encoding.UTF8.GetBytes(txt), commit: true);
         }
     }
 }

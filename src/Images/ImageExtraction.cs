@@ -220,7 +220,7 @@ namespace Images
             Console.WriteLine($"---> Output to {fileName}");
             EnsureFolderExistsForFile(fileName);
 
-            await FileHelpers.WriteAllBytesAsync(fileName, data, true);
+            await FileHelpers.WriteAllBytesAsync(fileName, data, commit: true);
 
             MetadataOutput.SetCreationDate(fileName, creationDate);
         }

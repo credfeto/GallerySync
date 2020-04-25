@@ -601,7 +601,7 @@ namespace BuildSiteIndex
             ExtensionMethods.RotateLastGenerations(outputFilename);
 
             byte[] encoded = Encoding.UTF8.GetBytes(json);
-            await FileHelpers.WriteAllBytesAsync(outputFilename, encoded, true);
+            await FileHelpers.WriteAllBytesAsync(outputFilename, encoded, commit: true);
         }
 
         private static GallerySiteIndex ProduceSiteIndex(Dictionary<string, GalleryEntry> contents)
@@ -759,7 +759,7 @@ namespace BuildSiteIndex
 
             string json = JsonSerializer.Serialize(queueItem);
 
-            return FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(json), true);
+            return FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(json), commit: true);
         }
 
         private static string BuildQueueItemFileName(string key)
