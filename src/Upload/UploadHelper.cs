@@ -40,7 +40,7 @@ namespace Upload
 
                     using (StringContent content = new StringContent(json, Encoding.UTF8, jsonMimeType))
                     {
-                        HttpResponseMessage response = await client.PostAsync(requestUri: "tasks/sync", content);
+                        HttpResponseMessage response = await client.PostAsync(new Uri(uriString: "tasks/sync", UriKind.Relative), content);
                         Console.WriteLine(format: "Status: {0}", response.StatusCode);
 
                         if (response.IsSuccessStatusCode)
