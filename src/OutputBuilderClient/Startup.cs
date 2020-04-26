@@ -40,6 +40,7 @@ namespace OutputBuilderClient
             serviceCollection.AddSingleton<IRebuildDetection, RebuildDetection>();
             serviceCollection.AddSingleton<ISourceImageFileLocator, SourceImageFileLocator>();
             serviceCollection.AddSingleton<IResizeImageFileLocator, ResizeImageFileLocator>();
+            serviceCollection.AddSingleton<IBrokenImageTracker, BrokenImageTracker>();
             serviceCollection.AddSingleton<IGalleryBuilder, GalleryBuilder>();
 
             const string rootFolder = @"Source:RootFolder";
