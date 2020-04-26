@@ -8,7 +8,7 @@ using FileNaming;
 using ObjectModel;
 using Scanner;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Services.Emitters
 {
     public sealed class RawFileInfoEmitter : IFileEmitter
     {

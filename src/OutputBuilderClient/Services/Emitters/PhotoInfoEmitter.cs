@@ -8,7 +8,7 @@ using ObjectModel;
 using Scanner;
 using StorageHelpers;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Services.Emitters
 {
     public class PhotoInfoEmitter : IFileEmitter
     {
