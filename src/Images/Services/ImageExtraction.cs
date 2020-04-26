@@ -26,10 +26,12 @@ namespace Images.Services
     public sealed class ImageExtraction : IImageExtraction
     {
         private readonly IImageFilenameGeneration _imageFilenameGeneration;
+        private readonly IImageLoader _imageLoader;
         private readonly ILogger<ImageExtraction> _logging;
 
-        public ImageExtraction(IImageFilenameGeneration imageFilenameGeneration, ILogger<ImageExtraction> logging)
+        public ImageExtraction(IImageLoader imageLoader, IImageFilenameGeneration imageFilenameGeneration, ILogger<ImageExtraction> logging)
         {
+            this._imageLoader = imageLoader;
             this._imageFilenameGeneration = imageFilenameGeneration;
             this._logging = logging;
         }
@@ -50,8 +52,7 @@ namespace Images.Services
             }
         }
 
-        public async Task<IReadOnlyList<ImageSize>> BuildImagesAsync(IImageLoader loader,
-                                                                     Photo sourcePhoto,
+        public async Task<IReadOnlyList<ImageSize>> BuildImagesAsync(Photo sourcePhoto,
                                                                      List<string> filesCreated,
                                                                      DateTime creationDate,
                                                                      string url,
@@ -63,7 +64,7 @@ namespace Images.Services
 
             string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
-            if (!loader.CanLoad(filename))
+            if (!this._imageLoader.CanLoad(filename))
             {
                 this._logging.LogError($"No image converter for {rawExtension}");
 
@@ -76,7 +77,7 @@ namespace Images.Services
 
             this._logging.LogInformation($"Loading image: {filename}");
 
-            using (Image<Rgba32> sourceBitmap = await loader.LoadImageAsync(filename))
+            using (Image<Rgba32> sourceBitmap = await this._imageLoader.LoadImageAsync(filename))
             {
                 if (sourceBitmap == null)
                 {

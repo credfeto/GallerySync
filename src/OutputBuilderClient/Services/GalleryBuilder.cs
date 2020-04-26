@@ -164,8 +164,7 @@ namespace OutputBuilderClient.Services
 
                 try
                 {
-                    IReadOnlyList<ImageSize> sizes =
-                        await this._imageExtraction.BuildImagesAsync(this._imageLoader, sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
+                    IReadOnlyList<ImageSize> sizes = await this._imageExtraction.BuildImagesAsync(sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
 
                     sourcePhoto.ImageSizes = sizes.ToList();
                 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using ImageLoader.Interfaces;
 using ObjectModel;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -10,13 +9,7 @@ namespace Images
 {
     public interface IImageExtraction
     {
-        Task<IReadOnlyList<ImageSize>> BuildImagesAsync(IImageLoader loader,
-                                                        Photo sourcePhoto,
-                                                        List<string> filesCreated,
-                                                        DateTime creationDate,
-                                                        string url,
-                                                        string shortUrl,
-                                                        ISettings settings);
+        Task<IReadOnlyList<ImageSize>> BuildImagesAsync(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl, ISettings settings);
 
         /// <summary>
         ///     Saves the image as a block of JPEG bytes in memory.
