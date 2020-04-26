@@ -9,11 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.OutputBuil
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.FileNaming", "Credfeto.Gallery.FileNaming\Credfeto.Gallery.FileNaming.csproj", "{15F89A2F-BB27-4BE5-AC83-6353A7295D36}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{33315911-4476-4C70-8141-E74BFBF88454}"
-	ProjectSection(SolutionItems) = preProject
-		Scripts\BuildAll.proj = Scripts\BuildAll.proj
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.SiteIndexBuilder", "Credfeto.Gallery.SiteIndexBuilder\Credfeto.Gallery.SiteIndexBuilder.csproj", "{0DB62336-4B3A-4AA7-8EF5-FADF44A4E519}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.Storage", "Credfeto.Gallery.Storage\Credfeto.Gallery.Storage.csproj", "{08172B08-5233-4626-BE5B-D4FBCCCAA14B}"
