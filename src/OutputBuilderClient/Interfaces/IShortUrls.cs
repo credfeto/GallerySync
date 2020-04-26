@@ -2,7 +2,7 @@
 using Images;
 using ObjectModel;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Interfaces
 {
     public interface IShortUrls
     {

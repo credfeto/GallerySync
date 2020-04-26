@@ -6,11 +6,13 @@ using System.Threading.Tasks;
 using Images;
 using Microsoft.Extensions.Logging;
 using ObjectModel;
+using OutputBuilderClient.Interfaces;
 
 namespace OutputBuilderClient.Services
 {
     public sealed class GalleryBuilder : IGalleryBuilder
     {
+        private readonly IBrokenImageTracker _brokenImageTracker;
         private readonly IImageExtraction _imageExtraction;
         private readonly ILimitedUrlShortener _limitedUrlShortener;
         private readonly ILogger<GalleryBuilder> _logging;
@@ -21,12 +23,14 @@ namespace OutputBuilderClient.Services
                               IRebuildDetection rebuildDetection,
                               IShortUrls shortUrls,
                               ILimitedUrlShortener limitedUrlShortener,
+                              IBrokenImageTracker brokenImageTracker,
                               ILogger<GalleryBuilder> logging)
         {
             this._imageExtraction = imageExtraction;
             this._rebuildDetection = rebuildDetection;
             this._shortUrls = shortUrls;
             this._limitedUrlShortener = limitedUrlShortener;
+            this._brokenImageTracker = brokenImageTracker;
             this._logging = logging;
         }
 
@@ -114,19 +118,19 @@ namespace OutputBuilderClient.Services
             }
             catch (AbortProcessingException exception)
             {
-                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
+                this._brokenImageTracker.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
 
                 throw;
             }
             catch (StackOverflowException exception)
             {
-                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
+                this._brokenImageTracker.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
 
                 throw;
             }
             catch (Exception exception)
             {
-                BrokenImages.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
+                this._brokenImageTracker.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
             }
         }
 

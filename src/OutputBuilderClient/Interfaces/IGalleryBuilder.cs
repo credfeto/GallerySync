@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Images;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Interfaces
 {
     public interface IGalleryBuilder
     {

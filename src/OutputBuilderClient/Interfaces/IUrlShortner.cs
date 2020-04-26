@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Interfaces
 {
     public interface IUrlShortner
     {

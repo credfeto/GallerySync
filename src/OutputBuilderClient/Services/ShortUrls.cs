@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Images;
 using Microsoft.Extensions.Logging;
 using ObjectModel;
+using OutputBuilderClient.Interfaces;
 
 namespace OutputBuilderClient.Services
 {

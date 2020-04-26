@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Interfaces
 {
     public interface ILimitedUrlShortener
     {

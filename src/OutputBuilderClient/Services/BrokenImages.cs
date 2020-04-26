@@ -3,19 +3,20 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using OutputBuilderClient.Interfaces;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Services
 {
-    internal static class BrokenImages
+    public sealed class BrokenImageTracker : IBrokenImageTracker
     {
         private static readonly ConcurrentDictionary<string, Exception> Items = new ConcurrentDictionary<string, Exception>();
 
-        public static void LogBrokenImage(string path, Exception exception)
+        public void LogBrokenImage(string path, Exception exception)
         {
             Items.TryAdd(path, exception);
         }
 
-        public static string[] AllBrokenImages()
+        public string[] AllBrokenImages()
         {
             return Items.OrderBy(keySelector: item => item.Key)
                         .Select(FormatEntry)

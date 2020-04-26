@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Images;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Interfaces
 {
     internal class ImageSettings : ISettings
     {

@@ -14,6 +14,7 @@ using Images.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OutputBuilderClient.Interfaces;
 using OutputBuilderClient.Services;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
@@ -118,7 +119,9 @@ namespace OutputBuilderClient
             }
             finally
             {
-                await DumpBrokenImagesAsync(logging);
+                IBrokenImageTracker brokenImageTracker = serviceProvider.GetService<IBrokenImageTracker>();
+
+                await DumpBrokenImagesAsync(brokenImageTracker, logging);
             }
         }
 
@@ -163,9 +166,9 @@ namespace OutputBuilderClient
             return serviceCollection;
         }
 
-        private static async Task DumpBrokenImagesAsync(ILogger logging)
+        private static async Task DumpBrokenImagesAsync(IBrokenImageTracker brokenImageTracker, ILogger logging)
         {
-            string[] images = BrokenImages.AllBrokenImages();
+            string[] images = brokenImageTracker.AllBrokenImages();
 
             await File.WriteAllLinesAsync(Settings.BrokenImagesFile, images, Encoding.UTF8);
 

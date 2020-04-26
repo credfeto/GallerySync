@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using OutputBuilderClient.Interfaces;
 using StorageHelpers;
 
 namespace OutputBuilderClient.Services
