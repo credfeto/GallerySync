@@ -12,17 +12,12 @@ namespace OutputBuilderClient.Services
 {
     public sealed class RebuildDetection : IRebuildDetection
     {
-        private readonly IImageFilenameGeneration _imageFilenameGeneration;
         private readonly ILogger<RebuildDetection> _logging;
         private readonly IResizeImageFileLocator _resizeImageFileLocator;
         private readonly ISettings _settings;
 
-        public RebuildDetection(IImageFilenameGeneration imageFilenameGeneration,
-                                ISettings settings,
-                                IResizeImageFileLocator resizeImageFileLocator,
-                                ILogger<RebuildDetection> logging)
+        public RebuildDetection(ISettings settings, IResizeImageFileLocator resizeImageFileLocator, ILogger<RebuildDetection> logging)
         {
-            this._imageFilenameGeneration = imageFilenameGeneration;
             this._settings = settings;
             this._resizeImageFileLocator = resizeImageFileLocator;
             this._logging = logging;
