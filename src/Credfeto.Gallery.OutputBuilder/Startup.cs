@@ -32,7 +32,7 @@ namespace Credfeto.Gallery.OutputBuilder
             ImageLoaderRawSetup.Configure(serviceCollection);
             ImageLoaderPhotoshopSetup.Configure(serviceCollection);
 
-            serviceCollection.AddSingleton<IUrlShortner, BitlyUrlShortner>();
+            BitlyUrlShortner.RegisterServices(serviceCollection);
             serviceCollection.AddSingleton<ILimitedUrlShortener, LimitedUrlShortenerer>();
             serviceCollection.AddSingleton<IShortUrls, ShortUrls>();
             serviceCollection.AddSingleton<IImageFilenameGeneration, ImageFilenameGeneration>();
