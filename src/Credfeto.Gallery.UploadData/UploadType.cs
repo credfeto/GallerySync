@@ -2,8 +2,8 @@
 {
     public enum UploadType
     {
-        NewItem,
-        UpdateItem,
-        DeleteItem
+        NEW_ITEM,
+        UPDATE_ITEM,
+        DELETE_ITEM
     }
 }

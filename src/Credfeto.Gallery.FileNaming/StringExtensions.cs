@@ -7,9 +7,9 @@ namespace Credfeto.Gallery.FileNaming
 {
     public static class StringExtensions
     {
-        private const string DateMatchRegex = @"^(19|20)\d\d([- /.])(0[1-9]|1[012])\2(0[1-9]|[12][0-9]|3[01])\b*";
+        private const string DATE_MATCH_REGEX = @"^(19|20)\d\d([- /.])(0[1-9]|1[012])\2(0[1-9]|[12][0-9]|3[01])\b*";
 
-        private const string NamePrefixStripCharacters = " -";
+        private const string NAME_PREFIX_STRIP_CHARACTERS = " -";
 
         public static string ReformatTitle(this string name, DateFormat dateFormat)
         {
@@ -18,7 +18,7 @@ namespace Credfeto.Gallery.FileNaming
                 return string.Empty;
             }
 
-            Match match = Regex.Match(name, DateMatchRegex, RegexOptions.Singleline);
+            Match match = Regex.Match(name, DATE_MATCH_REGEX, RegexOptions.Singleline);
 
             if (match.Success)
             {
@@ -27,7 +27,7 @@ namespace Credfeto.Gallery.FileNaming
                 if (DateTime.TryParse(datePart, out DateTime date))
                 {
                     string fieldEnd = name.Remove(startIndex: 0, match.Value.Length)
-                                          .TrimStart(NamePrefixStripCharacters.ToCharArray());
+                                          .TrimStart(NAME_PREFIX_STRIP_CHARACTERS.ToCharArray());
 
                     return string.IsNullOrEmpty(fieldEnd)
                         ? string.Format(CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), date)
@@ -45,7 +45,7 @@ namespace Credfeto.Gallery.FileNaming
                 return string.Empty;
             }
 
-            Match match = Regex.Match(name, DateMatchRegex, RegexOptions.Singleline);
+            Match match = Regex.Match(name, DATE_MATCH_REGEX, RegexOptions.Singleline);
 
             if (match.Success)
             {
@@ -85,7 +85,7 @@ namespace Credfeto.Gallery.FileNaming
 
             switch (dateFormat)
             {
-                case DateFormat.ShortDate: return @"{0:d MMM yyyy}";
+                case DateFormat.SHORT_DATE: return @"{0:d MMM yyyy}";
 
                 default: return @"{0:d MMMM yyyy}";
             }

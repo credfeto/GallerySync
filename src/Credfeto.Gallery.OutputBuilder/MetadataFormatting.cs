@@ -147,10 +147,5 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             return (x + y / 2) / y * y;
         }
-
-        private static long Round(long x, long y)
-        {
-            return (x + y / 2) / y * y;
-        }
     }
 }

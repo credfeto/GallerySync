@@ -8,11 +8,11 @@
         /// <summary>
         ///     The short date.
         /// </summary>
-        ShortDate,
+        SHORT_DATE,
 
         /// <summary>
         ///     The long date.
         /// </summary>
-        LongDate
+        LONG_DATE
     }
 }

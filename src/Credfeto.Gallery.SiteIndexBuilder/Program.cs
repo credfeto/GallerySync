@@ -281,7 +281,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                     }
 
                     string date = year + "-" + month + "-" + day;
-                    string titleDate = (date + " MTR").ReformatTitle(DateFormat.LongDate)
+                    string titleDate = (date + " MTR").ReformatTitle(DateFormat.LONG_DATE)
                                                       .Replace(oldValue: " - MTR", string.Empty);
 
                     foreach (GalleryEntry sourcePhoto in folder.Children.Where(IsImage))
@@ -335,7 +335,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             LoadContext context = new LoadContext();
 
             // Only upload creates and updates.
-            foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType != UploadType.DeleteItem))
+            foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType != UploadType.DELETE_ITEM))
             {
                 if (await PerformUploadAsync(item, context))
                 {
@@ -346,7 +346,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             // ONly do deletes IF there are slots left for uploading
             if (!context.MaxReached)
             {
-                foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType == UploadType.DeleteItem))
+                foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType == UploadType.DELETE_ITEM))
                 {
                     if (await PerformUploadAsync(item, context))
                     {
@@ -415,7 +415,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
                     string title = sourcePhotoBreadcrumbFragments.Last();
                     string parentTitle = sourcePhotoBreadcrumbFragments[sourcePhotoBreadcrumbFragments.Length - 2]
-                        .ExtractDate(DateFormat.LongDate);
+                        .ExtractDate(DateFormat.LONG_DATE);
 
                     if (!string.IsNullOrWhiteSpace(parentTitle))
                     {
@@ -475,18 +475,6 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                     entry.Photos.Add(sourcePhoto);
                 }
             }
-        }
-
-        private static GalleryEntry FindParentAlbumPath(Dictionary<string, GalleryEntry> contents, Photo parentRecord)
-        {
-            string path = parentRecord.BasePath;
-
-            if (!contents.TryGetValue(path, out GalleryEntry item) || item == null)
-            {
-                return null;
-            }
-
-            return item;
         }
 
         private static void AddCoordinatesFromChildren(Dictionary<string, GalleryEntry> contents)
@@ -688,7 +676,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static Task QueueUploadItemsToDeleteAsync(GallerySiteIndex data, List<string> deletedItems)
         {
-            return Task.WhenAll(deletedItems.Select(selector: path => QueueUploadOneItemAsync(data, new GalleryItem {Path = path}, UploadType.DeleteItem)));
+            return Task.WhenAll(deletedItems.Select(selector: path => QueueUploadOneItemAsync(data, new GalleryItem {Path = path}, UploadType.DELETE_ITEM)));
         }
 
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
@@ -718,7 +706,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         private static Task QueueUploadAllItemsAsync(GallerySiteIndex data)
         {
             return Task.WhenAll(UploadOrdering(data)
-                                    .Select(selector: item => QueueUploadOneItemAsync(data, item, UploadType.NewItem)));
+                                    .Select(selector: item => QueueUploadOneItemAsync(data, item, UploadType.NEW_ITEM)));
         }
 
         private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
@@ -745,7 +733,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
             {
-                await QueueUploadOneItemAsync(data, item, oldItem == null ? UploadType.NewItem : UploadType.UpdateItem);
+                await QueueUploadOneItemAsync(data, item, oldItem == null ? UploadType.NEW_ITEM : UploadType.UPDATE_ITEM);
             }
         }
 
@@ -787,7 +775,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             string progressText = item.Path;
 
             const int maxRetries = 5;
-            bool uploaded = false;
+            bool uploaded;
             int retry = 0;
 
             do
@@ -803,7 +791,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         {
             GallerySiteIndex itemToPost = new GallerySiteIndex {version = item.Version, items = new List<GalleryItem>(), deletedItems = new List<string>()};
 
-            if (item.UploadType == UploadType.DeleteItem)
+            if (item.UploadType == UploadType.DELETE_ITEM)
             {
                 itemToPost.deletedItems.Add(item.Item.Path);
             }
@@ -1199,7 +1187,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                Path = level,
                                                OriginalAlbumPath = null,
                                                Title = breadcrumbFragments[folderLevel - 1]
-                                                   .ReformatTitle(DateFormat.LongDate),
+                                                   .ReformatTitle(DateFormat.LONG_DATE),
                                                Description = string.Empty,
                                                Location = null,
                                                Children = new List<GalleryEntry>(),
@@ -1267,7 +1255,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             }
         }
 
-        private class LoadContext
+        private sealed class LoadContext
         {
             private int _itemsUploaded;
 
@@ -1286,7 +1274,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             }
         }
 
-        private class EventDesc
+        private sealed class EventDesc
         {
             public string Name { get; set; }
 

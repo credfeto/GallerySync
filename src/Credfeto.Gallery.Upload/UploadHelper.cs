@@ -66,9 +66,9 @@ namespace Credfeto.Gallery.Upload
         {
             switch (uploadType)
             {
-                case UploadType.NewItem: return "New";
+                case UploadType.NEW_ITEM: return "New";
 
-                case UploadType.DeleteItem: return "Delete";
+                case UploadType.DELETE_ITEM: return "Delete";
 
                 default: return "Existing";
             }

@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Credfeto.Gallery.FileNaming;
 using Credfeto.Gallery.ObjectModel;
@@ -360,94 +359,6 @@ namespace Credfeto.Gallery.Image.Services
             description += ".";
 
             return description;
-        }
-
-        private static string ExtractTitle(string path, List<PhotoMetadata> metadata)
-        {
-            string title = string.Empty;
-            PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Title));
-
-            if (desc != null)
-            {
-                title = desc.Value;
-            }
-
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                string[] fragments = path.Split(separator: '\\')
-                                         .Where(predicate: candidate => !string.IsNullOrWhiteSpace(candidate))
-                                         .ToArray();
-
-                if (fragments.Length > 0)
-                {
-                    title = fragments[fragments.Length - 1];
-                }
-            }
-
-            return title;
-        }
-
-        /// <summary>
-        ///     Checks to see if the class implements the interface.
-        /// </summary>
-        /// <param name="classType">
-        ///     Type of the class.
-        /// </param>
-        /// <param name="interfaceType">
-        ///     Type of the interface.
-        /// </param>
-        /// <returns>
-        ///     True, if the class implements the interface;false, otherwise.
-        /// </returns>
-        private static bool ImplementsInterface(Type classType, Type interfaceType)
-        {
-            Contract.Requires(classType != null);
-            Contract.Requires(interfaceType != null);
-
-            Type[] interfaces = classType.GetInterfaces();
-
-            return interfaces.Any(predicate: i => i == interfaceType);
-        }
-
-        /// <summary>
-        ///     Locates the converters.
-        /// </summary>
-        /// <returns>
-        ///     List of converters.
-        /// </returns>
-        /// <exception cref="ConfigurationErrorsException">No registered converters were loaded.</exception>
-        private static Dictionary<string, IImageConverter> LocateConverters()
-        {
-            Contract.Ensures(Contract.Result<Dictionary<string, IImageConverter>>() != null);
-
-            Dictionary<string, IImageConverter> converters = new Dictionary<string, IImageConverter>();
-
-            Assembly ass = typeof(IImageConverter).Assembly;
-
-            Type[] types = ass.GetTypes();
-
-            foreach (Type t in types.Where(predicate: t => ImplementsInterface(t, typeof(IImageConverter))))
-            {
-                IImageConverter converter = null;
-                object[] attributes = t.GetCustomAttributes(inherit: false);
-
-                foreach (SupportedExtensionAttribute supportedExtension in attributes.OfType<SupportedExtensionAttribute>())
-                {
-                    if (converter == null)
-                    {
-                        converter = (IImageConverter) Activator.CreateInstance(t);
-                    }
-
-                    converters.Add(supportedExtension.Extension.ToUpperInvariant(), converter);
-                }
-            }
-
-            if (!converters.Any())
-            {
-                throw new AbortProcessingException(message: "No registered converters!");
-            }
-
-            return converters;
         }
 
         /// <summary>
