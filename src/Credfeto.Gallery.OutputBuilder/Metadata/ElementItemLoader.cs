@@ -11,7 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Xml;
 
-namespace OutputBuilderClient.Metadata
+namespace Credfeto.Gallery.OutputBuilder.Metadata
 {
     /// <summary>
     ///     The element item loader.

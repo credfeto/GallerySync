@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class MetadataFormatting
     {

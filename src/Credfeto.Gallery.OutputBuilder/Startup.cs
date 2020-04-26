@@ -1,18 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using Credfeto.Gallery.Image;
+using Credfeto.Gallery.Image.Services;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
+using Credfeto.Gallery.OutputBuilder.Services;
 using ImageLoader.Core;
 using ImageLoader.Photoshop;
 using ImageLoader.Raw;
 using ImageLoader.Standard;
-using Images;
-using Images.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using OutputBuilderClient.Interfaces;
-using OutputBuilderClient.Services;
 using Serilog;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class Startup
     {
@@ -49,7 +49,7 @@ namespace OutputBuilderClient
             const string outputShortUrls = @"Output:ShortUrls";
             const string outputImages = @"Output:ImagesOutputPath";
             const string outputBrokenImages = @"Output:BrokenImagesFile";
-            const string watermark = @"Images:Watermark";
+            const string watermark = @"Credfeto.Gallery.Image:Watermark";
 
             const string outputJpegQuality = @"Output:JpegOutputQuality";
             const string outputMaximumDimensions = @"Output:ImageMaximumDimensions";

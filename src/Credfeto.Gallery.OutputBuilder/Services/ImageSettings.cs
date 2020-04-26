@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Images;
+using Credfeto.Gallery.Image;
 
-namespace OutputBuilderClient.Services
+namespace Credfeto.Gallery.OutputBuilder.Services
 {
     internal class ImageSettings : IImageSettings
     {

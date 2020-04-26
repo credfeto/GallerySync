@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using ObjectModel;
+using Credfeto.Gallery.ObjectModel;
 
-namespace OutputBuilderClient.Interfaces
+namespace Credfeto.Gallery.OutputBuilder.Interfaces
 {
     public interface IShortUrls
     {

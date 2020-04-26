@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FileNaming;
-using ObjectModel;
-using Scanner;
+using Credfeto.Gallery.FileNaming;
+using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.Scanner;
 
-namespace OutputBuilderClient.Services.Emitters
+namespace Credfeto.Gallery.OutputBuilder.Services.Emitters
 {
     public sealed class RawFileInfoEmitter : IFileEmitter
     {

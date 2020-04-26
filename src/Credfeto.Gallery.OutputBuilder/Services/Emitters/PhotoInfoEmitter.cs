@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ObjectModel;
-using Scanner;
-using StorageHelpers;
+using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.Scanner;
+using Credfeto.Gallery.Storage;
 
-namespace OutputBuilderClient.Services.Emitters
+namespace Credfeto.Gallery.OutputBuilder.Services.Emitters
 {
     public class PhotoInfoEmitter : IFileEmitter
     {

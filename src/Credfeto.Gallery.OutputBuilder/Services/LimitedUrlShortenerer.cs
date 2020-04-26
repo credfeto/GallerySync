@@ -6,11 +6,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
+using Credfeto.Gallery.Storage;
 using Microsoft.Extensions.Logging;
-using OutputBuilderClient.Interfaces;
-using StorageHelpers;
 
-namespace OutputBuilderClient.Services
+namespace Credfeto.Gallery.OutputBuilder.Services
 {
     public sealed class LimitedUrlShortenerer : ILimitedUrlShortener
     {

@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using OutputBuilderClient.Interfaces;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
 
-namespace OutputBuilderClient.Services
+namespace Credfeto.Gallery.OutputBuilder.Services
 {
     public sealed class BrokenImageTracker : IBrokenImageTracker
     {

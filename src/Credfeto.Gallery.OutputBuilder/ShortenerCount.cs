@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     [Serializable]
     [DebuggerDisplay(value: "Year: {Year}, Month:{Month} Impressions:{Impressions} TotalImpressionsEver:{TotalImpressionsEver}")]

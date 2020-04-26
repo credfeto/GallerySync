@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Credfeto.Gallery.FileNaming;
+using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
+using Credfeto.Gallery.OutputBuilder.Metadata;
 using ExifLib;
-using FileNaming;
-using ObjectModel;
-using OutputBuilderClient.Interfaces;
-using OutputBuilderClient.Metadata;
 using TagLib;
 using TagLib.Image;
 using TagLib.Xmp;
 using File = System.IO.File;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class MetadataExtraction
     {

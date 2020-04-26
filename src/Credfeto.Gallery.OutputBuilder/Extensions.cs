@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class Extensions
     {

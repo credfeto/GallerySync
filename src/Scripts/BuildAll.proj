@@ -31,13 +31,13 @@
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\Credfeto.Gallery.OutputBuilder\bin\Release"/>
 
     <!-- Add the site index builder -->
-    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\BuildSiteIndex\bin\Release" />
+    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\Credfeto.Gallery.SiteIndexBuilder\bin\Release" />
 
     <!-- Add the Uploader processor -->
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\UploadToAmazon\bin\Release" />
 
     <!-- Add the Uploader processor -->
-    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\DeleteImageIfCorrupt\bin\Release" />
+    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\Credfeto.Gallery.DeleteCorruptImage\bin\Release" />
 
     <Delete Files="$(SharedFolder)\Gallery.zip" ContinueOnError="true"/>
     <Copy SourceFiles="$(OutputZip)" DestinationFiles="$(SharedFolder)\Gallery.zip"  />

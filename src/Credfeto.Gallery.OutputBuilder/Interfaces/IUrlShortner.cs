@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace OutputBuilderClient.Interfaces
+namespace Credfeto.Gallery.OutputBuilder.Interfaces
 {
     public interface IUrlShortner
     {

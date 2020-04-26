@@ -4,9 +4,9 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using FileNaming;
+using Credfeto.Gallery.FileNaming;
 
-namespace OutputBuilderClient.Metadata
+namespace Credfeto.Gallery.OutputBuilder.Metadata
 {
     /// <summary>
     ///     The XMP File.

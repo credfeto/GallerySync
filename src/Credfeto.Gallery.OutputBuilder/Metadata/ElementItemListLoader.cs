@@ -12,7 +12,7 @@ using System.Diagnostics.Contracts;
 using System.Text;
 using System.Xml;
 
-namespace OutputBuilderClient.Metadata
+namespace Credfeto.Gallery.OutputBuilder.Metadata
 {
     /// <summary>
     ///     The element item list loader.

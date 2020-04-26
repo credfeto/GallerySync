@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FileNaming;
-using ObjectModel;
+using Credfeto.Gallery.FileNaming;
+using Credfeto.Gallery.ObjectModel;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class MetadataHelpers
     {

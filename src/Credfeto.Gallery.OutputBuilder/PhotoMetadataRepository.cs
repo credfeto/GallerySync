@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
+using Credfeto.Gallery.OutputBuilder.Services.Emitters;
+using Credfeto.Gallery.Scanner;
+using Credfeto.Gallery.Storage;
 using Microsoft.Extensions.Logging;
-using ObjectModel;
-using OutputBuilderClient.Interfaces;
-using OutputBuilderClient.Services.Emitters;
-using Scanner;
-using StorageHelpers;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class PhotoMetadataRepository
     {

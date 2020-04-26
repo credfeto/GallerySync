@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using FileNaming;
+using Credfeto.Gallery.FileNaming;
+using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
+using Credfeto.Gallery.Scanner;
 using Microsoft.Extensions.Logging;
-using ObjectModel;
-using OutputBuilderClient.Interfaces;
-using Scanner;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class StandaloneMetadata
     {

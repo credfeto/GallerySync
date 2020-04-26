@@ -2,11 +2,11 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
+using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
 using Microsoft.Extensions.Logging;
-using ObjectModel;
-using OutputBuilderClient.Interfaces;
 
-namespace OutputBuilderClient.Services
+namespace Credfeto.Gallery.OutputBuilder.Services
 {
     public sealed class ShortUrls : IShortUrls
     {

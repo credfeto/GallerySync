@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using Images;
+using Credfeto.Gallery.Image;
 
-namespace OutputBuilderClient.Interfaces
+namespace Credfeto.Gallery.OutputBuilder.Interfaces
 {
     public interface IGalleryBuilder
     {

@@ -6,10 +6,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
 using Microsoft.Extensions.Logging;
-using OutputBuilderClient.Interfaces;
 
-namespace OutputBuilderClient.Services
+namespace Credfeto.Gallery.OutputBuilder.Services
 {
     /// <summary>
     ///     Bit.ly's URL Shortener.

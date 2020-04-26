@@ -1,6 +1,6 @@
-﻿using OutputBuilderClient.Interfaces;
+﻿using Credfeto.Gallery.OutputBuilder.Interfaces;
 
-namespace OutputBuilderClient.Services
+namespace Credfeto.Gallery.OutputBuilder.Services
 {
     public sealed class Settings : ISettings
     {

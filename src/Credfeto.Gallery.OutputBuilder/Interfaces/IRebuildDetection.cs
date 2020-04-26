@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
-using Images;
+using Credfeto.Gallery.Image;
+using Credfeto.Gallery.ObjectModel;
 using Microsoft.Extensions.Logging;
-using ObjectModel;
 
-namespace OutputBuilderClient.Interfaces
+namespace Credfeto.Gallery.OutputBuilder.Interfaces
 {
     public interface IRebuildDetection
     {

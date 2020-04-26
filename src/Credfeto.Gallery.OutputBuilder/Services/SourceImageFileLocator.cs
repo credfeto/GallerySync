@@ -1,9 +1,9 @@
 ﻿using System.IO;
-using Images;
-using ObjectModel;
-using OutputBuilderClient.Interfaces;
+using Credfeto.Gallery.Image;
+using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
 
-namespace OutputBuilderClient.Services
+namespace Credfeto.Gallery.OutputBuilder.Services
 {
     public sealed class SourceImageFileLocator : ISourceImageFileLocator
     {

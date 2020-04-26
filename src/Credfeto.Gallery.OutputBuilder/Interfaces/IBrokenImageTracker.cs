@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OutputBuilderClient.Interfaces
+namespace Credfeto.Gallery.OutputBuilder.Interfaces
 {
     public interface IBrokenImageTracker
     {

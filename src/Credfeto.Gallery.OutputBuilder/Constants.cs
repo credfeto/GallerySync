@@ -1,4 +1,4 @@
-﻿namespace OutputBuilderClient
+﻿namespace Credfeto.Gallery.OutputBuilder
 {
     public static class Constants
     {

@@ -3,15 +3,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Credfeto.Gallery.Image;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
 using ImageLoader.Interfaces;
-using Images;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OutputBuilderClient.Interfaces;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class Program
     {
@@ -36,7 +36,7 @@ namespace OutputBuilderClient
 
             logging.LogInformation($"Source: {settings.RootFolder}");
             logging.LogInformation($"Output: {settings.DatabaseOutputFolder}");
-            logging.LogInformation($"Images: {settings.ImagesOutputPath}");
+            logging.LogInformation($"Credfeto.Gallery.Image: {settings.ImagesOutputPath}");
             logging.LogInformation($"Thumb:  {imageSettings.ThumbnailSize}");
 
             foreach (int resize in imageSettings.ImageMaximumDimensions)
@@ -95,7 +95,7 @@ namespace OutputBuilderClient
 
             await File.WriteAllLinesAsync(settings.BrokenImagesFile, images, Encoding.UTF8);
 
-            logging.LogInformation($"Broken Images: {images.Length}");
+            logging.LogInformation($"Broken Credfeto.Gallery.Image: {images.Length}");
         }
     }
 }

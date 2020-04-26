@@ -1,11 +1,11 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using FileNaming;
-using ObjectModel;
-using OutputBuilderClient.Interfaces;
+using Credfeto.Gallery.FileNaming;
+using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.OutputBuilder.Interfaces;
 
-namespace OutputBuilderClient
+namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class PhotoExtensionMethods
     {

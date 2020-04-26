@@ -10,7 +10,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 
-namespace OutputBuilderClient.Metadata
+namespace Credfeto.Gallery.OutputBuilder.Metadata
 {
     /// <summary>
     ///     The item loader.
