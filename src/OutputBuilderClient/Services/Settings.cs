@@ -1,15 +1,22 @@
 ﻿using OutputBuilderClient.Interfaces;
 
-namespace OutputBuilderClient.Services.Emitters
+namespace OutputBuilderClient.Services
 {
     public sealed class Settings : ISettings
     {
-        public Settings(string bitlyApiKey, string bitlyApiUser, string rootFolder, string databaseOutputFolder, string brokenImagesFile, string shortNamesFile)
+        public Settings(string bitlyApiKey,
+                        string bitlyApiUser,
+                        string rootFolder,
+                        string databaseOutputFolder,
+                        string imagesOutputPath,
+                        string brokenImagesFile,
+                        string shortNamesFile)
         {
             this.BitlyApiKey = bitlyApiKey;
             this.BitlyApiUser = bitlyApiUser;
             this.RootFolder = rootFolder;
             this.DatabaseOutputFolder = databaseOutputFolder;
+            this.ImagesOutputPath = imagesOutputPath;
             this.BrokenImagesFile = brokenImagesFile;
             this.ShortNamesFile = shortNamesFile;
         }
@@ -21,6 +28,8 @@ namespace OutputBuilderClient.Services.Emitters
         public string BitlyApiUser { get; }
 
         public string DatabaseOutputFolder { get; }
+
+        public string ImagesOutputPath { get; }
 
         public string BrokenImagesFile { get; }
 

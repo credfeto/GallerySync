@@ -8,16 +8,8 @@ namespace Images
 
         IReadOnlyList<int> ImageMaximumDimensions { get; }
 
-        string RootFolder { get; }
-
-        string ImagesOutputPath { get; }
-
         long JpegOutputQuality { get; }
 
-        string WatermarkImage { get; set; }
-
-        object DefaultShortUrl { get; }
-
-        string ShortUrlsPath { get; }
+        string WatermarkImage { get; }
     }
 }

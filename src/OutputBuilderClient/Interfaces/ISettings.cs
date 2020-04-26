@@ -10,6 +10,8 @@
 
         string DatabaseOutputFolder { get; }
 
+        public string ImagesOutputPath { get; }
+
         string BrokenImagesFile { get; }
 
         string ShortNamesFile { get; }

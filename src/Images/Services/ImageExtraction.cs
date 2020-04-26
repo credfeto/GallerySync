@@ -28,11 +28,19 @@ namespace Images.Services
         private readonly IImageFilenameGeneration _imageFilenameGeneration;
         private readonly IImageLoader _imageLoader;
         private readonly ILogger<ImageExtraction> _logging;
+        private readonly IResizeImageFileLocator _resizeImageFileLocator;
+        private readonly ISourceImageFileLocator _sourceImageFileLocator;
 
-        public ImageExtraction(IImageLoader imageLoader, IImageFilenameGeneration imageFilenameGeneration, ILogger<ImageExtraction> logging)
+        public ImageExtraction(IImageLoader imageLoader,
+                               IImageFilenameGeneration imageFilenameGeneration,
+                               ISourceImageFileLocator sourceImageFileLocator,
+                               IResizeImageFileLocator resizeImageFileLocator,
+                               ILogger<ImageExtraction> logging)
         {
             this._imageLoader = imageLoader;
             this._imageFilenameGeneration = imageFilenameGeneration;
+            this._sourceImageFileLocator = sourceImageFileLocator;
+            this._resizeImageFileLocator = resizeImageFileLocator;
             this._logging = logging;
         }
 
@@ -62,7 +70,7 @@ namespace Images.Services
             string rawExtension = sourcePhoto.ImageExtension.TrimStart(trimChar: '.')
                                              .ToUpperInvariant();
 
-            string filename = Path.Combine(imageSettings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
+            string filename = this._sourceImageFileLocator.GetFilename(sourcePhoto);
 
             if (!this._imageLoader.CanLoad(filename))
             {
@@ -97,9 +105,7 @@ namespace Images.Services
 
                     using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
                     {
-                        string resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
-                                                              HashNaming.PathifyHash(sourcePhoto.PathHash),
-                                                              this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized));
+                        string resizedFileName = this._resizeImageFileLocator.GetResizedFileName(sourcePhoto, new ImageSize {Width = resized.Width, Height = resized.Height});
 
                         ApplyWatermark(resized, shortUrl, imageSettings);
 
@@ -126,10 +132,10 @@ namespace Images.Services
 
                         if (resized.Width == imageSettings.ThumbnailSize)
                         {
-                            resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
-                                                           HashNaming.PathifyHash(sourcePhoto.PathHash),
-                                                           this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
-                            resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.Metadata, creationDate, imageSettings);
+                            resizedFileName = this._resizeImageFileLocator.GetResizedFileName(sourcePhoto,
+                                                                                              new ImageSize {Width = resized.Width, Height = resized.Height},
+                                                                                              extension: "png");
+                            resizedBytes = SaveImageAsPng(resized, url, sourcePhoto.Metadata, creationDate);
                             await this.WriteImageAsync(resizedFileName, resizedBytes, creationDate);
 
                             filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
@@ -173,7 +179,7 @@ namespace Images.Services
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, shortUrl, metadata, creationDate, imageSettings);
+            SetMetadataProperties(image, url, metadata, creationDate);
 
             try
             {
@@ -325,7 +331,7 @@ namespace Images.Services
             }
         }
 
-        private static string ExtractDescription(List<PhotoMetadata> metadata, string url, string shortUrl, DateTime creationDate, IImageSettings imageSettings)
+        private static string ExtractDescription(List<PhotoMetadata> metadata, string url, DateTime creationDate)
         {
             string description = string.Empty;
             PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
@@ -342,14 +348,7 @@ namespace Images.Services
 
             description += "Source : ";
 
-            if (StringComparer.InvariantCultureIgnoreCase.Equals(imageSettings.DefaultShortUrl, shortUrl))
-            {
-                description += url;
-            }
-            else
-            {
-                description += shortUrl;
-            }
+            description += url;
 
             description += " Photo taken by Mark Ridgwell";
 
@@ -553,12 +552,12 @@ namespace Images.Services
             }
         }
 
-        private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, IImageSettings imageSettings)
+        private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, List<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, shortUrl, metadata, creationDate, imageSettings);
+            SetMetadataProperties(image, url, metadata, creationDate);
 
             using (MemoryStream ms = new MemoryStream())
             {
@@ -604,15 +603,9 @@ namespace Images.Services
         ///     The image to set the properties to it.
         /// </param>
         /// <param name="url"></param>
-        /// <param name="shortUrl"></param>
         /// <param name="metadata"></param>
         /// <param name="creationDate"></param>
-        private static void SetMetadataProperties(Image<Rgba32> image,
-                                                  string url,
-                                                  string shortUrl,
-                                                  List<PhotoMetadata> metadata,
-                                                  DateTime creationDate,
-                                                  IImageSettings imageSettings)
+        private static void SetMetadataProperties(Image<Rgba32> image, string url, List<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
 
@@ -622,7 +615,7 @@ namespace Images.Services
             const string program = "https://www.markridgwell.co.uk/";
 
             //string title = ExtractTitle(filePath, metadata);
-            string description = ExtractDescription(metadata, url, shortUrl, creationDate, imageSettings);
+            string description = ExtractDescription(metadata, url, creationDate);
 
             SetExifMetadata(image, creationDate, description, copyright, licensing, credit, program);
         }

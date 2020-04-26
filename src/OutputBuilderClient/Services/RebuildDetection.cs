@@ -14,12 +14,17 @@ namespace OutputBuilderClient.Services
     {
         private readonly IImageFilenameGeneration _imageFilenameGeneration;
         private readonly ILogger<RebuildDetection> _logging;
+        private readonly IResizeImageFileLocator _resizeImageFileLocator;
         private readonly ISettings _settings;
 
-        public RebuildDetection(IImageFilenameGeneration imageFilenameGeneration, ISettings settings, ILogger<RebuildDetection> logging)
+        public RebuildDetection(IImageFilenameGeneration imageFilenameGeneration,
+                                ISettings settings,
+                                IResizeImageFileLocator resizeImageFileLocator,
+                                ILogger<RebuildDetection> logging)
         {
             this._imageFilenameGeneration = imageFilenameGeneration;
             this._settings = settings;
+            this._resizeImageFileLocator = resizeImageFileLocator;
             this._logging = logging;
         }
 
@@ -118,9 +123,7 @@ namespace OutputBuilderClient.Services
 
             foreach (ImageSize resize in photoToProcess.ImageSizes)
             {
-                string resizedFileName = Path.Combine(imageImageSettings.ImagesOutputPath,
-                                                      HashNaming.PathifyHash(photoToProcess.PathHash),
-                                                      this._imageFilenameGeneration.IndividualResizeFileName(photoToProcess, resize));
+                string resizedFileName = this._resizeImageFileLocator.GetResizedFileName(photoToProcess, resize);
 
                 if (!File.Exists(resizedFileName))
                 {
@@ -131,9 +134,7 @@ namespace OutputBuilderClient.Services
 
                 if (resize.Width == imageImageSettings.ThumbnailSize)
                 {
-                    resizedFileName = Path.Combine(imageImageSettings.ImagesOutputPath,
-                                                   HashNaming.PathifyHash(photoToProcess.PathHash),
-                                                   this._imageFilenameGeneration.IndividualResizeFileName(photoToProcess, resize, extension: "png"));
+                    resizedFileName = this._resizeImageFileLocator.GetResizedFileName(photoToProcess, resize, extension: @"png");
 
                     if (!File.Exists(resizedFileName))
                     {

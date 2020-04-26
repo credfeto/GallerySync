@@ -16,7 +16,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OutputBuilderClient.Interfaces;
 using OutputBuilderClient.Services;
-using OutputBuilderClient.Services.Emitters;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -45,7 +44,7 @@ namespace OutputBuilderClient
 
             logging.LogInformation($"Source: {settings.RootFolder}");
             logging.LogInformation($"Output: {settings.DatabaseOutputFolder}");
-            logging.LogInformation($"Images: {imageSettings.RootFolder}");
+            logging.LogInformation($"Images: {settings.ImagesOutputPath}");
             logging.LogInformation($"Thumb:  {imageSettings.ThumbnailSize}");
 
             foreach (int resize in imageSettings.ImageMaximumDimensions)
@@ -119,7 +118,8 @@ namespace OutputBuilderClient
             serviceCollection.AddSingleton<IImageFilenameGeneration, ImageFilenameGeneration>();
             serviceCollection.AddSingleton<IImageExtraction, ImageExtraction>();
             serviceCollection.AddSingleton<IRebuildDetection, RebuildDetection>();
-
+            serviceCollection.AddSingleton<ISourceImageFileLocator, SourceImageFileLocator>();
+            serviceCollection.AddSingleton<IResizeImageFileLocator, ResizeImageFileLocator>();
             serviceCollection.AddSingleton<IGalleryBuilder, GalleryBuilder>();
 
             const string rootFolder = @"Source:RootFolder";
@@ -153,6 +153,7 @@ namespace OutputBuilderClient
 
             ISettings settings = new Settings(rootFolder: config.GetValue<string>(rootFolder),
                                               databaseOutputFolder: config.GetValue<string>(databaseOutputFolder),
+                                              imagesOutputPath: config.GetValue<string>(outputImages),
                                               shortNamesFile: config.GetValue<string>(outputShortUrls),
                                               brokenImagesFile: config.GetValue<string>(outputBrokenImages),
                                               bitlyApiUser: config.GetValue<string>(key: @"UrlShortener:BitlyApiUser"),
@@ -161,8 +162,6 @@ namespace OutputBuilderClient
                                                                   shortUrlsPath: settings.ShortNamesFile,
                                                                   defaultShortUrl: @"https://www.markridgwell.co.uk",
                                                                   imageMaximumDimensions: config.GetValue(outputMaximumDimensions, defaultValue: @"400,600,800,1024,1600"),
-                                                                  rootFolder: settings.RootFolder,
-                                                                  imagesOutputPath: config.GetValue<string>(outputImages),
                                                                   jpegOutputQuality: config.GetValue(outputJpegQuality, defaultValue: 100),
                                                                   watermarkImage: config.GetValue<string>(watermark));
 
