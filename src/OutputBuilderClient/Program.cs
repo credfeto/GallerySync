@@ -1,21 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using ImageLoader.Core;
 using ImageLoader.Interfaces;
-using ImageLoader.Photoshop;
-using ImageLoader.Raw;
-using ImageLoader.Standard;
 using Images;
-using Images.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OutputBuilderClient.Interfaces;
-using OutputBuilderClient.Services;
 using Serilog;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -29,7 +21,7 @@ namespace OutputBuilderClient
 
             AlterPriority();
 
-            ServiceCollection serviceCollection = RegisterServices(args);
+            ServiceCollection serviceCollection = Startup.RegisterServices(args);
 
             ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
@@ -95,80 +87,6 @@ namespace OutputBuilderClient
             {
                 // Don't care'
             }
-        }
-
-        private static ServiceCollection RegisterServices(string[] args)
-        {
-            ServiceCollection serviceCollection = new ServiceCollection();
-
-            Log.Logger = new LoggerConfiguration().Enrich.FromLogContext()
-                                                  .WriteTo.Console()
-                                                  .CreateLogger();
-
-            serviceCollection.AddOptions()
-                             .AddLogging();
-
-            ImageLoaderCoreSetup.Configure(serviceCollection);
-            ImageLoaderStandardSetup.Configure(serviceCollection);
-            ImageLoaderRawSetup.Configure(serviceCollection);
-            ImageLoaderPhotoshopSetup.Configure(serviceCollection);
-
-            serviceCollection.AddSingleton<ILimitedUrlShortener, LimitedUrlShortenerer>();
-            serviceCollection.AddSingleton<IShortUrls, ShortUrls>();
-            serviceCollection.AddSingleton<IImageFilenameGeneration, ImageFilenameGeneration>();
-            serviceCollection.AddSingleton<IImageExtraction, ImageExtraction>();
-            serviceCollection.AddSingleton<IRebuildDetection, RebuildDetection>();
-            serviceCollection.AddSingleton<ISourceImageFileLocator, SourceImageFileLocator>();
-            serviceCollection.AddSingleton<IResizeImageFileLocator, ResizeImageFileLocator>();
-            serviceCollection.AddSingleton<IGalleryBuilder, GalleryBuilder>();
-
-            const string rootFolder = @"Source:RootFolder";
-
-            const string databaseOutputFolder = @"Database:OutputFolder";
-            const string outputShortUrls = @"Output:ShortUrls";
-            const string outputImages = @"Output:ImagesOutputPath";
-            const string outputBrokenImages = @"Output:BrokenImagesFile";
-            const string watermark = @"Images:Watermark";
-
-            const string outputJpegQuality = @"Output:JpegOutputQuality";
-            const string outputMaximumDimensions = @"Output:ImageMaximumDimensions";
-            const string outputThumbnailSize = @"Output:ThumbnailSize";
-
-            IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-                                                                  .AddJsonFile(path: "appsettings.json", optional: true)
-                                                                  .AddCommandLine(args,
-                                                                                  new Dictionary<string, string>
-                                                                                  {
-                                                                                      {@"-source", rootFolder},
-                                                                                      {@"-output", databaseOutputFolder},
-                                                                                      {@"-imageoutput", outputImages},
-                                                                                      {@"-brokenImages", outputBrokenImages},
-                                                                                      {@"-shortUrls", outputShortUrls},
-                                                                                      {@"-watermark", watermark},
-                                                                                      {@"-thumbnailSize", outputThumbnailSize},
-                                                                                      {@"-quality", outputJpegQuality},
-                                                                                      {@"-resizes", outputMaximumDimensions}
-                                                                                  })
-                                                                  .Build();
-
-            ISettings settings = new Settings(rootFolder: config.GetValue<string>(rootFolder),
-                                              databaseOutputFolder: config.GetValue<string>(databaseOutputFolder),
-                                              imagesOutputPath: config.GetValue<string>(outputImages),
-                                              shortNamesFile: config.GetValue<string>(outputShortUrls),
-                                              brokenImagesFile: config.GetValue<string>(outputBrokenImages),
-                                              bitlyApiUser: config.GetValue<string>(key: @"UrlShortener:BitlyApiUser"),
-                                              bitlyApiKey: config.GetValue<string>(key: @"UrlShortener:BitlyApiKey"));
-            IImageSettings imageImageSettings = new ImageSettings(thumbnailSize: config.GetValue(outputThumbnailSize, defaultValue: 150),
-                                                                  shortUrlsPath: settings.ShortNamesFile,
-                                                                  defaultShortUrl: @"https://www.markridgwell.co.uk",
-                                                                  imageMaximumDimensions: config.GetValue(outputMaximumDimensions, defaultValue: @"400,600,800,1024,1600"),
-                                                                  jpegOutputQuality: config.GetValue(outputJpegQuality, defaultValue: 100),
-                                                                  watermarkImage: config.GetValue<string>(watermark));
-
-            serviceCollection.AddSingleton(settings);
-            serviceCollection.AddSingleton(imageImageSettings);
-
-            return serviceCollection;
         }
 
         private static async Task DumpBrokenImagesAsync(IBrokenImageTracker brokenImageTracker, ISettings settings, ILogger logging)
