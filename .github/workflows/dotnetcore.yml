@@ -49,26 +49,19 @@ jobs:
       run: |
          cd src
          dotnet build --configuration Release /p:Version=${{ env.BUILD_VERSION }} --no-restore
-    - name: Publish OutputBuilderClient
+    - name: Pack components
       run: |
          cd src
-         dotnet publish OutputBuilderClient --configuration Release -o ../prepublish/OutputBuilderClient/lib /p:Version=${{ env.BUILD_VERSION }} --no-restore --no-build
-    - name: pack OutputBuilderClient tool
-      run: nuget pack prepublish/OutputBuilderClient/package.nuspec -tool -outputdirectory dist -version ${{ env.BUILD_VERSION }}
-    - name: Publish BuildSiteIndex
-      run: |
-         cd src
-         dotnet publish BuildSiteIndex --configuration Release -o ../prepublish/BuildSiteIndex/lib /p:Version=${{ env.BUILD_VERSION }} --no-restore --no-build
-    - name: pack BuildSiteIndex tool
-      run: nuget pack prepublish/BuildSiteIndex/package.nuspec -tool -outputdirectory dist -version ${{ env.BUILD_VERSION }}
-    - name: Publish DeleteImageIfCorrupt
-      run: |
-         cd src
-         dotnet publish DeleteImageIfCorrupt --configuration Release -o ../prepublish/DeleteImageIfCorrupt.lib /p:Version=${{ env.BUILD_VERSION }} --no-restore --no-build  
-    - name: pack DeleteImageIfCorrupt tool
-      run: nuget pack prepublish/DeleteImageIfCorrupt/package.nuspec -tool -outputdirectory dist -version ${{ env.BUILD_VERSION }}
+         dotnet pack --configuration Release /p:Version=${{ env.BUILD_VERSION }} --no-restore --output ../dist
     - name: publish
       run: |
+        dotnet nuget push dist/Credfeto.Gallery.FileNaming.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
+        dotnet nuget push dist/Credfeto.Gallery.Image.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
+        dotnet nuget push dist/Credfeto.Gallery.ObjectModel.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
+        dotnet nuget push dist/Credfeto.Gallery.Scanner.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
+        dotnet nuget push dist/Credfeto.Gallery.Storage.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
+        dotnet nuget push dist/Credfeto.Gallery.Upload.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
+        dotnet nuget push dist/Credfeto.Gallery.UploadData.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
         dotnet nuget push dist/Credfeto.Gallery.OutputBuilder.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
         dotnet nuget push dist/Credfeto.Gallery.SiteIndexBuilder.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}
         dotnet nuget push dist/Credfeto.Gallery.DeleteCorruptImage.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_FEED }}

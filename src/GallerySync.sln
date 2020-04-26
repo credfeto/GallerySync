@@ -1,30 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanner", "Scanner\Scanner.csproj", "{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.Scanner", "Credfeto.Gallery.Scanner\Credfeto.Gallery.Scanner.csproj", "{3698F44D-BBFF-4173-B1B2-2C6A0A9F537E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectModel", "ObjectModel\ObjectModel.csproj", "{7A5F8CCB-3D18-4FB0-AEE7-3037B8000EBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.ObjectModel", "Credfeto.Gallery.ObjectModel\Credfeto.Gallery.ObjectModel.csproj", "{7A5F8CCB-3D18-4FB0-AEE7-3037B8000EBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutputBuilderClient", "OutputBuilderClient\OutputBuilderClient.csproj", "{BED35732-4FE3-46B5-888D-0C19EFD2030F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.OutputBuilder", "Credfeto.Gallery.OutputBuilder\Credfeto.Gallery.OutputBuilder.csproj", "{BED35732-4FE3-46B5-888D-0C19EFD2030F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileNaming", "FileNaming\FileNaming.csproj", "{15F89A2F-BB27-4BE5-AC83-6353A7295D36}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.FileNaming", "Credfeto.Gallery.FileNaming\Credfeto.Gallery.FileNaming.csproj", "{15F89A2F-BB27-4BE5-AC83-6353A7295D36}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{33315911-4476-4C70-8141-E74BFBF88454}"
-	ProjectSection(SolutionItems) = preProject
-		Scripts\BuildAll.proj = Scripts\BuildAll.proj
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.SiteIndexBuilder", "Credfeto.Gallery.SiteIndexBuilder\Credfeto.Gallery.SiteIndexBuilder.csproj", "{0DB62336-4B3A-4AA7-8EF5-FADF44A4E519}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildSiteIndex", "BuildSiteIndex\BuildSiteIndex.csproj", "{0DB62336-4B3A-4AA7-8EF5-FADF44A4E519}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.Storage", "Credfeto.Gallery.Storage\Credfeto.Gallery.Storage.csproj", "{08172B08-5233-4626-BE5B-D4FBCCCAA14B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StorageHelpers", "StorageHelpers\StorageHelpers.csproj", "{08172B08-5233-4626-BE5B-D4FBCCCAA14B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.DeleteCorruptImage", "Credfeto.Gallery.DeleteCorruptImage\Credfeto.Gallery.DeleteCorruptImage.csproj", "{B4EC82DA-7E7A-41B2-A0E9-9311F91D3F9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeleteImageIfCorrupt", "DeleteImageIfCorrupt\DeleteImageIfCorrupt.csproj", "{B4EC82DA-7E7A-41B2-A0E9-9311F91D3F9B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.Image", "Credfeto.Gallery.Image\Credfeto.Gallery.Image.csproj", "{2425D0E9-202D-49CD-9363-138218D882CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Images", "Images\Images.csproj", "{2425D0E9-202D-49CD-9363-138218D882CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.Upload", "Credfeto.Gallery.Upload\Credfeto.Gallery.Upload.csproj", "{BAD7ABE8-2341-4230-A36A-3EC8DE8B4F2E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upload", "Upload\Upload.csproj", "{BAD7ABE8-2341-4230-A36A-3EC8DE8B4F2E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UploadData", "UploadData\UploadData.csproj", "{74ED470B-4F10-40E7-9136-CC7F812B0820}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.UploadData", "Credfeto.Gallery.UploadData\Credfeto.Gallery.UploadData.csproj", "{74ED470B-4F10-40E7-9136-CC7F812B0820}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{2C212D91-1894-4480-A07C-5E7AF60A8EC4}"
 ProjectSection(SolutionItems) = preProject
