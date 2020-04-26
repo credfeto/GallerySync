@@ -1,33 +1,32 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
-using ImageLoader.Interfaces;
 using Images;
 using Microsoft.Extensions.Logging;
 using ObjectModel;
-using StorageHelpers;
 
 namespace OutputBuilderClient.Services
 {
     public sealed class GalleryBuilder : IGalleryBuilder
     {
-        private static readonly SemaphoreSlim Sempahore = new SemaphoreSlim(initialCount: 1);
         private readonly IImageExtraction _imageExtraction;
-        private readonly IImageLoader _imageLoader;
+        private readonly ILimitedUrlShortener _limitedUrlShortener;
         private readonly ILogger<GalleryBuilder> _logging;
         private readonly IRebuildDetection _rebuildDetection;
+        private readonly IShortUrls _shortUrls;
 
-        public GalleryBuilder(IImageLoader imageLoader, IImageExtraction imageExtraction, IRebuildDetection rebuildDetection, ILogger<GalleryBuilder> logging)
+        public GalleryBuilder(IImageExtraction imageExtraction,
+                              IRebuildDetection rebuildDetection,
+                              IShortUrls shortUrls,
+                              ILimitedUrlShortener limitedUrlShortener,
+                              ILogger<GalleryBuilder> logging)
         {
-            this._imageLoader = imageLoader;
             this._imageExtraction = imageExtraction;
             this._rebuildDetection = rebuildDetection;
+            this._shortUrls = shortUrls;
+            this._limitedUrlShortener = limitedUrlShortener;
             this._logging = logging;
         }
 
@@ -72,13 +71,13 @@ namespace OutputBuilderClient.Services
                 {
                     shortUrl = targetPhoto.ShortUrl;
 
-                    if (ShortUrls.ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
+                    if (this._shortUrls.ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
                     {
-                        shortUrl = await this.TryGenerateShortUrlAsync(url);
+                        shortUrl = await this._limitedUrlShortener.TryGenerateShortUrlAsync(url);
 
                         if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                         {
-                            ShortUrls.LogShortUrl(url, shortUrl, imageSettings);
+                            this._shortUrls.LogShortUrl(url, shortUrl, imageSettings);
 
                             rebuild = true;
                             this._logging.LogInformation($" +++ Force rebuild: missing shortcut URL.  New short url: {shortUrl}");
@@ -87,7 +86,7 @@ namespace OutputBuilderClient.Services
                 }
                 else
                 {
-                    if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+                    if (this._shortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                     {
                         this._logging.LogInformation($"* Reusing existing short url: {shortUrl}");
                     }
@@ -198,89 +197,6 @@ namespace OutputBuilderClient.Services
             else
             {
                 await PhotoMetadataRepository.StoreAsync(sourcePhoto);
-            }
-        }
-
-        private async Task<string> TryGenerateShortUrlAsync(string url)
-        {
-            if (ShortUrls.TryGetValue(url, out string shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
-            {
-                return shortUrl;
-            }
-
-            await Sempahore.WaitAsync();
-
-            if (ShortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
-            {
-                return shortUrl;
-            }
-
-            try
-            {
-                string filename = Settings.ShortNamesFile + ".tracking.json";
-
-                List<ShortenerCount> tracking = new List<ShortenerCount>();
-
-                if (File.Exists(filename))
-                {
-                    byte[] bytes = await FileHelpers.ReadAllBytesAsync(filename);
-
-                    ShortenerCount[] items = JsonSerializer.Deserialize<ShortenerCount[]>(Encoding.UTF8.GetString(bytes));
-
-                    tracking.AddRange(items);
-                }
-
-                const int maxImpressionsPerMonth = 100;
-
-                DateTime now = DateTime.UtcNow;
-
-                ShortenerCount counter = tracking.FirstOrDefault(predicate: item => item.Year == now.Year && item.Month == now.Month);
-
-                if (counter == null)
-                {
-                    counter = new ShortenerCount();
-
-                    long totalImpressionsEver = 0L;
-
-                    foreach (ShortenerCount month in tracking)
-                    {
-                        totalImpressionsEver += month.Impressions;
-                    }
-
-                    counter.Year = now.Year;
-                    counter.Month = now.Month;
-                    counter.Impressions = 1;
-                    counter.TotalImpressionsEver = totalImpressionsEver;
-
-                    tracking.Add(counter);
-
-                    await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), commit: false);
-                }
-                else
-                {
-                    if (counter.Impressions < maxImpressionsPerMonth)
-                    {
-                        this._logging.LogInformation(message: "Bitly Impressions for {counter.Impressions}");
-                        this._logging.LogInformation(message: "Bitly Impressions total {counter.TotalImpressionsEver}");
-                        ++counter.Impressions;
-                        ++counter.TotalImpressionsEver;
-
-                        await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), commit: false);
-                    }
-                }
-
-                if (counter.Impressions < maxImpressionsPerMonth)
-                {
-                    Uri shortened = await BitlyUrlShortner.ShortenAsync(new Uri(url));
-
-                    return shortened.ToString();
-                }
-
-                return url;
-            }
-            finally
-            {
-                Sempahore.Release();
             }
         }
     }

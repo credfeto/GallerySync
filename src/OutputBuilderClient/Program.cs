@@ -83,23 +83,25 @@ namespace OutputBuilderClient
                                                         jpegOutputQuality: config.GetValue(outputJpegQuality, defaultValue: 100),
                                                         watermarkImage: config.GetValue<string>(watermark));
 
-            Console.WriteLine($"Source: {Settings.RootFolder}");
-            Console.WriteLine($"Output: {Settings.DatabaseOutputFolder}");
-            Console.WriteLine($"Images: {imageSettings.RootFolder}");
-            Console.WriteLine($"Thumb:  {imageSettings.ThumbnailSize}");
+            logging.LogInformation($"Source: {Settings.RootFolder}");
+            logging.LogInformation($"Output: {Settings.DatabaseOutputFolder}");
+            logging.LogInformation($"Images: {imageSettings.RootFolder}");
+            logging.LogInformation($"Thumb:  {imageSettings.ThumbnailSize}");
 
             foreach (int resize in imageSettings.ImageMaximumDimensions)
             {
-                Console.WriteLine($"Resize: {resize}");
+                logging.LogInformation($"Resize: {resize}");
             }
 
             try
             {
-                ShortUrls.Load();
+                IShortUrls shortUrls = serviceProvider.GetService<IShortUrls>();
+
+                await shortUrls.LoadAsync();
 
                 IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
 
-                Console.WriteLine($"Supported Extensions: {string.Join(separator: ", ", imageLoader.SupportedExtensions)}");
+                logging.LogInformation($"Supported Extensions: {string.Join(separator: ", ", imageLoader.SupportedExtensions)}");
 
                 IGalleryBuilder galleryBuilder = serviceProvider.GetService<IGalleryBuilder>();
 
@@ -150,6 +152,7 @@ namespace OutputBuilderClient
             ImageLoaderRawSetup.Configure(serviceCollection);
             ImageLoaderPhotoshopSetup.Configure(serviceCollection);
 
+            serviceCollection.AddSingleton<IShortUrls, ShortUrls>();
             serviceCollection.AddSingleton<IImageFilenameGeneration, ImageFilenameGeneration>();
             serviceCollection.AddSingleton<IImageExtraction, ImageExtraction>();
             serviceCollection.AddSingleton<IRebuildDetection, RebuildDetection>();

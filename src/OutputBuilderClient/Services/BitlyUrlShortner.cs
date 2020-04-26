@@ -7,7 +7,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace OutputBuilderClient
+namespace OutputBuilderClient.Services
 {
     /// <summary>
     ///     Bit.ly's URL Shortener.
@@ -16,7 +16,7 @@ namespace OutputBuilderClient
     ///     Get free key from https://bitly.com/a/your_api_key for up to 1000000 shortenings per day.
     /// </remarks>
     [SuppressMessage(category: "Microsoft.Naming", checkId: "CA1704:IdentifiersShouldBeSpelledCorrectly", Justification = "Bitly is name of site.")]
-    public static class BitlyUrlShortner
+    public sealed class BitlyUrlShortner : IUrlShortner
     {
         /// <summary>
         ///     Shortens the given URL.
@@ -26,7 +26,7 @@ namespace OutputBuilderClient
         ///     The shortened version of the URL.
         /// </returns>
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Many possible exceptions")]
-        public static async Task<Uri> ShortenAsync(Uri url)
+        public async Task<Uri> ShortenAsync(Uri url)
         {
             Contract.Requires(url != null);
             Contract.Ensures(Contract.Result<Uri>() != null);
@@ -42,6 +42,7 @@ namespace OutputBuilderClient
 
             try
             {
+                // TODO: Use IHttpClientFactory
                 using (HttpClient client = new HttpClient {BaseAddress = new Uri(shortnerUrl.GetLeftPart(UriPartial.Authority)), Timeout = TimeSpan.FromSeconds(value: 200)})
                 {
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(mediaType: "application/json"));
