@@ -7,8 +7,6 @@
         <WarningsAsErrors />
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
         <Features>strict;flow-analysis</Features>
-        <PackAsTool>true</PackAsTool>
-        <IsPackable>true</IsPackable>
         <Nullable>disable</Nullable>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>Credfeto.Gallery.SiteIndexBuilder</ToolCommandName>
