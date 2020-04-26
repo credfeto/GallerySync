@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
-using Images;
 using Microsoft.Extensions.Logging;
 using ObjectModel;
 using OutputBuilderClient.Interfaces;
@@ -12,11 +11,13 @@ namespace OutputBuilderClient.Services
     public sealed class ShortUrls : IShortUrls
     {
         private readonly ILogger<ShortUrls> _logging;
+        private readonly ISettings _settings;
 
         private readonly ConcurrentDictionary<string, string> _shorternedUrls;
 
-        public ShortUrls(ILogger<ShortUrls> logging)
+        public ShortUrls(ISettings settings, ILogger<ShortUrls> logging)
         {
+            this._settings = settings;
             this._logging = logging;
 
             this._shorternedUrls = new ConcurrentDictionary<string, string>();
@@ -36,7 +37,7 @@ namespace OutputBuilderClient.Services
 
         public async Task LoadAsync()
         {
-            string logPath = Settings.ShortNamesFile;
+            string logPath = this._settings.ShortNamesFile;
 
             if (!File.Exists(logPath))
             {
@@ -70,18 +71,6 @@ namespace OutputBuilderClient.Services
             this._logging.LogInformation($"Total Known Short Urls: {this.Count}");
         }
 
-        public void LogShortUrl(string url, string shortUrl, ISettings imageSettings)
-        {
-            if (!this.TryAdd(url, shortUrl))
-            {
-                return;
-            }
-
-            string[] text = {string.Format(format: "{0}\t{1}", url, shortUrl)};
-
-            File.AppendAllLines(imageSettings.ShortUrlsPath, text);
-        }
-
         public bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
         {
             // ONly want to generate a short URL, IF the photo has already been uploaded AND is public
@@ -92,6 +81,18 @@ namespace OutputBuilderClient.Services
 
             return string.IsNullOrWhiteSpace(shortUrl) || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url) ||
                    StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
+        }
+
+        public async Task LogShortUrlAsync(string url, string shortUrl)
+        {
+            if (!this.TryAdd(url, shortUrl))
+            {
+                return;
+            }
+
+            string[] text = {string.Format(format: "{0}\t{1}", url, shortUrl)};
+
+            await File.AppendAllLinesAsync(this._settings.ShortNamesFile, text);
         }
     }
 }

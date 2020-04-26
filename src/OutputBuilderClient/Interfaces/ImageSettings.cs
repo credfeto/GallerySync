@@ -5,7 +5,7 @@ using Images;
 
 namespace OutputBuilderClient.Interfaces
 {
-    internal class ImageSettings : ISettings
+    internal class ImageSettings : IImageSettings
     {
         public ImageSettings(string defaultShortUrl,
                              int thumbnailSize,

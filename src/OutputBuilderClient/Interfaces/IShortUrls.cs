@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using Images;
 using ObjectModel;
 
 namespace OutputBuilderClient.Interfaces
@@ -14,7 +13,7 @@ namespace OutputBuilderClient.Interfaces
 
         Task LoadAsync();
 
-        void LogShortUrl(string url, string shortUrl, ISettings imageSettings);
+        Task LogShortUrlAsync(string url, string shortUrl);
 
         bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url);
     }

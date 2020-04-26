@@ -57,12 +57,12 @@ namespace Images.Services
                                                                      DateTime creationDate,
                                                                      string url,
                                                                      string shortUrl,
-                                                                     ISettings settings)
+                                                                     IImageSettings imageSettings)
         {
             string rawExtension = sourcePhoto.ImageExtension.TrimStart(trimChar: '.')
                                              .ToUpperInvariant();
 
-            string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
+            string filename = Path.Combine(imageSettings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
 
             if (!this._imageLoader.CanLoad(filename))
             {
@@ -73,7 +73,7 @@ namespace Images.Services
 
             List<ImageSize> sizes = new List<ImageSize>();
 
-            IReadOnlyList<int> imageSizes = StandardImageSizesWithThumbnailSize(settings);
+            IReadOnlyList<int> imageSizes = StandardImageSizesWithThumbnailSize(imageSettings);
 
             this._logging.LogInformation($"Loading image: {filename}");
 
@@ -97,14 +97,14 @@ namespace Images.Services
 
                     using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
                     {
-                        string resizedFileName = Path.Combine(settings.ImagesOutputPath,
+                        string resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
                                                               HashNaming.PathifyHash(sourcePhoto.PathHash),
                                                               this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized));
 
-                        ApplyWatermark(resized, shortUrl, settings);
+                        ApplyWatermark(resized, shortUrl, imageSettings);
 
-                        long quality = settings.JpegOutputQuality;
-                        byte[] resizedBytes = this.SaveImageAsJpegBytes(resized, quality, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
+                        long quality = imageSettings.JpegOutputQuality;
+                        byte[] resizedBytes = this.SaveImageAsJpegBytes(resized, quality, url, shortUrl, sourcePhoto.Metadata, creationDate, imageSettings);
 
                         if (!ImageHelpers.IsValidJpegImage(resizedBytes, "In memory image to be saved as: " + resizedFileName))
                         {
@@ -124,12 +124,12 @@ namespace Images.Services
 
                         filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" + this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized));
 
-                        if (resized.Width == settings.ThumbnailSize)
+                        if (resized.Width == imageSettings.ThumbnailSize)
                         {
-                            resizedFileName = Path.Combine(settings.ImagesOutputPath,
+                            resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
                                                            HashNaming.PathifyHash(sourcePhoto.PathHash),
                                                            this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
-                            resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.Metadata, creationDate, settings);
+                            resizedBytes = SaveImageAsPng(resized, url, shortUrl, sourcePhoto.Metadata, creationDate, imageSettings);
                             await this.WriteImageAsync(resizedFileName, resizedBytes, creationDate);
 
                             filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
@@ -167,13 +167,13 @@ namespace Images.Services
                                            string shortUrl,
                                            List<PhotoMetadata> metadata,
                                            DateTime creationDate,
-                                           ISettings settings)
+                                           IImageSettings imageSettings)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, shortUrl, metadata, creationDate, settings);
+            SetMetadataProperties(image, url, shortUrl, metadata, creationDate, imageSettings);
 
             try
             {
@@ -216,13 +216,13 @@ namespace Images.Services
         ///     The image to add the watermark to.
         /// </param>
         /// <param name="url"></param>
-        private static void ApplyWatermark(Image<Rgba32> imageToAddWatermarkTo, string url, ISettings settings)
+        private static void ApplyWatermark(Image<Rgba32> imageToAddWatermarkTo, string url, IImageSettings imageSettings)
         {
             Contract.Requires(imageToAddWatermarkTo != null);
 
             const int spacer = 5;
 
-            string watermarkFilename = settings.WatermarkImage;
+            string watermarkFilename = imageSettings.WatermarkImage;
 
             if (string.IsNullOrEmpty(watermarkFilename))
             {
@@ -325,7 +325,7 @@ namespace Images.Services
             }
         }
 
-        private static string ExtractDescription(List<PhotoMetadata> metadata, string url, string shortUrl, DateTime creationDate, ISettings settings)
+        private static string ExtractDescription(List<PhotoMetadata> metadata, string url, string shortUrl, DateTime creationDate, IImageSettings imageSettings)
         {
             string description = string.Empty;
             PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
@@ -342,7 +342,7 @@ namespace Images.Services
 
             description += "Source : ";
 
-            if (StringComparer.InvariantCultureIgnoreCase.Equals(settings.DefaultShortUrl, shortUrl))
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(imageSettings.DefaultShortUrl, shortUrl))
             {
                 description += url;
             }
@@ -553,12 +553,12 @@ namespace Images.Services
             }
         }
 
-        private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
+        private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, IImageSettings imageSettings)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, shortUrl, metadata, creationDate, settings);
+            SetMetadataProperties(image, url, shortUrl, metadata, creationDate, imageSettings);
 
             using (MemoryStream ms = new MemoryStream())
             {
@@ -607,7 +607,12 @@ namespace Images.Services
         /// <param name="shortUrl"></param>
         /// <param name="metadata"></param>
         /// <param name="creationDate"></param>
-        private static void SetMetadataProperties(Image<Rgba32> image, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, ISettings settings)
+        private static void SetMetadataProperties(Image<Rgba32> image,
+                                                  string url,
+                                                  string shortUrl,
+                                                  List<PhotoMetadata> metadata,
+                                                  DateTime creationDate,
+                                                  IImageSettings imageSettings)
         {
             Contract.Requires(image != null);
 
@@ -617,17 +622,17 @@ namespace Images.Services
             const string program = "https://www.markridgwell.co.uk/";
 
             //string title = ExtractTitle(filePath, metadata);
-            string description = ExtractDescription(metadata, url, shortUrl, creationDate, settings);
+            string description = ExtractDescription(metadata, url, shortUrl, creationDate, imageSettings);
 
             SetExifMetadata(image, creationDate, description, copyright, licensing, credit, program);
         }
 
-        private static IReadOnlyList<int> StandardImageSizesWithThumbnailSize(ISettings settings)
+        private static IReadOnlyList<int> StandardImageSizesWithThumbnailSize(IImageSettings imageSettings)
         {
-            return settings.ImageMaximumDimensions.Concat(new[] {settings.ThumbnailSize})
-                           .Distinct()
-                           .OrderByDescending(keySelector: x => x)
-                           .ToArray();
+            return imageSettings.ImageMaximumDimensions.Concat(new[] {imageSettings.ThumbnailSize})
+                                .Distinct()
+                                .OrderByDescending(keySelector: x => x)
+                                .ToArray();
         }
     }
 }

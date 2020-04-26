@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Extensions.Logging;
 using OutputBuilderClient.Interfaces;
 
 namespace OutputBuilderClient.Services
@@ -19,6 +20,16 @@ namespace OutputBuilderClient.Services
     [SuppressMessage(category: "Microsoft.Naming", checkId: "CA1704:IdentifiersShouldBeSpelledCorrectly", Justification = "Bitly is name of site.")]
     public sealed class BitlyUrlShortner : IUrlShortner
     {
+        private readonly ILogger<BitlyUrlShortner> _logging;
+        private readonly ISettings _settings;
+
+        public BitlyUrlShortner(ISettings settings, ILogger<BitlyUrlShortner> logging)
+        {
+            // todo: IOptions<BitlyUrlShortnerOPtions>
+            this._settings = settings;
+            this._logging = logging;
+        }
+
         /// <summary>
         ///     Shortens the given URL.
         /// </summary>
@@ -35,8 +46,8 @@ namespace OutputBuilderClient.Services
             string encodedUrl = HttpUtility.UrlEncode(url.ToString());
             string urlRequest = string.Format(CultureInfo.InvariantCulture,
                                               format: "https://api-ssl.bit.ly/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}",
-                                              Settings.BitlyApiKey,
-                                              Settings.BitlyApiUser,
+                                              this._settings.BitlyApiKey,
+                                              this._settings.BitlyApiUser,
                                               encodedUrl);
 
             Uri shortnerUrl = new Uri(urlRequest);

@@ -6,6 +6,7 @@ using System.Linq;
 using ExifLib;
 using FileNaming;
 using ObjectModel;
+using OutputBuilderClient.Interfaces;
 using OutputBuilderClient.Metadata;
 using TagLib;
 using TagLib.Image;
@@ -41,9 +42,9 @@ namespace OutputBuilderClient
             }
         }
 
-        public static List<PhotoMetadata> ExtractMetadata(Photo sourcePhoto)
+        public static List<PhotoMetadata> ExtractMetadata(Photo sourcePhoto, ISettings settings)
         {
-            string rootFolder = Settings.RootFolder;
+            string rootFolder = settings.RootFolder;
 
             List<PhotoMetadata> metadata = new List<PhotoMetadata>();
 

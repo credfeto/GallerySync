@@ -5,6 +5,6 @@ namespace OutputBuilderClient.Interfaces
 {
     public interface IGalleryBuilder
     {
-        public Task ProcessGalleryAsync(ISettings imageSettings);
+        public Task ProcessGalleryAsync(IImageSettings imageImageSettings);
     }
 }

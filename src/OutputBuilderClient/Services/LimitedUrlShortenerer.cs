@@ -16,13 +16,15 @@ namespace OutputBuilderClient.Services
     {
         private static readonly SemaphoreSlim Sempahore = new SemaphoreSlim(initialCount: 1);
         private readonly ILogger<LimitedUrlShortenerer> _logging;
+        private readonly ISettings _settings;
         private readonly IShortUrls _shortUrls;
         private readonly IUrlShortner _urlShortener;
 
-        public LimitedUrlShortenerer(IUrlShortner urlShortener, IShortUrls shortUrls, ILogger<LimitedUrlShortenerer> logging)
+        public LimitedUrlShortenerer(IUrlShortner urlShortener, IShortUrls shortUrls, ISettings settings, ILogger<LimitedUrlShortenerer> logging)
         {
             this._urlShortener = urlShortener;
             this._shortUrls = shortUrls;
+            this._settings = settings;
             this._logging = logging;
         }
 
@@ -42,7 +44,7 @@ namespace OutputBuilderClient.Services
 
             try
             {
-                string filename = Settings.ShortNamesFile + ".tracking.json";
+                string filename = this._settings.ShortNamesFile + ".tracking.json";
 
                 List<ShortenerCount> tracking = new List<ShortenerCount>();
 

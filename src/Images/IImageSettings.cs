@@ -2,7 +2,7 @@
 
 namespace Images
 {
-    public interface ISettings
+    public interface IImageSettings
     {
         int ThumbnailSize { get; }
 

@@ -6,13 +6,14 @@ using System.Text;
 using FileNaming;
 using Microsoft.Extensions.Logging;
 using ObjectModel;
+using OutputBuilderClient.Interfaces;
 using Scanner;
 
 namespace OutputBuilderClient
 {
     internal static class StandaloneMetadata
     {
-        public static IReadOnlyList<PhotoMetadata> ReadMetadata(string filename, ILogger logging)
+        public static IReadOnlyList<PhotoMetadata> ReadMetadata(string filename, ISettings settings, ILogger logging)
         {
             string folder = Path.GetDirectoryName(filename);
             string file = Path.GetFileName(filename);
@@ -27,7 +28,7 @@ namespace OutputBuilderClient
 
             FileEntry entry = new FileEntry
                               {
-                                  Folder = folder, RelativeFolder = folder.Substring(Settings.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup
+                                  Folder = folder, RelativeFolder = folder.Substring(settings.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup
                               };
 
             string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
@@ -51,7 +52,7 @@ namespace OutputBuilderClient
                                                .ToList()
                           };
 
-            List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo);
+            List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo, settings);
 
             foreach (PhotoMetadata item in metadata)
             {

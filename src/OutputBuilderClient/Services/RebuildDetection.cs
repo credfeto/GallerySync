@@ -6,6 +6,7 @@ using FileNaming;
 using Images;
 using Microsoft.Extensions.Logging;
 using ObjectModel;
+using OutputBuilderClient.Interfaces;
 
 namespace OutputBuilderClient.Services
 {
@@ -13,17 +14,19 @@ namespace OutputBuilderClient.Services
     {
         private readonly IImageFilenameGeneration _imageFilenameGeneration;
         private readonly ILogger<RebuildDetection> _logging;
+        private readonly ISettings _settings;
 
-        public RebuildDetection(IImageFilenameGeneration imageFilenameGeneration, ILogger<RebuildDetection> logging)
+        public RebuildDetection(IImageFilenameGeneration imageFilenameGeneration, ISettings settings, ILogger<RebuildDetection> logging)
         {
             this._imageFilenameGeneration = imageFilenameGeneration;
+            this._settings = settings;
             this._logging = logging;
         }
 
-        public async Task<bool> NeedsFullResizedImageRebuildAsync(Photo sourcePhoto, Photo targetPhoto, ISettings imageSettings, ILogger logging)
+        public async Task<bool> NeedsFullResizedImageRebuildAsync(Photo sourcePhoto, Photo targetPhoto, IImageSettings imageImageSettings, ILogger logging)
         {
             return this.MetadataVersionRequiresRebuild(targetPhoto, this._logging) || await this.HaveFilesChangedAsync(sourcePhoto, targetPhoto, this._logging) ||
-                   this.HasMissingResizes(targetPhoto, imageSettings, this._logging);
+                   this.HasMissingResizes(targetPhoto, imageImageSettings, this._logging);
         }
 
         public bool MetadataVersionOutOfDate(Photo targetPhoto, ILogger logging)
@@ -68,7 +71,7 @@ namespace OutputBuilderClient.Services
 
                     if (string.IsNullOrWhiteSpace(found.Hash))
                     {
-                        string filename = Path.Combine(Settings.RootFolder, sourcePhoto.BasePath + componentFile.Extension);
+                        string filename = Path.Combine(this._settings.RootFolder, sourcePhoto.BasePath + componentFile.Extension);
 
                         found.Hash = await Hasher.HashFileAsync(filename);
                     }
@@ -104,7 +107,7 @@ namespace OutputBuilderClient.Services
             return false;
         }
 
-        private bool HasMissingResizes(Photo photoToProcess, ISettings imageSettings, ILogger logging)
+        private bool HasMissingResizes(Photo photoToProcess, IImageSettings imageImageSettings, ILogger logging)
         {
             if (photoToProcess.ImageSizes == null)
             {
@@ -115,7 +118,7 @@ namespace OutputBuilderClient.Services
 
             foreach (ImageSize resize in photoToProcess.ImageSizes)
             {
-                string resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
+                string resizedFileName = Path.Combine(imageImageSettings.ImagesOutputPath,
                                                       HashNaming.PathifyHash(photoToProcess.PathHash),
                                                       this._imageFilenameGeneration.IndividualResizeFileName(photoToProcess, resize));
 
@@ -126,9 +129,9 @@ namespace OutputBuilderClient.Services
                     return true;
                 }
 
-                if (resize.Width == imageSettings.ThumbnailSize)
+                if (resize.Width == imageImageSettings.ThumbnailSize)
                 {
-                    resizedFileName = Path.Combine(imageSettings.ImagesOutputPath,
+                    resizedFileName = Path.Combine(imageImageSettings.ImagesOutputPath,
                                                    HashNaming.PathifyHash(photoToProcess.PathHash),
                                                    this._imageFilenameGeneration.IndividualResizeFileName(photoToProcess, resize, extension: "png"));
 

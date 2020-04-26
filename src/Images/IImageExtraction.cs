@@ -9,7 +9,12 @@ namespace Images
 {
     public interface IImageExtraction
     {
-        Task<IReadOnlyList<ImageSize>> BuildImagesAsync(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl, ISettings settings);
+        Task<IReadOnlyList<ImageSize>> BuildImagesAsync(Photo sourcePhoto,
+                                                        List<string> filesCreated,
+                                                        DateTime creationDate,
+                                                        string url,
+                                                        string shortUrl,
+                                                        IImageSettings imageSettings);
 
         /// <summary>
         ///     Saves the image as a block of JPEG bytes in memory.
@@ -33,7 +38,7 @@ namespace Images
                                     string shortUrl,
                                     List<PhotoMetadata> metadata,
                                     DateTime creationDate,
-                                    ISettings settings);
+                                    IImageSettings imageSettings);
 
         /// <summary>
         ///     Writes the image.

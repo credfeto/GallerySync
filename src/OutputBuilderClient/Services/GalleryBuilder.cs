@@ -17,6 +17,7 @@ namespace OutputBuilderClient.Services
         private readonly ILimitedUrlShortener _limitedUrlShortener;
         private readonly ILogger<GalleryBuilder> _logging;
         private readonly IRebuildDetection _rebuildDetection;
+        private readonly ISettings _settings;
         private readonly IShortUrls _shortUrls;
 
         public GalleryBuilder(IImageExtraction imageExtraction,
@@ -24,6 +25,7 @@ namespace OutputBuilderClient.Services
                               IShortUrls shortUrls,
                               ILimitedUrlShortener limitedUrlShortener,
                               IBrokenImageTracker brokenImageTracker,
+                              ISettings settings,
                               ILogger<GalleryBuilder> logging)
         {
             this._imageExtraction = imageExtraction;
@@ -31,33 +33,34 @@ namespace OutputBuilderClient.Services
             this._shortUrls = shortUrls;
             this._limitedUrlShortener = limitedUrlShortener;
             this._brokenImageTracker = brokenImageTracker;
+            this._settings = settings;
             this._logging = logging;
         }
 
-        public async Task ProcessGalleryAsync(ISettings imageSettings)
+        public async Task ProcessGalleryAsync(IImageSettings imageImageSettings)
         {
-            Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepositoryAsync(Settings.RootFolder, this._logging);
-            Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepositoryAsync(Settings.DatabaseOutputFolder, this._logging);
+            Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepositoryAsync(this._settings.RootFolder, this._logging);
+            Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepositoryAsync(this._settings.DatabaseOutputFolder, this._logging);
 
             Photo[][] results = await Task.WhenAll(sourceTask, targetTask);
 
             Photo[] source = results[0];
             Photo[] target = results[1];
 
-            await this.ProcessAsync(source, target, imageSettings);
+            await this.ProcessAsync(source, target, imageImageSettings);
         }
 
-        private async Task<HashSet<string>> ProcessAsync(Photo[] source, Photo[] target, ISettings imageSettings)
+        private async Task<HashSet<string>> ProcessAsync(Photo[] source, Photo[] target, IImageSettings imageImageSettings)
         {
             ConcurrentDictionary<string, bool> items = new ConcurrentDictionary<string, bool>();
 
-            await Task.WhenAll(source.Select(selector: sourcePhoto => this.ProcessSinglePhotoAsync(target, sourcePhoto, items, imageSettings))
+            await Task.WhenAll(source.Select(selector: sourcePhoto => this.ProcessSinglePhotoAsync(target, sourcePhoto, items, imageImageSettings))
                                      .ToArray());
 
             return new HashSet<string>(items.Keys);
         }
 
-        private async Task ProcessSinglePhotoAsync(Photo[] target, Photo sourcePhoto, ConcurrentDictionary<string, bool> items, ISettings imageSettings)
+        private async Task ProcessSinglePhotoAsync(Photo[] target, Photo sourcePhoto, ConcurrentDictionary<string, bool> items, IImageSettings imageImageSettings)
         {
             ForceGarbageCollection();
 
@@ -65,7 +68,7 @@ namespace OutputBuilderClient.Services
             {
                 Photo targetPhoto = target.FirstOrDefault(predicate: item => item.PathHash == sourcePhoto.PathHash);
                 bool build = targetPhoto == null;
-                bool rebuild = targetPhoto != null && await this._rebuildDetection.NeedsFullResizedImageRebuildAsync(sourcePhoto, targetPhoto, imageSettings, this._logging);
+                bool rebuild = targetPhoto != null && await this._rebuildDetection.NeedsFullResizedImageRebuildAsync(sourcePhoto, targetPhoto, imageImageSettings, this._logging);
                 bool rebuildMetadata = targetPhoto != null && this._rebuildDetection.MetadataVersionOutOfDate(targetPhoto, this._logging);
 
                 string url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
@@ -81,7 +84,7 @@ namespace OutputBuilderClient.Services
 
                         if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
                         {
-                            this._shortUrls.LogShortUrl(url, shortUrl, imageSettings);
+                            await this._shortUrls.LogShortUrlAsync(url, shortUrl);
 
                             rebuild = true;
                             this._logging.LogInformation($" +++ Force rebuild: missing shortcut URL.  New short url: {shortUrl}");
@@ -107,7 +110,7 @@ namespace OutputBuilderClient.Services
 
                 if (build || rebuild || rebuildMetadata)
                 {
-                    await this.ProcessOneFileAsync(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl, imageSettings);
+                    await this.ProcessOneFileAsync(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl, imageImageSettings);
                 }
                 else
                 {
@@ -139,17 +142,23 @@ namespace OutputBuilderClient.Services
             GC.GetTotalMemory(forceFullCollection: true);
         }
 
-        private async Task ProcessOneFileAsync(Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl, ISettings imageSettings)
+        private async Task ProcessOneFileAsync(Photo sourcePhoto,
+                                               Photo targetPhoto,
+                                               bool rebuild,
+                                               bool rebuildMetadata,
+                                               string url,
+                                               string shortUrl,
+                                               IImageSettings imageImageSettings)
         {
             this._logging.LogInformation(rebuild ? $"Rebuild: {sourcePhoto.UrlSafePath}" : $"Build: {sourcePhoto.UrlSafePath}");
 
-            await targetPhoto.UpdateFileHashesAsync(sourcePhoto);
+            await targetPhoto.UpdateFileHashesAsync(sourcePhoto, this._settings);
 
             bool buildMetadata = targetPhoto == null || rebuild || rebuildMetadata || targetPhoto.Metadata == null;
 
             if (buildMetadata)
             {
-                sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto);
+                sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto, this._settings);
             }
             else
             {
@@ -167,7 +176,7 @@ namespace OutputBuilderClient.Services
 
                 try
                 {
-                    IReadOnlyList<ImageSize> sizes = await this._imageExtraction.BuildImagesAsync(sourcePhoto, filesCreated, creationDate, url, shortUrl, imageSettings);
+                    IReadOnlyList<ImageSize> sizes = await this._imageExtraction.BuildImagesAsync(sourcePhoto, filesCreated, creationDate, url, shortUrl, imageImageSettings);
 
                     sourcePhoto.ImageSizes = sizes.ToList();
                 }
@@ -196,11 +205,11 @@ namespace OutputBuilderClient.Services
                     //?
                 }
 
-                await PhotoMetadataRepository.StoreAsync(targetPhoto);
+                await PhotoMetadataRepository.StoreAsync(targetPhoto, this._settings);
             }
             else
             {
-                await PhotoMetadataRepository.StoreAsync(sourcePhoto);
+                await PhotoMetadataRepository.StoreAsync(sourcePhoto, this._settings);
             }
         }
     }

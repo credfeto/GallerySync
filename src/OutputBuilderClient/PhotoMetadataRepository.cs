@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ObjectModel;
+using OutputBuilderClient.Interfaces;
 using OutputBuilderClient.Services.Emitters;
 using Scanner;
 using StorageHelpers;
@@ -50,13 +51,13 @@ namespace OutputBuilderClient
             return emitter.Photos;
         }
 
-        public static Task StoreAsync(Photo photo)
+        public static Task StoreAsync(Photo photo, ISettings settings)
         {
             string safeUrl = photo.UrlSafePath.Replace(oldChar: '/', Path.DirectorySeparatorChar);
             safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
             safeUrl += ".info";
 
-            string outputPath = Path.Combine(Settings.DatabaseOutputFolder, safeUrl);
+            string outputPath = Path.Combine(settings.DatabaseOutputFolder, safeUrl);
 
             string txt = JsonSerializer.Serialize(photo);
 

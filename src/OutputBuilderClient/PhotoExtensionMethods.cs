@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FileNaming;
 using ObjectModel;
+using OutputBuilderClient.Interfaces;
 
 namespace OutputBuilderClient
 {
@@ -21,7 +22,7 @@ namespace OutputBuilderClient
             targetPhoto.ShortUrl = sourcePhoto.ShortUrl;
         }
 
-        public static Task UpdateFileHashesAsync(this Photo targetPhoto, Photo sourcePhoto)
+        public static Task UpdateFileHashesAsync(this Photo targetPhoto, Photo sourcePhoto, ISettings settings)
         {
             if (targetPhoto != null)
             {
@@ -37,12 +38,12 @@ namespace OutputBuilderClient
             }
 
             return Task.WhenAll(sourcePhoto.Files.Where(predicate: s => string.IsNullOrWhiteSpace(s.Hash))
-                                           .Select(sourcePhoto.SetFileHashAsync));
+                                           .Select(selector: x => sourcePhoto.SetFileHashAsync(x, settings)));
         }
 
-        private static async Task SetFileHashAsync(this Photo sourcePhoto, ComponentFile file)
+        private static async Task SetFileHashAsync(this Photo sourcePhoto, ComponentFile file, ISettings settings)
         {
-            string filename = Path.Combine(Settings.RootFolder, sourcePhoto.BasePath + file.Extension);
+            string filename = Path.Combine(settings.RootFolder, sourcePhoto.BasePath + file.Extension);
 
             file.Hash = await Hasher.HashFileAsync(filename);
         }
