@@ -4,7 +4,7 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
-        <WarningsAsErrors />
+        <WarningsAsErrors/>
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
         <Features>strict;flow-analysis</Features>
         <PackAsTool>true</PackAsTool>
@@ -17,6 +17,7 @@
         <Company>Mark Ridgwell</Company>
         <Copyright>Mark Ridgwell</Copyright>
         <Product>Photo Gallery</Product>
+        <PackageLicenseUrl>https://raw.githubusercontent.com/credfeto/GallerySync/master/LICENSE</PackageLicenseUrl>
         <NeutralLanguage>en-GB</NeutralLanguage>
     </PropertyGroup>
     <PropertyGroup>
@@ -27,15 +28,15 @@
         <CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Credfeto.Gallery.Image\Credfeto.Gallery.Image.csproj" />
-        <ProjectReference Include="..\Credfeto.Gallery.Storage\Credfeto.Gallery.Storage.csproj" />
+        <ProjectReference Include="..\Credfeto.Gallery.Image\Credfeto.Gallery.Image.csproj"/>
+        <ProjectReference Include="..\Credfeto.Gallery.Storage\Credfeto.Gallery.Storage.csproj"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AsyncFixer" Version="1.1.6" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.6.13" PrivateAssets="All" />
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.6.0.16497" PrivateAssets="All" />
-        <PackageReference Include="Roslynator.Analyzers" Version="2.3.0" PrivateAssets="All" />
-        <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All" />
+        <PackageReference Include="AsyncFixer" Version="1.1.6" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.6.13" PrivateAssets="All"/>
+        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.6.0.16497" PrivateAssets="All"/>
+        <PackageReference Include="Roslynator.Analyzers" Version="2.3.0" PrivateAssets="All"/>
+        <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All"/>
     </ItemGroup>
 </Project>
