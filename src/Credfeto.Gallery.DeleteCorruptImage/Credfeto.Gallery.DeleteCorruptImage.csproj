@@ -17,7 +17,7 @@
         <Company>Mark Ridgwell</Company>
         <Copyright>Mark Ridgwell</Copyright>
         <Product>Photo Gallery</Product>
-        <PackageLicenseUrl>https://raw.githubusercontent.com/credfeto/GallerySync/master/LICENSE</PackageLicenseUrl>
+        <PackageLicense>https://raw.githubusercontent.com/credfeto/GallerySync/master/LICENSE</PackageLicense>
         <NeutralLanguage>en-GB</NeutralLanguage>
     </PropertyGroup>
     <PropertyGroup>
