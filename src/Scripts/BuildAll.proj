@@ -28,11 +28,11 @@
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*"  WorkingDirectory="$(MSBuildProjectDirectory)\..\HomeClient\bin\Release"/>
 
     <!-- Add the Output processor -->
-    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\OutputBuilderClient\bin\Release" />
+    <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\Credfeto.Gallery.OutputBuilder\bin\Release"/>
 
     <!-- Add the site index builder -->
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\BuildSiteIndex\bin\Release" />
-    
+
     <!-- Add the Uploader processor -->
     <Exec Command="$(ZipExecutable) -9r -D -b . $(OutputZip) . -x *.vshost.exe*" WorkingDirectory="$(MSBuildProjectDirectory)\..\UploadToAmazon\bin\Release" />
 

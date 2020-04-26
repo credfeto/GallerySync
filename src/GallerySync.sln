@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanner", "Scanner\Scanner.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectModel", "ObjectModel\ObjectModel.csproj", "{7A5F8CCB-3D18-4FB0-AEE7-3037B8000EBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutputBuilderClient", "OutputBuilderClient\OutputBuilderClient.csproj", "{BED35732-4FE3-46B5-888D-0C19EFD2030F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.OutputBuilder", "Credfeto.Gallery.OutputBuilder\Credfeto.Gallery.OutputBuilder.csproj", "{BED35732-4FE3-46B5-888D-0C19EFD2030F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileNaming", "FileNaming\FileNaming.csproj", "{15F89A2F-BB27-4BE5-AC83-6353A7295D36}"
 EndProject

@@ -17,7 +17,7 @@ namespace OutputBuilderClient
     {
         private static async Task<int> Main(string[] args)
         {
-            Console.WriteLine(value: "OutputBuilderClient");
+            Console.WriteLine(value: "Credfeto.Gallery.OutputBuilder");
 
             AlterPriority();
 
@@ -29,7 +29,7 @@ namespace OutputBuilderClient
 
             loggerFactory.AddSerilog();
 
-            ILogger logging = loggerFactory.CreateLogger(categoryName: "OutputBuilderClient");
+            ILogger logging = loggerFactory.CreateLogger(categoryName: "Credfeto.Gallery.OutputBuilder");
 
             ISettings settings = serviceProvider.GetService<ISettings>();
             IImageSettings imageSettings = serviceProvider.GetService<IImageSettings>();

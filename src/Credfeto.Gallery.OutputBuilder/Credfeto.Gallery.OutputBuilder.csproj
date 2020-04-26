@@ -10,6 +10,7 @@
         <PackAsTool>false</PackAsTool>
         <IsPackable>true</IsPackable>
         <Nullable>disable</Nullable>
+        <RootNamespace>OutputBuilderClient</RootNamespace>
     </PropertyGroup>
     <PropertyGroup>
         <Company>Mark Ridgwell</Company>
