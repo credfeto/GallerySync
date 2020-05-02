@@ -15,7 +15,7 @@ namespace Credfeto.Gallery.OutputBuilder
                 if (!double.IsInfinity(dd) && dd > 0)
                 {
                     //sprintf_s(sz, len, "f/%.01f", dd);
-                    sz = string.Format(format: "f/{0:0.0#}", dd);
+                    sz = string.Format(format: "f/{0:0.0#}", arg0: dd);
                 }
             }
             else
@@ -46,7 +46,7 @@ namespace Credfeto.Gallery.OutputBuilder
                         else
                         {
                             // sprintf_s(sz, len, "1/%ds", ExpRound(1.0 / d));
-                            sz = string.Format(format: "1/{0}s", n);
+                            sz = string.Format(format: "1/{0}s", arg0: n);
                         }
                     }
                     else
@@ -76,7 +76,7 @@ namespace Credfeto.Gallery.OutputBuilder
         public static string FormatFNumber(double d)
         {
             // sprintf_s(sz, len, "f/%.01f", d)
-            return string.Format(format: "f/{0:0.#}", d);
+            return string.Format(format: "f/{0:0.#}", arg0: d);
         }
 
         public static string FormatFocalLength(double d, int filmEquivalent = 0)
@@ -88,12 +88,12 @@ namespace Credfeto.Gallery.OutputBuilder
                 if (filmEquivalent != 0)
                 {
                     // sprintf_s(sz, len, "%.1fmm (%dmm film eq)", d, filmEquivalent);
-                    sz = string.Format(format: "{0:0.#}mm ({1}mm film eq)", d, filmEquivalent);
+                    sz = string.Format(format: "{0:0.#}mm ({1}mm film eq)", arg0: d, arg1: filmEquivalent);
                 }
                 else
                 {
                     //sprintf_s(sz, len, d < 1 ? "%.1fmm" : "%.0fmm", d);
-                    sz = string.Format(d < 1 ? "{0:0.#}mm" : "{0:0}mm", d);
+                    sz = string.Format(d < 1 ? "{0:0.#}mm" : "{0:0}mm", arg0: d);
                 }
             }
             else
@@ -110,17 +110,17 @@ namespace Credfeto.Gallery.OutputBuilder
 
             if (n >= 950)
             {
-                return Round(n, y: 1000);
+                return Round(x: n, y: 1000);
             }
 
             if (n >= 95)
             {
-                return Round(n, y: 100);
+                return Round(x: n, y: 100);
             }
 
             if (n >= 5)
             {
-                return Round(n, y: 10);
+                return Round(x: n, y: 10);
             }
 
             return n;

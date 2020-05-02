@@ -11,12 +11,12 @@ namespace Credfeto.Gallery.UploadData
 
         public bool Equals(Location other)
         {
-            if (ReferenceEquals(objA: null, other))
+            if (ReferenceEquals(objA: null, objB: other))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, other))
+            if (ReferenceEquals(this, objB: other))
             {
                 return true;
             }
@@ -33,12 +33,12 @@ namespace Credfeto.Gallery.UploadData
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(objA: null, obj))
+            if (ReferenceEquals(objA: null, objB: obj))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, objB: obj))
             {
                 return true;
             }
@@ -60,12 +60,12 @@ namespace Credfeto.Gallery.UploadData
 
         public static bool operator ==(Location left, Location right)
         {
-            return Equals(left, right);
+            return Equals(objA: left, objB: right);
         }
 
         public static bool operator !=(Location left, Location right)
         {
-            return !Equals(left, right);
+            return !Equals(objA: left, objB: right);
         }
     }
 }

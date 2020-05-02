@@ -16,7 +16,7 @@ namespace Credfeto.Gallery.Storage
 
             EnsureFolderExists(fileName);
 
-            return WriteWithRetriesAsync(fileName, bytes, maxRetries, commit);
+            return WriteWithRetriesAsync(fileName: fileName, data: bytes, maxRetries: maxRetries, commit: commit);
         }
 
         private static void EnsureFolderExists(string fileName)
@@ -77,9 +77,9 @@ namespace Credfeto.Gallery.Storage
             if (bytes.Length != written.Length)
             {
                 throw new FileContentException(string.Format(format: "File {0} does not contain the bytes that were written (size different Src:{1} != Dest:{2})",
-                                                             path,
-                                                             bytes.Length,
-                                                             written.Length));
+                                                             arg0: path,
+                                                             arg1: bytes.Length,
+                                                             arg2: written.Length));
             }
 
             for (int pos = 0; pos < bytes.Length; ++pos)
@@ -101,15 +101,15 @@ namespace Credfeto.Gallery.Storage
             {
                 byte[] existingBytes = await ReadAllBytesAsync(path);
 
-                if (AreSame(existingBytes, bytes))
+                if (AreSame(existingBytes: existingBytes, bytesToWrite: bytes))
                 {
                     return false;
                 }
             }
 
-            await WriteNoVerifyAsync(path, bytes);
+            await WriteNoVerifyAsync(path: path, bytes: bytes);
 
-            await VerifyContentAsync(path, bytes);
+            await VerifyContentAsync(path: path, bytes: bytes);
 
             return true;
         }
@@ -134,7 +134,7 @@ namespace Credfeto.Gallery.Storage
 
         private static Task WriteNoVerifyAsync(string path, byte[] bytes)
         {
-            return File.WriteAllBytesAsync(path, bytes);
+            return File.WriteAllBytesAsync(path: path, bytes: bytes);
         }
 
         private static async Task WriteWithRetriesAsync(string fileName, byte[] data, int maxRetries, bool commit)
@@ -151,15 +151,15 @@ namespace Credfeto.Gallery.Storage
 
                     try
                     {
-                        changed = await WriteContentAsync(fileName, data);
+                        changed = await WriteContentAsync(path: fileName, bytes: data);
 
                         return;
                     }
                     catch (Exception exception)
                     {
-                        Console.WriteLine(format: "Error: {0}", exception.Message);
-                        Console.WriteLine(format: "File: {0}", fileName);
-                        Console.WriteLine(format: "Attempt: {0} of {1}", retries + 1, maxRetries);
+                        Console.WriteLine(format: "Error: {0}", arg0: exception.Message);
+                        Console.WriteLine(format: "File: {0}", arg0: fileName);
+                        Console.WriteLine(format: "Attempt: {0} of {1}", retries + 1, arg1: maxRetries);
                         Console.WriteLine(value: "Stack:");
                         Console.WriteLine(exception.StackTrace);
                     }
@@ -192,22 +192,22 @@ namespace Credfeto.Gallery.Storage
 
                 using (Repository repo = OpenRepository(workDir))
                 {
-                    string localFile = GetLocalRepoFile(repo, fileName);
+                    string localFile = GetLocalRepoFile(repo: repo, fileName: fileName);
 
                     foreach (string alwaysAddFile in alwaysAddFiles)
                     {
-                        if (File.Exists(Path.Combine(repo.Info.WorkingDirectory, alwaysAddFile)))
+                        if (File.Exists(Path.Combine(path1: repo.Info.WorkingDirectory, path2: alwaysAddFile)))
                         {
-                            Commands.Stage(repo, alwaysAddFile);
+                            Commands.Stage(repository: repo, path: alwaysAddFile);
                         }
                     }
 
-                    Commands.Stage(repo, localFile);
+                    Commands.Stage(repository: repo, path: localFile);
 
-                    Signature author = new Signature(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", DateTime.UtcNow);
+                    Signature author = new Signature(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", when: DateTime.UtcNow);
                     Signature committer = author;
 
-                    repo.Commit($"Updated {localFile}", author, committer);
+                    repo.Commit($"Updated {localFile}", author: author, committer: committer);
                 }
             }
             catch (Exception exception)

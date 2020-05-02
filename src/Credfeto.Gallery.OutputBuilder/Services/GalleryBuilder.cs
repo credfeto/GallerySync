@@ -39,23 +39,24 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
         public async Task ProcessGalleryAsync(IImageSettings imageImageSettings)
         {
-            Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepositoryAsync(this._settings.RootFolder, this._logging);
-            Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepositoryAsync(this._settings.DatabaseOutputFolder, this._logging);
+            Task<Photo[]> sourceTask = PhotoMetadataRepository.LoadEmptyRepositoryAsync(baseFolder: this._settings.RootFolder, logging: this._logging);
+            Task<Photo[]> targetTask = PhotoMetadataRepository.LoadRepositoryAsync(baseFolder: this._settings.DatabaseOutputFolder, logging: this._logging);
 
             Photo[][] results = await Task.WhenAll(sourceTask, targetTask);
 
             Photo[] source = results[0];
             Photo[] target = results[1];
 
-            await this.ProcessAsync(source, target, imageImageSettings);
+            await this.ProcessAsync(source: source, target: target, imageImageSettings: imageImageSettings);
         }
 
         private async Task<HashSet<string>> ProcessAsync(Photo[] source, Photo[] target, IImageSettings imageImageSettings)
         {
             ConcurrentDictionary<string, bool> items = new ConcurrentDictionary<string, bool>();
 
-            await Task.WhenAll(source.Select(selector: sourcePhoto => this.ProcessSinglePhotoAsync(target, sourcePhoto, items, imageImageSettings))
-                                     .ToArray());
+            await Task.WhenAll(
+                source.Select(selector: sourcePhoto => this.ProcessSinglePhotoAsync(target: target, sourcePhoto: sourcePhoto, items: items, imageImageSettings: imageImageSettings))
+                      .ToArray());
 
             return new HashSet<string>(items.Keys);
         }
@@ -68,8 +69,12 @@ namespace Credfeto.Gallery.OutputBuilder.Services
             {
                 Photo targetPhoto = target.FirstOrDefault(predicate: item => item.PathHash == sourcePhoto.PathHash);
                 bool build = targetPhoto == null;
-                bool rebuild = targetPhoto != null && await this._rebuildDetection.NeedsFullResizedImageRebuildAsync(sourcePhoto, targetPhoto, imageImageSettings, this._logging);
-                bool rebuildMetadata = targetPhoto != null && this._rebuildDetection.MetadataVersionOutOfDate(targetPhoto, this._logging);
+                bool rebuild = targetPhoto != null &&
+                               await this._rebuildDetection.NeedsFullResizedImageRebuildAsync(sourcePhoto: sourcePhoto,
+                                                                                              targetPhoto: targetPhoto,
+                                                                                              imageImageSettings: imageImageSettings,
+                                                                                              logging: this._logging);
+                bool rebuildMetadata = targetPhoto != null && this._rebuildDetection.MetadataVersionOutOfDate(targetPhoto: targetPhoto, logging: this._logging);
 
                 string url = "https://www.markridgwell.co.uk/albums/" + sourcePhoto.UrlSafePath;
                 string shortUrl;
@@ -78,13 +83,13 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                 {
                     shortUrl = targetPhoto.ShortUrl;
 
-                    if (this._shortUrls.ShouldGenerateShortUrl(sourcePhoto, shortUrl, url))
+                    if (this._shortUrls.ShouldGenerateShortUrl(sourcePhoto: sourcePhoto, shortUrl: shortUrl, url: url))
                     {
                         shortUrl = await this._limitedUrlShortener.TryGenerateShortUrlAsync(url);
 
-                        if (!StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
+                        if (!StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: url))
                         {
-                            await this._shortUrls.LogShortUrlAsync(url, shortUrl);
+                            await this._shortUrls.LogShortUrlAsync(url: url, shortUrl: shortUrl);
 
                             rebuild = true;
                             this._logging.LogInformation($" +++ Force rebuild: missing shortcut URL.  New short url: {shortUrl}");
@@ -93,13 +98,13 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                 }
                 else
                 {
-                    if (this._shortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+                    if (this._shortUrls.TryGetValue(url: url, shortUrl: out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
                     {
                         this._logging.LogInformation($"* Reusing existing short url: {shortUrl}");
                     }
                 }
 
-                if (!string.IsNullOrWhiteSpace(shortUrl) && !StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url))
+                if (!string.IsNullOrWhiteSpace(shortUrl) && !StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: url))
                 {
                     sourcePhoto.ShortUrl = shortUrl;
                 }
@@ -110,30 +115,36 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
                 if (build || rebuild || rebuildMetadata)
                 {
-                    await this.ProcessOneFileAsync(sourcePhoto, targetPhoto, rebuild, rebuildMetadata, url, shortUrl, imageImageSettings);
+                    await this.ProcessOneFileAsync(sourcePhoto: sourcePhoto,
+                                                   targetPhoto: targetPhoto,
+                                                   rebuild: rebuild,
+                                                   rebuildMetadata: rebuildMetadata,
+                                                   url: url,
+                                                   shortUrl: shortUrl,
+                                                   imageImageSettings: imageImageSettings);
                 }
                 else
                 {
                     this._logging.LogInformation($"Unchanged: {targetPhoto.UrlSafePath}");
                 }
 
-                items.TryAdd(sourcePhoto.PathHash, value: true);
+                items.TryAdd(key: sourcePhoto.PathHash, value: true);
             }
             catch (AbortProcessingException exception)
             {
-                this._brokenImageTracker.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
+                this._brokenImageTracker.LogBrokenImage(path: sourcePhoto.UrlSafePath, exception: exception);
 
                 throw;
             }
             catch (StackOverflowException exception)
             {
-                this._brokenImageTracker.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
+                this._brokenImageTracker.LogBrokenImage(path: sourcePhoto.UrlSafePath, exception: exception);
 
                 throw;
             }
             catch (Exception exception)
             {
-                this._brokenImageTracker.LogBrokenImage(sourcePhoto.UrlSafePath, exception);
+                this._brokenImageTracker.LogBrokenImage(path: sourcePhoto.UrlSafePath, exception: exception);
             }
         }
 
@@ -152,13 +163,13 @@ namespace Credfeto.Gallery.OutputBuilder.Services
         {
             this._logging.LogInformation(rebuild ? $"Rebuild: {sourcePhoto.UrlSafePath}" : $"Build: {sourcePhoto.UrlSafePath}");
 
-            await targetPhoto.UpdateFileHashesAsync(sourcePhoto, this._settings);
+            await targetPhoto.UpdateFileHashesAsync(sourcePhoto: sourcePhoto, settings: this._settings);
 
             bool buildMetadata = targetPhoto == null || rebuild || rebuildMetadata || targetPhoto.Metadata == null;
 
             if (buildMetadata)
             {
-                sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto, this._settings);
+                sourcePhoto.Metadata = MetadataExtraction.ExtractMetadata(sourcePhoto: sourcePhoto, settings: this._settings);
             }
             else
             {
@@ -176,7 +187,12 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
                 try
                 {
-                    IReadOnlyList<ImageSize> sizes = await this._imageExtraction.BuildImagesAsync(sourcePhoto, filesCreated, creationDate, url, shortUrl, imageImageSettings);
+                    IReadOnlyList<ImageSize> sizes = await this._imageExtraction.BuildImagesAsync(sourcePhoto: sourcePhoto,
+                                                                                                  filesCreated: filesCreated,
+                                                                                                  creationDate: creationDate,
+                                                                                                  url: url,
+                                                                                                  shortUrl: shortUrl,
+                                                                                                  imageSettings: imageImageSettings);
 
                     sourcePhoto.ImageSizes = sizes.ToList();
                 }
@@ -205,11 +221,11 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                     //?
                 }
 
-                await PhotoMetadataRepository.StoreAsync(targetPhoto, this._settings);
+                await PhotoMetadataRepository.StoreAsync(photo: targetPhoto, settings: this._settings);
             }
             else
             {
-                await PhotoMetadataRepository.StoreAsync(sourcePhoto, this._settings);
+                await PhotoMetadataRepository.StoreAsync(photo: sourcePhoto, settings: this._settings);
             }
         }
     }

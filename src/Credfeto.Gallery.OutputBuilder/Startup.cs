@@ -57,7 +57,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
             IConfigurationRoot config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
                                                                   .AddJsonFile(path: "appsettings.json", optional: true)
-                                                                  .AddCommandLine(args,
+                                                                  .AddCommandLine(args: args,
                                                                                   new Dictionary<string, string>
                                                                                   {
                                                                                       {@"-source", rootFolder},
@@ -79,11 +79,11 @@ namespace Credfeto.Gallery.OutputBuilder
                                               brokenImagesFile: config.GetValue<string>(outputBrokenImages),
                                               bitlyApiUser: config.GetValue<string>(key: @"UrlShortener:BitlyApiUser"),
                                               bitlyApiKey: config.GetValue<string>(key: @"UrlShortener:BitlyApiKey"));
-            IImageSettings imageImageSettings = new ImageSettings(thumbnailSize: config.GetValue(outputThumbnailSize, defaultValue: 150),
+            IImageSettings imageImageSettings = new ImageSettings(thumbnailSize: config.GetValue(key: outputThumbnailSize, defaultValue: 150),
                                                                   shortUrlsPath: settings.ShortNamesFile,
                                                                   defaultShortUrl: @"https://www.markridgwell.co.uk",
-                                                                  imageMaximumDimensions: config.GetValue(outputMaximumDimensions, defaultValue: @"400,600,800,1024,1600"),
-                                                                  jpegOutputQuality: config.GetValue(outputJpegQuality, defaultValue: 100),
+                                                                  imageMaximumDimensions: config.GetValue(key: outputMaximumDimensions, defaultValue: @"400,600,800,1024,1600"),
+                                                                  jpegOutputQuality: config.GetValue(key: outputJpegQuality, defaultValue: 100),
                                                                   watermarkImage: config.GetValue<string>(watermark));
 
             serviceCollection.AddSingleton(settings);

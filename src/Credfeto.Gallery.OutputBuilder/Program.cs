@@ -52,7 +52,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
                 IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
 
-                logging.LogInformation($"Supported Extensions: {string.Join(separator: ", ", imageLoader.SupportedExtensions)}");
+                logging.LogInformation($"Supported Extensions: {string.Join(separator: ", ", values: imageLoader.SupportedExtensions)}");
 
                 IGalleryBuilder galleryBuilder = serviceProvider.GetService<IGalleryBuilder>();
 
@@ -62,8 +62,8 @@ namespace Credfeto.Gallery.OutputBuilder
             }
             catch (Exception exception)
             {
-                Console.WriteLine(format: "Error: {0}", exception.Message);
-                Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
+                Console.WriteLine(format: "Error: {0}", arg0: exception.Message);
+                Console.WriteLine(format: "Stack Trace: {0}", arg0: exception.StackTrace);
 
                 return 1;
             }
@@ -71,7 +71,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 IBrokenImageTracker brokenImageTracker = serviceProvider.GetService<IBrokenImageTracker>();
 
-                await DumpBrokenImagesAsync(brokenImageTracker, settings, logging);
+                await DumpBrokenImagesAsync(brokenImageTracker: brokenImageTracker, settings: settings, logging: logging);
             }
         }
 
@@ -93,7 +93,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             string[] images = brokenImageTracker.AllBrokenImages();
 
-            await File.WriteAllLinesAsync(settings.BrokenImagesFile, images, Encoding.UTF8);
+            await File.WriteAllLinesAsync(path: settings.BrokenImagesFile, contents: images, encoding: Encoding.UTF8);
 
             logging.LogInformation($"Broken Credfeto.Gallery.Image: {images.Length}");
         }

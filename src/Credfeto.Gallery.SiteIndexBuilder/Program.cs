@@ -95,13 +95,13 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             if (args != null)
             {
-                if (args.Any(predicate: candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, y: "IgnoreExisting")))
+                if (args.Any(predicate: candidate => StringComparer.InvariantCultureIgnoreCase.Equals(x: candidate, y: "IgnoreExisting")))
                 {
                     Console.WriteLine(value: "******* Ignoring existing items *******");
                     _ignoreExisting = true;
                 }
 
-                if (args.Any(predicate: candidate => StringComparer.InvariantCultureIgnoreCase.Equals(candidate, y: "NoLimit")))
+                if (args.Any(predicate: candidate => StringComparer.InvariantCultureIgnoreCase.Equals(x: candidate, y: "NoLimit")))
                 {
                     Console.WriteLine(value: "******* Ignoring Upload limit *******");
                     _maxDailyUploads = int.MaxValue;
@@ -118,8 +118,8 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             }
             catch (Exception exception)
             {
-                Console.WriteLine(format: "Error: {0}", exception.Message);
-                Console.WriteLine(format: "Stack Trace: {0}", exception.StackTrace);
+                Console.WriteLine(format: "Error: {0}", arg0: exception.Message);
+                Console.WriteLine(format: "Stack Trace: {0}", arg0: exception.StackTrace);
 
                 return 1;
             }
@@ -153,7 +153,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             {
                 string path = EnsureTerminatedPath("/" + ALBUMS_ROOT + "/" + sourcePhoto.UrlSafePath);
                 string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + ALBUMS_TITLE + "\\" + sourcePhoto.BasePath);
-                Console.WriteLine(format: "Item: {0}", path);
+                Console.WriteLine(format: "Item: {0}", arg0: path);
 
                 string[] pathFragments = path.Split(separator: '/')
                                              .Where(IsNotEmpty)
@@ -162,7 +162,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                           .Where(IsNotEmpty)
                                                           .ToArray();
 
-                await EnsureParentFoldersExistAsync(pathFragments, breadcrumbFragments, contents);
+                await EnsureParentFoldersExistAsync(pathFragments: pathFragments, breadcrumbFragments: breadcrumbFragments, contents: contents);
 
                 string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
@@ -173,18 +173,18 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                     title = breadcrumbFragments[breadcrumbFragments.Length - 1];
                 }
 
-                await AppendPhotoEntryAsync(contents, parentLevel, path, title, sourcePhoto);
+                await AppendPhotoEntryAsync(contents: contents, parentLevel: parentLevel, path: path, title: title, sourcePhoto: sourcePhoto);
 
                 if (!IsUnderHiddenItem(path))
                 {
-                    AppendKeywordsForLaterProcessing(sourcePhoto, keywords);
+                    AppendKeywordsForLaterProcessing(sourcePhoto: sourcePhoto, keywords: keywords);
                 }
             }
 
-            Console.WriteLine(format: "Found {0} items total", contents.Count);
-            Console.WriteLine(format: "Found {0} keyword items total", keywords.Count);
+            Console.WriteLine(format: "Found {0} items total", arg0: contents.Count);
+            Console.WriteLine(format: "Found {0} keyword items total", arg0: keywords.Count);
 
-            await Task.WhenAll(BuildEventsAsync(contents), BuildGalleryItemsForKeywordsAsync(keywords, contents));
+            await Task.WhenAll(BuildEventsAsync(contents), BuildGalleryItemsForKeywordsAsync(keywords: keywords, contents: contents));
 
             AddCoordinatesFromChildren(contents);
             await ProcessSiteIndexAsync(contents);
@@ -195,13 +195,13 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static async Task<List<UploadQueueItem>> LoadQueuedItemsAsync()
         {
-            IEnumerable<string> files = Directory.EnumerateFiles(Settings.QueueFolder, searchPattern: "*.queue");
+            IEnumerable<string> files = Directory.EnumerateFiles(path: Settings.QueueFolder, searchPattern: "*.queue");
 
             ConcurrentBag<UploadQueueItem> loaded = new ConcurrentBag<UploadQueueItem>();
 
-            await Task.WhenAll(files.Select(selector: file => LoadOneQueuedFileAsync(file, loaded)));
+            await Task.WhenAll(files.Select(selector: file => LoadOneQueuedFileAsync(file: file, loaded: loaded)));
 
-            Console.WriteLine(format: "Found {0} queued items total", loaded.Count);
+            Console.WriteLine(format: "Found {0} queued items total", arg0: loaded.Count);
 
             return loaded.ToList();
         }
@@ -217,7 +217,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static async Task<Photo[]> LoadRepositoryAsync(string baseFolder)
         {
-            Console.WriteLine(format: "Loading Repository from {0}...", baseFolder);
+            Console.WriteLine(format: "Loading Repository from {0}...", arg0: baseFolder);
             string[] scores = {".info"};
 
             List<string> sidecarFiles = new List<string>();
@@ -226,9 +226,9 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             if (Directory.Exists(baseFolder))
             {
-                long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, scores.ToList(), sidecarFiles: sidecarFiles);
 
-                Console.WriteLine(format: "{0} : Files Found: {1}", baseFolder, filesFound);
+                Console.WriteLine(format: "{0} : Files Found: {1}", arg0: baseFolder, arg1: filesFound);
             }
 
             return emitter.Photos;
@@ -259,7 +259,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
                 if (found != null)
                 {
-                    Console.WriteLine(format: "Found {0} in {1}", found.Name, folder.Path);
+                    Console.WriteLine(format: "Found {0} in {1}", arg0: found.Name, arg1: folder.Path);
 
                     Match pathMatch = found.PathMatch.Match(folder.Path);
 
@@ -282,14 +282,14 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
                     string date = year + "-" + month + "-" + day;
                     string titleDate = (date + " MTR").ReformatTitle(DateFormat.LONG_DATE)
-                                                      .Replace(oldValue: " - MTR", string.Empty);
+                                                      .Replace(oldValue: " - MTR", newValue: string.Empty);
 
                     foreach (GalleryEntry sourcePhoto in folder.Children.Where(IsImage))
                     {
                         string path = EnsureTerminatedPath(
                             UrlNaming.BuildUrlSafePath("/" + EVENTS_ROOT + "/" + found.Name + "/" + year + "/" + date + "/" + pathRest + "/" + sourcePhoto.Title));
                         string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + EVENTS_TITLE + "\\" + found.Name + "\\" + year + "\\" + titleDate + "\\" +
-                                                                         folder.Title.Replace(titleDate + " - ", string.Empty) + "\\" + sourcePhoto.Title);
+                                                                         folder.Title.Replace(titleDate + " - ", newValue: string.Empty) + "\\" + sourcePhoto.Title);
 
                         string[] pathFragments = path.Split(separator: '/')
                                                      .Where(IsNotEmpty)
@@ -298,13 +298,18 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                                   .Where(IsNotEmpty)
                                                                   .ToArray();
 
-                        await EnsureParentFoldersExistAsync(pathFragments, breadcrumbFragments, contents);
+                        await EnsureParentFoldersExistAsync(pathFragments: pathFragments, breadcrumbFragments: breadcrumbFragments, contents: contents);
 
                         string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
-                        Console.WriteLine(format: "Item: {0}", path);
+                        Console.WriteLine(format: "Item: {0}", arg0: path);
 
-                        await AppendVirtualEntryPhotoForGalleryEntryAsync(contents, parentLevel, path, sourcePhoto.Path, sourcePhoto.Title, sourcePhoto);
+                        await AppendVirtualEntryPhotoForGalleryEntryAsync(contents: contents,
+                                                                          parentLevel: parentLevel,
+                                                                          path: path,
+                                                                          originalPath: sourcePhoto.Path,
+                                                                          title: sourcePhoto.Title,
+                                                                          sourcePhoto: sourcePhoto);
                     }
                 }
             }
@@ -322,7 +327,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static bool UnderAlbumsFolder(GalleryEntry item)
         {
-            return item.Path.StartsWith(value: "/albums/", StringComparison.OrdinalIgnoreCase);
+            return item.Path.StartsWith(value: "/albums/", comparisonType: StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsImage(GalleryEntry candiate)
@@ -337,7 +342,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             // Only upload creates and updates.
             foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType != UploadType.DELETE_ITEM))
             {
-                if (await PerformUploadAsync(item, context))
+                if (await PerformUploadAsync(item: item, context: context))
                 {
                     return;
                 }
@@ -348,7 +353,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             {
                 foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType == UploadType.DELETE_ITEM))
                 {
-                    if (await PerformUploadAsync(item, context))
+                    if (await PerformUploadAsync(item: item, context: context))
                     {
                         return;
                     }
@@ -431,13 +436,18 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                               .Where(IsNotEmpty)
                                                               .ToArray();
 
-                    await EnsureParentFoldersExistAsync(pathFragments, breadcrumbFragments, contents);
+                    await EnsureParentFoldersExistAsync(pathFragments: pathFragments, breadcrumbFragments: breadcrumbFragments, contents: contents);
 
                     string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(pathFragments.Length - 1)));
 
-                    Console.WriteLine(format: "Item: {0}", path);
+                    Console.WriteLine(format: "Item: {0}", arg0: path);
 
-                    await AppendVirtualEntryAsync(contents, parentLevel, path, sourcePhotoFullPath, title, sourcePhoto);
+                    await AppendVirtualEntryAsync(contents: contents,
+                                                  parentLevel: parentLevel,
+                                                  path: path,
+                                                  originalPath: sourcePhotoFullPath,
+                                                  title: title,
+                                                  sourcePhoto: sourcePhoto);
                 }
             }
         }
@@ -447,7 +457,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             foreach (KeyValuePair<string, KeywordEntry> keywordEntry in keywords.Where(predicate: entry => entry.Value.Photos.Count > MAX_PHOTOS_PER_KEYWORD)
                                                                                 .ToList())
             {
-                Console.WriteLine(format: "Removing over-sized probably generic keyword '{0}'", keywordEntry.Value.Keyword);
+                Console.WriteLine(format: "Removing over-sized probably generic keyword '{0}'", arg0: keywordEntry.Value.Keyword);
                 keywords.Remove(keywordEntry.Key);
             }
         }
@@ -466,10 +476,10 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                            .TrimStart("-".ToArray())
                                            .TrimEnd("-".ToArray());
 
-                    if (!keywords.TryGetValue(safe, out KeywordEntry entry))
+                    if (!keywords.TryGetValue(key: safe, out KeywordEntry entry))
                     {
                         entry = new KeywordEntry(keyword);
-                        keywords.Add(safe, entry);
+                        keywords.Add(key: safe, value: entry);
                     }
 
                     entry.Photos.Add(sourcePhoto);
@@ -485,7 +495,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                 {
                     List<Location> locations = new List<Location>();
 
-                    AppendChildLocations(entry, locations);
+                    AppendChildLocations(entry: entry, locations: locations);
 
                     Location location = LocationHelpers.GetCenterFromDegrees(locations);
 
@@ -503,7 +513,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             {
                 if (child.Children != null && child.Children.Any())
                 {
-                    AppendChildLocations(child, locations);
+                    AppendChildLocations(entry: child, locations: locations);
                 }
                 else if (child.Location != null)
                 {
@@ -514,17 +524,17 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static string EnsureTerminatedPath(string path)
         {
-            return EnsureEndsWithSpecificTerminator(path, terminator: "/");
+            return EnsureEndsWithSpecificTerminator(path: path, terminator: "/");
         }
 
         private static string EnsureTerminatedBreadcrumbs(string path)
         {
-            return EnsureEndsWithSpecificTerminator(path, terminator: "\\");
+            return EnsureEndsWithSpecificTerminator(path: path, terminator: "\\");
         }
 
         private static string EnsureEndsWithSpecificTerminator(string path, string terminator)
         {
-            if (!path.EndsWith(terminator, StringComparison.Ordinal))
+            if (!path.EndsWith(value: terminator, comparisonType: StringComparison.Ordinal))
             {
                 return path + terminator;
             }
@@ -541,7 +551,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         {
             GallerySiteIndex data = ProduceSiteIndex(contents);
 
-            string outputFilename = Path.Combine(Settings.OutputFolder, path2: "site.js");
+            string outputFilename = Path.Combine(path1: Settings.OutputFolder, path2: "site.js");
 
             string json = JsonSerializer.Serialize(data);
 
@@ -571,10 +581,10 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
                 if (oldData != null)
                 {
-                    List<string> deletedItems = FindDeletedItems(oldData, data);
+                    List<string> deletedItems = FindDeletedItems(oldData: oldData, data: data);
                     data.deletedItems.AddRange(deletedItems.OrderBy(keySelector: x => x));
 
-                    await Task.WhenAll(QueueUploadChangesAsync(data, oldData), QueueUploadItemsToDeleteAsync(data, deletedItems));
+                    await Task.WhenAll(QueueUploadChangesAsync(data: data, oldData: oldData), QueueUploadItemsToDeleteAsync(data: data, deletedItems: deletedItems));
                 }
                 else
                 {
@@ -589,7 +599,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             ExtensionMethods.RotateLastGenerations(outputFilename);
 
             byte[] encoded = Encoding.UTF8.GetBytes(json);
-            await FileHelpers.WriteAllBytesAsync(outputFilename, encoded, commit: true);
+            await FileHelpers.WriteAllBytesAsync(fileName: outputFilename, bytes: encoded, commit: true);
         }
 
         private static GallerySiteIndex ProduceSiteIndex(Dictionary<string, GalleryEntry> contents)
@@ -599,11 +609,11 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                        version = GALLERY_JSON_VERSION,
                        items = (from parentRecord in contents.Values
                                 orderby parentRecord.Path
-                                let siblings = GetSiblings(contents, parentRecord)
-                                let firstItem = GetFirstItem(siblings, parentRecord)
-                                let lastItem = GetLastItem(siblings, parentRecord)
-                                let previousItem = GetPreviousItem(siblings, parentRecord, firstItem)
-                                let nextItem = GetNextItem(siblings, parentRecord, lastItem)
+                                let siblings = GetSiblings(contents: contents, entry: parentRecord)
+                                let firstItem = GetFirstItem(siblings: siblings, parentRecord: parentRecord)
+                                let lastItem = GetLastItem(siblings: siblings, parentRecord: parentRecord)
+                                let previousItem = GetPreviousItem(siblings: siblings, parentRecord: parentRecord, firstItem: firstItem)
+                                let nextItem = GetNextItem(siblings: siblings, parentRecord: parentRecord, lastItem: lastItem)
                                 select new GalleryItem
                                        {
                                            Path = parentRecord.Path,
@@ -625,7 +635,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                        where !IsHiddenItem(childRecord)
                                                        orderby childRecord.Path
                                                        select CreateGalleryChildItem(childRecord)).ToList(),
-                                           Breadcrumbs = ExtractItemPreadcrumbs(contents, parentRecord)
+                                           Breadcrumbs = ExtractItemPreadcrumbs(contents: contents, parentRecord: parentRecord)
                                        }).ToList(),
                        deletedItems = new List<string>()
                    };
@@ -643,7 +653,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             {
                 string level = EnsureTerminatedPath("/" + string.Join(separator: "/", breadcrumbFragments.Take(folderLevel)));
 
-                if (!contents.TryGetValue(level, out GalleryEntry item) || item == null)
+                if (!contents.TryGetValue(key: level, out GalleryEntry item) || item == null)
                 {
                     return new List<GalleryChildItem>();
                 }
@@ -671,12 +681,12 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static bool IsUnderHiddenItem(string path)
         {
-            return path.StartsWith(value: "/albums/private/", StringComparison.OrdinalIgnoreCase);
+            return path.StartsWith(value: "/albums/private/", comparisonType: StringComparison.OrdinalIgnoreCase);
         }
 
         private static Task QueueUploadItemsToDeleteAsync(GallerySiteIndex data, List<string> deletedItems)
         {
-            return Task.WhenAll(deletedItems.Select(selector: path => QueueUploadOneItemAsync(data, new GalleryItem {Path = path}, UploadType.DELETE_ITEM)));
+            return Task.WhenAll(deletedItems.Select(selector: path => QueueUploadOneItemAsync(data: data, new GalleryItem {Path = path}, uploadType: UploadType.DELETE_ITEM)));
         }
 
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
@@ -706,7 +716,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         private static Task QueueUploadAllItemsAsync(GallerySiteIndex data)
         {
             return Task.WhenAll(UploadOrdering(data)
-                                    .Select(selector: item => QueueUploadOneItemAsync(data, item, UploadType.NEW_ITEM)));
+                                    .Select(selector: item => QueueUploadOneItemAsync(data: data, item: item, uploadType: UploadType.NEW_ITEM)));
         }
 
         private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
@@ -724,16 +734,16 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         private static Task QueueUploadChangesAsync(GallerySiteIndex data, GallerySiteIndex oldData)
         {
             return Task.WhenAll(UploadOrdering(data)
-                                    .Select(selector: item => QueueOneNewOrModifiedItemAsync(data, oldData, item)));
+                                    .Select(selector: item => QueueOneNewOrModifiedItemAsync(data: data, oldData: oldData, item: item)));
         }
 
         private static async Task QueueOneNewOrModifiedItemAsync(GallerySiteIndex data, GallerySiteIndex oldData, GalleryItem item)
         {
             GalleryItem oldItem = oldData.items.FirstOrDefault(predicate: candidate => candidate.Path == item.Path);
 
-            if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem, item))
+            if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem: oldItem, other: item))
             {
-                await QueueUploadOneItemAsync(data, item, oldItem == null ? UploadType.NEW_ITEM : UploadType.UPDATE_ITEM);
+                await QueueUploadOneItemAsync(data: data, item: item, oldItem == null ? UploadType.NEW_ITEM : UploadType.UPDATE_ITEM);
             }
         }
 
@@ -747,12 +757,12 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             string json = JsonSerializer.Serialize(queueItem);
 
-            return FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(json), commit: true);
+            return FileHelpers.WriteAllBytesAsync(fileName: filename, Encoding.UTF8.GetBytes(json), commit: true);
         }
 
         private static string BuildQueueItemFileName(string key)
         {
-            return Path.Combine(Settings.QueueFolder, key + ".queue");
+            return Path.Combine(path1: Settings.QueueFolder, key + ".queue");
         }
 
         private static string BuildUploadQueueHash(GalleryItem item)
@@ -780,7 +790,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             do
             {
-                uploaded = await uh.UploadItemAsync(itemToPost, progressText, item.UploadType);
+                uploaded = await uh.UploadItemAsync(itemToPost: itemToPost, progressText: progressText, uploadType: item.UploadType);
                 ++retry;
             } while (!uploaded && retry < maxRetries);
 
@@ -810,7 +820,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                  .Select(CreateGalleryChildItem)
                                                  .FirstOrDefault(predicate: item => !IsHiddenItem(item));
 
-            return SkipKnownItem(candidate, lastItem);
+            return SkipKnownItem(candidate: candidate, itemToIgnoreIfMataches: lastItem);
         }
 
         private static GalleryChildItem SkipKnownItem(GalleryChildItem candidate, GalleryChildItem itemToIgnoreIfMataches)
@@ -828,7 +838,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             GalleryChildItem candidate = siblings.Select(CreateGalleryChildItem)
                                                  .FirstOrDefault(predicate: item => !IsHiddenItem(item));
 
-            return SkipKnownItem(candidate, parentRecord);
+            return SkipKnownItem(candidate: candidate, itemToIgnoreIfMataches: parentRecord);
         }
 
         private static GalleryChildItem SkipKnownItem(GalleryChildItem candidate, GalleryEntry itemToIgnoreIfMataches)
@@ -862,7 +872,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             GalleryChildItem candidate = siblings.Select(CreateGalleryChildItem)
                                                  .LastOrDefault(predicate: item => !IsHiddenItem(item));
 
-            return SkipKnownItem(candidate, parentRecord);
+            return SkipKnownItem(candidate: candidate, itemToIgnoreIfMataches: parentRecord);
         }
 
         private static GalleryChildItem GetPreviousItem(List<GalleryEntry> siblings, GalleryEntry parentRecord, GalleryChildItem firstItem)
@@ -871,7 +881,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                  .Select(CreateGalleryChildItem)
                                                  .LastOrDefault(predicate: item => !IsHiddenItem(item));
 
-            return SkipKnownItem(candidate, firstItem);
+            return SkipKnownItem(candidate: candidate, itemToIgnoreIfMataches: firstItem);
         }
 
         public IEnumerable<Tuple<T, T, T>> WithNextAndPrevious<T>(IEnumerable<T> source)
@@ -898,7 +908,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                 {
                     T current = iterator.Current;
 
-                    yield return Tuple.Create(lastButOne, previous, current);
+                    yield return Tuple.Create(item1: lastButOne, item2: previous, item3: current);
 
                     lastButOne = previous;
                     previous = current;
@@ -922,7 +932,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             string parentPath = entry.Path.Substring(startIndex: 0, parentPathIndex + 1);
 
-            if (contents.TryGetValue(parentPath, out GalleryEntry parentItem) && parentItem != null)
+            if (contents.TryGetValue(key: parentPath, out GalleryEntry parentItem) && parentItem != null)
             {
                 return new List<GalleryEntry>(parentItem.Children.OrderBy(keySelector: item => item.Path));
             }
@@ -932,7 +942,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static Task AppendPhotoEntryAsync(Dictionary<string, GalleryEntry> contents, string parentLevel, string path, string title, Photo sourcePhoto)
         {
-            ExtractDates(sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
+            ExtractDates(sourcePhoto: sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
 
             string description = ExtractDescription(sourcePhoto);
 
@@ -947,9 +957,9 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                 keywords = new List<string>();
             }
 
-            return AppendEntryAsync(contents,
-                                    parentLevel,
-                                    path,
+            return AppendEntryAsync(contents: contents,
+                                    parentPath: parentLevel,
+                                    itemPath: path,
                                     new GalleryEntry
                                     {
                                         Path = path,
@@ -976,7 +986,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                     string title,
                                                     Photo sourcePhoto)
         {
-            ExtractDates(sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
+            ExtractDates(sourcePhoto: sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
 
             string description = ExtractDescription(sourcePhoto);
 
@@ -986,9 +996,9 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             List<string> keywords = ExtractKeywords(sourcePhoto);
 
-            return AppendEntryAsync(contents,
-                                    parentLevel,
-                                    path,
+            return AppendEntryAsync(contents: contents,
+                                    parentPath: parentLevel,
+                                    itemPath: path,
                                     new GalleryEntry
                                     {
                                         Path = path,
@@ -1026,9 +1036,9 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             List<string> keywords = sourcePhoto.Keywords;
 
-            return AppendEntryAsync(contents,
-                                    parentLevel,
-                                    path,
+            return AppendEntryAsync(contents: contents,
+                                    parentPath: parentLevel,
+                                    itemPath: path,
                                     new GalleryEntry
                                     {
                                         Path = path,
@@ -1050,7 +1060,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static List<string> ExtractKeywords(Photo sourcePhoto)
         {
-            PhotoMetadata kwd = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Keywords));
+            PhotoMetadata kwd = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Keywords));
 
             if (kwd != null)
             {
@@ -1081,17 +1091,17 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                 MetadataNames.Comment
             };
 
-            return notPublishable.All(predicate: item => !StringComparer.InvariantCultureIgnoreCase.Equals(item, metadata.Name));
+            return notPublishable.All(predicate: item => !StringComparer.InvariantCultureIgnoreCase.Equals(x: item, y: metadata.Name));
         }
 
         private static int ExtractRating(Photo sourcePhoto)
         {
             int rating = 1;
-            PhotoMetadata rat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Rating));
+            PhotoMetadata rat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Rating));
 
             if (rat != null)
             {
-                if (!int.TryParse(rat.Value, out rating) || rating < 1 || rating > 5)
+                if (!int.TryParse(s: rat.Value, result: out rating) || rating < 1 || rating > 5)
                 {
                     rating = 1;
                 }
@@ -1105,13 +1115,14 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             dateCreated = sourcePhoto.Files.Min(selector: file => file.LastModified);
             dateUpdated = sourcePhoto.Files.Max(selector: file => file.LastModified);
 
-            PhotoMetadata taken = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.DateTaken));
+            PhotoMetadata taken =
+                sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.DateTaken));
 
             if (taken != null)
             {
                 // Extract the date from the value;
 
-                if (DateTime.TryParse(taken.Value, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out DateTime when))
+                if (DateTime.TryParse(s: taken.Value, provider: CultureInfo.InvariantCulture, styles: DateTimeStyles.AllowWhiteSpaces, out DateTime when))
                 {
                     if (when < dateCreated)
                     {
@@ -1129,7 +1140,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         private static string ExtractTitle(Photo sourcePhoto)
         {
             string description = string.Empty;
-            PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Title));
+            PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Title));
 
             if (desc != null)
             {
@@ -1142,7 +1153,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         private static string ExtractDescription(Photo sourcePhoto)
         {
             string description = string.Empty;
-            PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
+            PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Comment));
 
             if (desc != null)
             {
@@ -1155,12 +1166,12 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         private static Location ExtractLocation(Photo sourcePhoto)
         {
             Location location = null;
-            PhotoMetadata lat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Latitude));
-            PhotoMetadata lng = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Longitude));
+            PhotoMetadata lat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Latitude));
+            PhotoMetadata lng = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Longitude));
 
             if (lat != null && lng != null)
             {
-                if (double.TryParse(lat.Value, out double latitude) && double.TryParse(lng.Value, out double longitude))
+                if (double.TryParse(s: lat.Value, out double latitude) && double.TryParse(s: lng.Value, out double longitude))
                 {
                     location = new Location {Latitude = latitude, Longitude = longitude};
                 }
@@ -1175,13 +1186,13 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             {
                 string level = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(folderLevel)));
 
-                if (!contents.TryGetValue(level, out GalleryEntry _))
+                if (!contents.TryGetValue(key: level, out GalleryEntry _))
                 {
                     string parentLevel = EnsureTerminatedPath("/" + string.Join(separator: "/", pathFragments.Take(folderLevel - 1)));
 
-                    await AppendEntryAsync(contents,
-                                           parentLevel,
-                                           level,
+                    await AppendEntryAsync(contents: contents,
+                                           parentPath: parentLevel,
+                                           itemPath: level,
                                            new GalleryEntry
                                            {
                                                Path = level,
@@ -1204,24 +1215,24 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             try
             {
-                if (!contents.TryGetValue(parentPath, out GalleryEntry parent))
+                if (!contents.TryGetValue(key: parentPath, out GalleryEntry parent))
                 {
                     throw new FileContentException("Could not find: " + parentPath);
                 }
 
-                if (contents.TryGetValue(itemPath, out GalleryEntry _))
+                if (contents.TryGetValue(key: itemPath, out GalleryEntry _))
                 {
                     // This shouldn't ever happen, but wth, it does!
-                    Console.WriteLine(format: "ERROR: DUPLICATE PATH: {0}", itemPath);
+                    Console.WriteLine(format: "ERROR: DUPLICATE PATH: {0}", arg0: itemPath);
 
                     return;
                 }
 
-                Console.WriteLine(format: " * Path: {0}", itemPath);
-                Console.WriteLine(format: "   + Title: {0}", entry.Title);
+                Console.WriteLine(format: " * Path: {0}", arg0: itemPath);
+                Console.WriteLine(format: "   + Title: {0}", arg0: entry.Title);
                 parent.Children.Add(entry);
 
-                contents.Add(itemPath, entry);
+                contents.Add(key: itemPath, value: entry);
             }
             finally
             {
@@ -1247,7 +1258,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             try
             {
-                contents.Add(key: "/", entry);
+                contents.Add(key: "/", value: entry);
             }
             finally
             {

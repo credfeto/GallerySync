@@ -19,22 +19,22 @@ namespace Credfeto.Gallery.OutputBuilder
     {
         public static void AppendMetadata(List<PhotoMetadata> metadata, string name, DateTime value)
         {
-            AppendMetadata(metadata, name, FormatDate(value));
+            AppendMetadata(metadata: metadata, name: name, FormatDate(value));
         }
 
         public static void AppendMetadata(List<PhotoMetadata> metadata, string name, int value)
         {
-            AppendMetadata(metadata, name, value.ToString(CultureInfo.InvariantCulture));
+            AppendMetadata(metadata: metadata, name: name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         public static void AppendMetadata(List<PhotoMetadata> metadata, string name, double value)
         {
-            AppendMetadata(metadata, name, value.ToString(CultureInfo.InvariantCulture));
+            AppendMetadata(metadata: metadata, name: name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         public static void AppendMetadata(List<PhotoMetadata> metadata, string name, string value)
         {
-            Console.WriteLine(format: " * {0} = {1}", name, value);
+            Console.WriteLine(format: " * {0} = {1}", arg0: name, arg1: value);
 
             if (metadata.All(predicate: candidate => candidate.Name != name))
             {
@@ -48,20 +48,20 @@ namespace Credfeto.Gallery.OutputBuilder
 
             List<PhotoMetadata> metadata = new List<PhotoMetadata>();
 
-            ExtractXmpMetadata(sourcePhoto, metadata, rootFolder);
+            ExtractXmpMetadata(sourcePhoto: sourcePhoto, metadata: metadata, rootFolder: rootFolder);
 
             foreach (ComponentFile extension in sourcePhoto.Files.Where(predicate: candidate => !IsXmp(candidate)))
             {
-                string filename = Path.Combine(rootFolder, sourcePhoto.BasePath + extension.Extension);
+                string filename = Path.Combine(path1: rootFolder, sourcePhoto.BasePath + extension.Extension);
 
                 if (SupportsXmp(extension.Extension))
                 {
-                    ExtractMetadataFromXmp(metadata, filename);
+                    ExtractMetadataFromXmp(metadata: metadata, fileName: filename);
                 }
 
                 if (SupportsExif(extension.Extension))
                 {
-                    ExtractMetadataFromImage(metadata, filename);
+                    ExtractMetadataFromImage(metadata: metadata, fileName: filename);
                 }
             }
 
@@ -74,29 +74,29 @@ namespace Credfeto.Gallery.OutputBuilder
                               {
                                   ExifReader reader = new ExifReader(fileName);
 
-                                  TryIgnore(action: () => ExtractXmpDateTime(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpDateTime(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpExposureTime(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpExposureTime(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpFNumber(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpFNumber(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpAperture(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpAperture(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpFocalLength(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpFocalLength(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpGpsLocation(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpGpsLocation(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpIsoSpeed(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpIsoSpeed(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpArtist(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpArtist(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpCopyright(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpCopyright(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpCameraMake(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpCameraMake(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpCameraModel(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpCameraModel(metadata: metadata, reader: reader));
 
-                                  TryIgnore(action: () => ExtractXmpUserComment(metadata, reader));
+                                  TryIgnore(action: () => ExtractXmpUserComment(metadata: metadata, reader: reader));
                               });
         }
 
@@ -106,9 +106,9 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 byte[] data = File.ReadAllBytes(fileName);
 
-                using (MemoryStream ms = new MemoryStream(data, writable: false))
+                using (MemoryStream ms = new MemoryStream(buffer: data, writable: false))
                 {
-                    TagLib.File.IFileAbstraction fa = new StreamFileAbstraction(fileName, ms, Stream.Null);
+                    TagLib.File.IFileAbstraction fa = new StreamFileAbstraction(name: fileName, readStream: ms, writeStream: Stream.Null);
 
                     using (TagLib.File tlf = TagLib.File.Create(fa))
                     {
@@ -123,7 +123,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
                         if (tag != null && !tag.IsEmpty)
                         {
-                            ExtractXmpTagCommon(metadata, tag);
+                            ExtractXmpTagCommon(metadata: metadata, tag: tag);
                         }
                     }
                 }
@@ -142,19 +142,19 @@ namespace Credfeto.Gallery.OutputBuilder
 
             try
             {
-                tag = new XmpTag(xmp, file: null);
+                tag = new XmpTag(data: xmp, file: null);
             }
             catch (Exception)
             {
                 return;
             }
 
-            ExtractXmpTagCommon(metadata, tag);
+            ExtractXmpTagCommon(metadata: metadata, tag: tag);
         }
 
         public static bool IsXmp(ComponentFile candidate)
         {
-            return StringComparer.InvariantCulture.Equals(x: ".xmp", candidate.Extension);
+            return StringComparer.InvariantCulture.Equals(x: ".xmp", y: candidate.Extension);
         }
 
         private static double ExtractGpsMetadataDegreesMinutes(string[] parts, char positive, char negative)
@@ -166,7 +166,7 @@ namespace Credfeto.Gallery.OutputBuilder
             double baseValue = part1 + part2 / 60.0d;
 
             if (parts[1]
-                .EndsWith(negative.ToString(), StringComparison.OrdinalIgnoreCase))
+                .EndsWith(negative.ToString(), comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 baseValue = -baseValue;
             }
@@ -184,7 +184,7 @@ namespace Credfeto.Gallery.OutputBuilder
             double baseValue = part1 + part2 / 60d + part3 / 3600d;
 
             if (parts[2]
-                .EndsWith(negative.ToString(), StringComparison.OrdinalIgnoreCase))
+                .EndsWith(negative.ToString(), comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 baseValue = -baseValue;
             }
@@ -194,130 +194,130 @@ namespace Credfeto.Gallery.OutputBuilder
 
         private static void ExtractXmpAperture(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.ApertureValue, out uint[] aperture))
+            if (reader.GetTagValue(tag: ExifTags.ApertureValue, out uint[] aperture))
             {
                 double d = MetadataNormalizationFunctions.ToApexValue(MetadataNormalizationFunctions.ToReal(aperture[0], aperture[1]));
 
-                AppendMetadata(metadata, MetadataNames.Aperture, MetadataFormatting.FormatAperture(d));
+                AppendMetadata(metadata: metadata, name: MetadataNames.Aperture, MetadataFormatting.FormatAperture(d));
             }
         }
 
         private static void ExtractXmpArtist(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.Artist, out string artist))
+            if (reader.GetTagValue(tag: ExifTags.Artist, out string artist))
             {
-                AppendMetadata(metadata, MetadataNames.Photographer, artist);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Photographer, value: artist);
             }
         }
 
         private static void ExtractXmpCameraMake(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.Make, out string cameraMake))
+            if (reader.GetTagValue(tag: ExifTags.Make, out string cameraMake))
             {
-                AppendMetadata(metadata, MetadataNames.CameraManufacturer, cameraMake);
+                AppendMetadata(metadata: metadata, name: MetadataNames.CameraManufacturer, value: cameraMake);
             }
         }
 
         private static void ExtractXmpCameraModel(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.Model, out string cameraModel))
+            if (reader.GetTagValue(tag: ExifTags.Model, out string cameraModel))
             {
-                AppendMetadata(metadata, MetadataNames.CameraModel, cameraModel);
+                AppendMetadata(metadata: metadata, name: MetadataNames.CameraModel, value: cameraModel);
             }
         }
 
         private static void ExtractXmpCopyright(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.Artist, out string copyright))
+            if (reader.GetTagValue(tag: ExifTags.Artist, out string copyright))
             {
-                AppendMetadata(metadata, MetadataNames.Copyright, copyright);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Copyright, value: copyright);
             }
         }
 
         private static void ExtractXmpDateTime(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.DateTimeDigitized, out DateTime whenTaken))
+            if (reader.GetTagValue(tag: ExifTags.DateTimeDigitized, out DateTime whenTaken))
             {
-                AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
+                AppendMetadata(metadata: metadata, name: MetadataNames.DateTaken, value: whenTaken);
             }
-            else if (reader.GetTagValue(ExifTags.DateTime, out whenTaken))
+            else if (reader.GetTagValue(tag: ExifTags.DateTime, result: out whenTaken))
             {
-                AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
+                AppendMetadata(metadata: metadata, name: MetadataNames.DateTaken, value: whenTaken);
             }
-            else if (reader.GetTagValue(ExifTags.DateTimeOriginal, out whenTaken))
+            else if (reader.GetTagValue(tag: ExifTags.DateTimeOriginal, result: out whenTaken))
             {
-                AppendMetadata(metadata, MetadataNames.DateTaken, whenTaken);
+                AppendMetadata(metadata: metadata, name: MetadataNames.DateTaken, value: whenTaken);
             }
         }
 
         private static void ExtractXmpExposureTime(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.ExposureTime, out uint[] exposureTime))
+            if (reader.GetTagValue(tag: ExifTags.ExposureTime, out uint[] exposureTime))
             {
                 double d = MetadataNormalizationFunctions.ToReal(exposureTime[0], exposureTime[1]);
 
-                AppendMetadata(metadata, MetadataNames.ExposureTime, MetadataFormatting.FormatExposure(d));
+                AppendMetadata(metadata: metadata, name: MetadataNames.ExposureTime, MetadataFormatting.FormatExposure(d));
             }
         }
 
         private static void ExtractXmpFNumber(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.FNumber, out uint[] fNumber))
+            if (reader.GetTagValue(tag: ExifTags.FNumber, out uint[] fNumber))
             {
                 double d = MetadataNormalizationFunctions.ClosestFStop(MetadataNormalizationFunctions.ToReal(fNumber[0], fNumber[1]));
 
-                AppendMetadata(metadata, MetadataNames.Aperture, MetadataFormatting.FormatFNumber(d));
+                AppendMetadata(metadata: metadata, name: MetadataNames.Aperture, MetadataFormatting.FormatFNumber(d));
             }
         }
 
         private static void ExtractXmpFocalLength(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.FocalLength, out uint[] focalLength))
+            if (reader.GetTagValue(tag: ExifTags.FocalLength, out uint[] focalLength))
             {
                 double d = MetadataNormalizationFunctions.ToReal(focalLength[0], focalLength[1]);
 
-                AppendMetadata(metadata, MetadataNames.FocalLength, MetadataFormatting.FormatFocalLength(d));
+                AppendMetadata(metadata: metadata, name: MetadataNames.FocalLength, MetadataFormatting.FormatFocalLength(d));
             }
         }
 
         private static void ExtractXmpGpsLocation(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.GPSLatitude, out double[] latitudeComponents) && reader.GetTagValue(ExifTags.GPSLongitude, out double[] longitudeComponents))
+            if (reader.GetTagValue(tag: ExifTags.GPSLatitude, out double[] latitudeComponents) && reader.GetTagValue(tag: ExifTags.GPSLongitude, out double[] longitudeComponents))
             {
-                if (!reader.GetTagValue(ExifTags.GPSLatitudeRef, out string lattitudeRef))
+                if (!reader.GetTagValue(tag: ExifTags.GPSLatitudeRef, out string lattitudeRef))
                 {
                     lattitudeRef = "N";
                 }
 
-                if (!reader.GetTagValue(ExifTags.GPSLongitudeRef, out string longitudeRef))
+                if (!reader.GetTagValue(tag: ExifTags.GPSLongitudeRef, out string longitudeRef))
                 {
                     longitudeRef = "E";
                 }
 
                 double latitude = latitudeComponents[0] + latitudeComponents[1] / 60 + latitudeComponents[2] / 3600;
 
-                if (StringComparer.InvariantCultureIgnoreCase.Equals(x: "S", lattitudeRef))
+                if (StringComparer.InvariantCultureIgnoreCase.Equals(x: "S", y: lattitudeRef))
                 {
                     latitude = -latitude;
                 }
 
                 double longitude = longitudeComponents[0] + longitudeComponents[1] / 60 + longitudeComponents[2] / 3600;
 
-                if (StringComparer.InvariantCultureIgnoreCase.Equals(x: "W", longitudeRef))
+                if (StringComparer.InvariantCultureIgnoreCase.Equals(x: "W", y: longitudeRef))
                 {
                     longitude = -longitude;
                 }
 
-                AppendMetadata(metadata, MetadataNames.Latitude, latitude);
-                AppendMetadata(metadata, MetadataNames.Longitude, longitude);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Latitude, value: latitude);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Longitude, value: longitude);
             }
         }
 
         private static void ExtractXmpIsoSpeed(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.PhotographicSensitivity, out ushort isoSpeed))
+            if (reader.GetTagValue(tag: ExifTags.PhotographicSensitivity, out ushort isoSpeed))
             {
-                AppendMetadata(metadata, MetadataNames.IsoSpeed, isoSpeed);
+                AppendMetadata(metadata: metadata, name: MetadataNames.IsoSpeed, value: isoSpeed);
             }
         }
 
@@ -327,18 +327,18 @@ namespace Credfeto.Gallery.OutputBuilder
 
             if (xmpFile != null)
             {
-                string sidecarFileName = Path.Combine(rootFolder, sourcePhoto.BasePath + xmpFile.Extension);
-                ExtractXmpSidecareAlternative(metadata, sidecarFileName);
-                ExtractMetadataFromXmpSideCar(metadata, sidecarFileName);
+                string sidecarFileName = Path.Combine(path1: rootFolder, sourcePhoto.BasePath + xmpFile.Extension);
+                ExtractXmpSidecareAlternative(metadata: metadata, sidecarFileName: sidecarFileName);
+                ExtractMetadataFromXmpSideCar(metadata: metadata, fileName: sidecarFileName);
             }
             else
             {
-                string xmpFileName = Path.Combine(rootFolder, sourcePhoto.BasePath + ".xmp");
+                string xmpFileName = Path.Combine(path1: rootFolder, sourcePhoto.BasePath + ".xmp");
 
                 if (File.Exists(xmpFileName))
                 {
-                    ExtractXmpSidecareAlternative(metadata, xmpFileName);
-                    ExtractMetadataFromXmpSideCar(metadata, xmpFileName);
+                    ExtractXmpSidecareAlternative(metadata: metadata, sidecarFileName: xmpFileName);
+                    ExtractMetadataFromXmpSideCar(metadata: metadata, fileName: xmpFileName);
                 }
             }
         }
@@ -349,7 +349,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 Dictionary<string, string> properties = XmpFile.ExtractProperties(sidecarFileName);
 
-                if (properties.TryGetValue(MetadataNames.Latitude, out string latStr) && properties.TryGetValue(MetadataNames.Longitude, out string lngStr))
+                if (properties.TryGetValue(key: MetadataNames.Latitude, out string latStr) && properties.TryGetValue(key: MetadataNames.Longitude, out string lngStr))
                 {
                     string[] latParts = latStr.Split(separator: ',');
                     string[] lngParts = lngStr.Split(separator: ',');
@@ -357,20 +357,20 @@ namespace Credfeto.Gallery.OutputBuilder
                     if (latParts.Length == 3 && lngParts.Length == 3)
                     {
                         // Degrees Minutes Seconds
-                        double lat = ExtractGpsMetadataDegreesMinutesSeconds(latParts, positive: 'N', negative: 'S');
-                        double lng = ExtractGpsMetadataDegreesMinutesSeconds(lngParts, positive: 'E', negative: 'W');
+                        double lat = ExtractGpsMetadataDegreesMinutesSeconds(parts: latParts, positive: 'N', negative: 'S');
+                        double lng = ExtractGpsMetadataDegreesMinutesSeconds(parts: lngParts, positive: 'E', negative: 'W');
 
-                        AppendMetadata(metadata, MetadataNames.Latitude, lat);
-                        AppendMetadata(metadata, MetadataNames.Longitude, lng);
+                        AppendMetadata(metadata: metadata, name: MetadataNames.Latitude, value: lat);
+                        AppendMetadata(metadata: metadata, name: MetadataNames.Longitude, value: lng);
                     }
                     else if (latParts.Length == 2 && lngParts.Length == 2)
                     {
                         // Degrees Decimal Minutes
-                        double lat = ExtractGpsMetadataDegreesMinutes(latParts, positive: 'N', negative: 'S');
-                        double lng = ExtractGpsMetadataDegreesMinutes(lngParts, positive: 'E', negative: 'W');
+                        double lat = ExtractGpsMetadataDegreesMinutes(parts: latParts, positive: 'N', negative: 'S');
+                        double lng = ExtractGpsMetadataDegreesMinutes(parts: lngParts, positive: 'E', negative: 'W');
 
-                        AppendMetadata(metadata, MetadataNames.Latitude, lat);
-                        AppendMetadata(metadata, MetadataNames.Longitude, lng);
+                        AppendMetadata(metadata: metadata, name: MetadataNames.Latitude, value: lat);
+                        AppendMetadata(metadata: metadata, name: MetadataNames.Longitude, value: lng);
                     }
                 }
 
@@ -378,7 +378,7 @@ namespace Credfeto.Gallery.OutputBuilder
                 {
                     if (!string.IsNullOrWhiteSpace(item.Value))
                     {
-                        AppendMetadata(metadata, item.Key, item.Value);
+                        AppendMetadata(metadata: metadata, name: item.Key, value: item.Value);
                     }
                 }
             }
@@ -392,15 +392,15 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             if (!string.IsNullOrWhiteSpace(tag.Title))
             {
-                AppendMetadata(metadata, MetadataNames.Title, tag.Title);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Title, value: tag.Title);
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Comment) && !IsStupidManufacturerComment(tag.Comment))
             {
-                AppendMetadata(metadata, MetadataNames.Comment, tag.Comment);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Comment, value: tag.Comment);
             }
 
-            string keywords = string.Join(separator: ",", tag.Keywords);
+            string keywords = string.Join(separator: ",", value: tag.Keywords);
 
             if (!string.IsNullOrWhiteSpace(keywords))
             {
@@ -408,7 +408,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
                 if (existing == null)
                 {
-                    AppendMetadata(metadata, MetadataNames.Keywords, keywords);
+                    AppendMetadata(metadata: metadata, name: MetadataNames.Keywords, value: keywords);
                 }
                 else
                 {
@@ -417,78 +417,78 @@ namespace Credfeto.Gallery.OutputBuilder
                                                                      .Concat(tag.Keywords)
                                                                      .Distinct()
                                                                      .OrderBy(keySelector: x => x);
-                    keywords = string.Join(separator: ",", allKeywords);
+                    keywords = string.Join(separator: ",", values: allKeywords);
                     metadata.Remove(existing);
                 }
 
-                AppendMetadata(metadata, MetadataNames.Keywords, keywords);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Keywords, value: keywords);
             }
 
-            AppendMetadata(metadata, MetadataNames.Rating, tag.Rating.GetValueOrDefault(defaultValue: 1));
+            AppendMetadata(metadata: metadata, name: MetadataNames.Rating, tag.Rating.GetValueOrDefault(defaultValue: 1));
 
             if (tag.DateTime.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.DateTaken, tag.DateTime.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.DateTaken, value: tag.DateTime.Value);
             }
 
-            AppendMetadata(metadata, MetadataNames.Orientation, tag.Orientation.ToString());
+            AppendMetadata(metadata: metadata, name: MetadataNames.Orientation, tag.Orientation.ToString());
 
             if (tag.Latitude.HasValue && tag.Longitude.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.Latitude, tag.Latitude.Value);
-                AppendMetadata(metadata, MetadataNames.Longitude, tag.Longitude.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Latitude, value: tag.Latitude.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Longitude, value: tag.Longitude.Value);
             }
 
             if (tag.Altitude.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.Altitude, tag.Altitude.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Altitude, value: tag.Altitude.Value);
             }
 
             if (tag.ExposureTime.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.ExposureTime, MetadataFormatting.FormatExposure(tag.ExposureTime.Value, bucket: false));
+                AppendMetadata(metadata: metadata, name: MetadataNames.ExposureTime, MetadataFormatting.FormatExposure(d: tag.ExposureTime.Value, bucket: false));
             }
 
             if (tag.FNumber.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.Aperture, MetadataFormatting.FormatFNumber(tag.FNumber.Value));
+                AppendMetadata(metadata: metadata, name: MetadataNames.Aperture, MetadataFormatting.FormatFNumber(tag.FNumber.Value));
             }
 
             if (tag.ISOSpeedRatings.HasValue)
             {
-                AppendMetadata(metadata, MetadataNames.IsoSpeed, tag.ISOSpeedRatings.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.IsoSpeed, value: tag.ISOSpeedRatings.Value);
             }
 
             if (tag.FocalLength.HasValue)
             {
-                AppendMetadata(metadata,
-                               MetadataNames.FocalLength,
-                               MetadataFormatting.FormatFocalLength(tag.FocalLength.Value, (int) tag.FocalLengthIn35mmFilm.GetValueOrDefault(defaultValue: 0)));
+                AppendMetadata(metadata: metadata,
+                               name: MetadataNames.FocalLength,
+                               MetadataFormatting.FormatFocalLength(d: tag.FocalLength.Value, (int) tag.FocalLengthIn35mmFilm.GetValueOrDefault(defaultValue: 0)));
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Make))
             {
-                AppendMetadata(metadata, MetadataNames.CameraManufacturer, tag.Make);
+                AppendMetadata(metadata: metadata, name: MetadataNames.CameraManufacturer, value: tag.Make);
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Model))
             {
-                AppendMetadata(metadata, MetadataNames.CameraModel, tag.Model);
+                AppendMetadata(metadata: metadata, name: MetadataNames.CameraModel, value: tag.Model);
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Creator))
             {
-                AppendMetadata(metadata, MetadataNames.Photographer, tag.Creator);
+                AppendMetadata(metadata: metadata, name: MetadataNames.Photographer, value: tag.Creator);
             }
         }
 
         private static void ExtractXmpUserComment(List<PhotoMetadata> metadata, ExifReader reader)
         {
-            if (reader.GetTagValue(ExifTags.UserComment, out string userComment))
+            if (reader.GetTagValue(tag: ExifTags.UserComment, out string userComment))
             {
                 if (!string.IsNullOrWhiteSpace(userComment) && !IsStupidManufacturerComment(userComment))
                 {
-                    AppendMetadata(metadata, MetadataNames.Comment, userComment);
+                    AppendMetadata(metadata: metadata, name: MetadataNames.Comment, value: userComment);
                 }
             }
         }
@@ -502,7 +502,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             string[] p = {MetadataNames.Latitude, MetadataNames.Longitude};
 
-            return p.Any(predicate: v => StringComparer.InvariantCultureIgnoreCase.Equals(v, keyValuePair.Key));
+            return p.Any(predicate: v => StringComparer.InvariantCultureIgnoreCase.Equals(x: v, y: keyValuePair.Key));
         }
 
         private static bool IsStupidManufacturerComment(string userComment)
@@ -510,21 +510,21 @@ namespace Credfeto.Gallery.OutputBuilder
             // Why companies put this crap in the metadata when they already set the model and manufacturer I've no idea.
             string[] badComments = {"GE", "OLYMPUS DIGITAL CAMERA", "Minolta DSC"};
 
-            return badComments.Any(predicate: text => StringComparer.InvariantCultureIgnoreCase.Equals(text, userComment.Trim()));
+            return badComments.Any(predicate: text => StringComparer.InvariantCultureIgnoreCase.Equals(x: text, userComment.Trim()));
         }
 
         private static bool SupportsExif(string extension)
         {
             string[] supportedExtensions = {".jpg", ".jpeg", ".jpe", ".gif", ".tiff", ".tif"};
 
-            return supportedExtensions.Any(predicate: ext => StringComparer.InvariantCultureIgnoreCase.Equals(ext, extension));
+            return supportedExtensions.Any(predicate: ext => StringComparer.InvariantCultureIgnoreCase.Equals(x: ext, y: extension));
         }
 
         private static bool SupportsXmp(string extension)
         {
             string[] supportedExtensions = {"arw", "cf2", "cr2", "crw", "dng", "erf", "mef", "mrw", "nef", "orf", "pef", "raf", "raw", "rw2", "sr2", "x3f"};
 
-            return supportedExtensions.Any(predicate: ext => StringComparer.InvariantCultureIgnoreCase.Equals(ext, extension));
+            return supportedExtensions.Any(predicate: ext => StringComparer.InvariantCultureIgnoreCase.Equals(x: ext, y: extension));
         }
 
         private static void TryIgnore(Action action)

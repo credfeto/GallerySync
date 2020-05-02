@@ -98,47 +98,55 @@ namespace Credfeto.Gallery.Image.Services
                 int sourceImageWidth = sourceBitmap.Width;
                 this._logging.LogInformation($"Using Image Width: {sourceBitmap.Width}");
 
-                foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size, sourceImageWidth)))
+                foreach (int dimension in imageSizes.Where(predicate: size => ResziedImageWillNotBeBigger(size: size, sourceImageWidth: sourceImageWidth)))
                 {
                     this._logging.LogDebug($"Creating Dimension: {dimension}");
 
-                    using (Image<Rgba32> resized = ResizeImage(sourceBitmap, dimension))
+                    using (Image<Rgba32> resized = ResizeImage(image: sourceBitmap, maximumDimension: dimension))
                     {
-                        string resizedFileName = this._resizeImageFileLocator.GetResizedFileName(sourcePhoto, new ImageSize {Width = resized.Width, Height = resized.Height});
+                        string resizedFileName =
+                            this._resizeImageFileLocator.GetResizedFileName(sourcePhoto: sourcePhoto, new ImageSize {Width = resized.Width, Height = resized.Height});
 
-                        ApplyWatermark(resized, shortUrl, imageSettings);
+                        ApplyWatermark(imageToAddWatermarkTo: resized, url: shortUrl, imageSettings: imageSettings);
 
                         long quality = imageSettings.JpegOutputQuality;
-                        byte[] resizedBytes = this.SaveImageAsJpegBytes(resized, quality, url, shortUrl, sourcePhoto.Metadata, creationDate, imageSettings);
+                        byte[] resizedBytes = this.SaveImageAsJpegBytes(image: resized,
+                                                                        compressionQuality: quality,
+                                                                        url: url,
+                                                                        shortUrl: shortUrl,
+                                                                        metadata: sourcePhoto.Metadata,
+                                                                        creationDate: creationDate,
+                                                                        imageSettings: imageSettings);
 
-                        if (!ImageHelpers.IsValidJpegImage(resizedBytes, "In memory image to be saved as: " + resizedFileName))
+                        if (!ImageHelpers.IsValidJpegImage(bytes: resizedBytes, "In memory image to be saved as: " + resizedFileName))
                         {
-                            throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
+                            throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", arg0: filename));
                         }
 
-                        await this.WriteImageAsync(resizedFileName, resizedBytes, creationDate);
+                        await this.WriteImageAsync(fileName: resizedFileName, data: resizedBytes, creationDate: creationDate);
 
                         byte[] resizedData = await File.ReadAllBytesAsync(resizedFileName);
 
-                        if (!ImageHelpers.IsValidJpegImage(resizedData, "Saved resize image: " + resizedFileName))
+                        if (!ImageHelpers.IsValidJpegImage(bytes: resizedData, "Saved resize image: " + resizedFileName))
                         {
                             this._logging.LogError($"Error: File {resizedFileName} produced an invalid image");
 
-                            throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", filename));
+                            throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", arg0: filename));
                         }
 
-                        filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" + this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized));
+                        filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
+                                         this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto: sourcePhoto, resized: resized));
 
                         if (resized.Width == imageSettings.ThumbnailSize)
                         {
-                            resizedFileName = this._resizeImageFileLocator.GetResizedFileName(sourcePhoto,
+                            resizedFileName = this._resizeImageFileLocator.GetResizedFileName(sourcePhoto: sourcePhoto,
                                                                                               new ImageSize {Width = resized.Width, Height = resized.Height},
                                                                                               extension: "png");
-                            resizedBytes = SaveImageAsPng(resized, url, sourcePhoto.Metadata, creationDate);
-                            await this.WriteImageAsync(resizedFileName, resizedBytes, creationDate);
+                            resizedBytes = SaveImageAsPng(image: resized, url: url, metadata: sourcePhoto.Metadata, creationDate: creationDate);
+                            await this.WriteImageAsync(fileName: resizedFileName, data: resizedBytes, creationDate: creationDate);
 
                             filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
-                                             this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto, resized, extension: "png"));
+                                             this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto: sourcePhoto, resized: resized, extension: "png"));
                         }
 
                         sizes.Add(new ImageSize {Width = resized.Width, Height = resized.Height});
@@ -178,11 +186,11 @@ namespace Credfeto.Gallery.Image.Services
             Contract.Requires(compressionQuality > 0);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, metadata, creationDate);
+            SetMetadataProperties(image: image, url: url, metadata: metadata, creationDate: creationDate);
 
             try
             {
-                return SaveImageAsJpegBytesWithOptions(image, compressionQuality);
+                return SaveImageAsJpegBytesWithOptions(image: image, compression: compressionQuality);
             }
             catch
             {
@@ -209,9 +217,9 @@ namespace Credfeto.Gallery.Image.Services
             Console.WriteLine($"---> Output to {fileName}");
             EnsureFolderExistsForFile(fileName);
 
-            await FileHelpers.WriteAllBytesAsync(fileName, data, commit: true);
+            await FileHelpers.WriteAllBytesAsync(fileName: fileName, bytes: data, commit: true);
 
-            MetadataOutput.SetCreationDate(fileName, creationDate);
+            MetadataOutput.SetCreationDate(fileName: fileName, creationDate: creationDate);
         }
 
         /// <summary>
@@ -261,7 +269,7 @@ namespace Credfeto.Gallery.Image.Services
 
                         width = watermark.Width + (qrWidth > 0 ? qrWidth + 2 * spacer : 0);
 
-                        int maxHeight = Math.Max(watermark.Height, qrHeight + spacer);
+                        int maxHeight = Math.Max(val1: watermark.Height, qrHeight + spacer);
 
                         if (imageToAddWatermarkTo.Width <= width || imageToAddWatermarkTo.Height <= maxHeight)
                         {
@@ -270,10 +278,10 @@ namespace Credfeto.Gallery.Image.Services
 
                         imageToAddWatermarkTo.Mutate(operation: pc =>
                                                                 {
-                                                                    pc.DrawImage(qr,
-                                                                                 new Point(qrXPos, qrYPos),
-                                                                                 PixelColorBlendingMode.Overlay,
-                                                                                 PixelAlphaCompositionMode.SrcOver,
+                                                                    pc.DrawImage(image: qr,
+                                                                                 new Point(x: qrXPos, y: qrYPos),
+                                                                                 colorBlending: PixelColorBlendingMode.Overlay,
+                                                                                 alphaComposition: PixelAlphaCompositionMode.SrcOver,
                                                                                  opacity: 1);
                                                                 });
                     }
@@ -289,7 +297,11 @@ namespace Credfeto.Gallery.Image.Services
 
                 imageToAddWatermarkTo.Mutate(operation: pc =>
                                                         {
-                                                            pc.DrawImage(watermark, new Point(x, y), PixelColorBlendingMode.Overlay, PixelAlphaCompositionMode.SrcOver, opacity: 1);
+                                                            pc.DrawImage(image: watermark,
+                                                                         new Point(x: x, y: y),
+                                                                         colorBlending: PixelColorBlendingMode.Overlay,
+                                                                         alphaComposition: PixelAlphaCompositionMode.SrcOver,
+                                                                         opacity: 1);
                                                         });
             }
         }
@@ -333,7 +345,7 @@ namespace Credfeto.Gallery.Image.Services
         private static string ExtractDescription(List<PhotoMetadata> metadata, string url, DateTime creationDate)
         {
             string description = string.Empty;
-            PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(item.Name, MetadataNames.Comment));
+            PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Comment));
 
             if (desc != null)
             {
@@ -382,13 +394,13 @@ namespace Credfeto.Gallery.Image.Services
             Contract.Requires((int) (maximumDimension / (double) image.Width * image.Height) > 0);
             Contract.Ensures(Contract.Result<Image<Rgba32>>() != null);
 
-            int yscale = CalculateScaledHeightFromWidth(maximumDimension, image.Width, image.Height);
+            int yscale = CalculateScaledHeightFromWidth(scaleWidth: maximumDimension, originalWidth: image.Width, originalHeight: image.Height);
 
             Image<Rgba32> resized = null;
 
             try
             {
-                resized = image.Clone(operation: x => x.Resize(maximumDimension, yscale));
+                resized = image.Clone(operation: x => x.Resize(width: maximumDimension, height: yscale));
 
                 Debug.Assert(resized.Width == maximumDimension);
                 Debug.Assert(resized.Height == yscale);
@@ -430,7 +442,7 @@ namespace Credfeto.Gallery.Image.Services
             {
                 JpegEncoder encoder = new JpegEncoder {Quality = (int) compression};
 
-                image.SaveAsJpeg(ms, encoder);
+                image.SaveAsJpeg(stream: ms, encoder: encoder);
 
                 return ms.ToArray();
             }
@@ -457,7 +469,7 @@ namespace Credfeto.Gallery.Image.Services
             {
                 JpegEncoder encoder = new JpegEncoder {Quality = 75};
 
-                image.SaveAsJpeg(ms, encoder);
+                image.SaveAsJpeg(stream: ms, encoder: encoder);
 
                 return ms.ToArray();
             }
@@ -468,12 +480,12 @@ namespace Credfeto.Gallery.Image.Services
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            SetMetadataProperties(image, url, metadata, creationDate);
+            SetMetadataProperties(image: image, url: url, metadata: metadata, creationDate: creationDate);
 
             using (MemoryStream ms = new MemoryStream())
             {
                 PngEncoder encoder = new PngEncoder {CompressionLevel = 9, Quantizer = new WuQuantizer(), ColorType = PngColorType.Palette};
-                image.SaveAsPng(ms, encoder);
+                image.SaveAsPng(stream: ms, encoder: encoder);
 
                 return ms.ToArray();
             }
@@ -495,16 +507,16 @@ namespace Credfeto.Gallery.Image.Services
                 return;
             }
 
-            MetadataOutput.SetCreationDate(creationDate, exifProfile);
+            MetadataOutput.SetCreationDate(creationDate: creationDate, exifProfile: exifProfile);
 
-            MetadataOutput.SetDescription(description, exifProfile);
-            MetadataOutput.SetCopyright(exifProfile, copyright);
+            MetadataOutput.SetDescription(description: description, exifProfile: exifProfile);
+            MetadataOutput.SetCopyright(exifProfile: exifProfile, copyright: copyright);
 
-            MetadataOutput.SetLicensing(exifProfile, licensing);
+            MetadataOutput.SetLicensing(exifProfile: exifProfile, licensing: licensing);
 
-            MetadataOutput.SetPhotographer(exifProfile, credit);
+            MetadataOutput.SetPhotographer(exifProfile: exifProfile, credit: credit);
 
-            MetadataOutput.SetProgram(exifProfile, program);
+            MetadataOutput.SetProgram(exifProfile: exifProfile, program: program);
         }
 
         /// <summary>
@@ -526,9 +538,9 @@ namespace Credfeto.Gallery.Image.Services
             const string program = "https://www.markridgwell.co.uk/";
 
             //string title = ExtractTitle(filePath, metadata);
-            string description = ExtractDescription(metadata, url, creationDate);
+            string description = ExtractDescription(metadata: metadata, url: url, creationDate: creationDate);
 
-            SetExifMetadata(image, creationDate, description, copyright, licensing, credit, program);
+            SetExifMetadata(image: image, creationDate: creationDate, description: description, copyright: copyright, licensing: licensing, credit: credit, program: program);
         }
 
         private static IReadOnlyList<int> StandardImageSizesWithThumbnailSize(IImageSettings imageSettings)

@@ -25,8 +25,9 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
         public async Task<bool> NeedsFullResizedImageRebuildAsync(Photo sourcePhoto, Photo targetPhoto, IImageSettings imageImageSettings, ILogger logging)
         {
-            return this.MetadataVersionRequiresRebuild(targetPhoto, this._logging) || await this.HaveFilesChangedAsync(sourcePhoto, targetPhoto, this._logging) ||
-                   this.HasMissingResizes(targetPhoto, imageImageSettings, this._logging);
+            return this.MetadataVersionRequiresRebuild(targetPhoto: targetPhoto, logging: this._logging) ||
+                   await this.HaveFilesChangedAsync(sourcePhoto: sourcePhoto, targetPhoto: targetPhoto, logging: this._logging) ||
+                   this.HasMissingResizes(photoToProcess: targetPhoto, imageImageSettings: imageImageSettings, logging: this._logging);
         }
 
         public bool MetadataVersionOutOfDate(Photo targetPhoto, ILogger logging)
@@ -53,7 +54,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
             foreach (ComponentFile componentFile in targetPhoto.Files)
             {
                 ComponentFile found =
-                    sourcePhoto.Files.FirstOrDefault(predicate: candiate => StringComparer.InvariantCultureIgnoreCase.Equals(candiate.Extension, componentFile.Extension));
+                    sourcePhoto.Files.FirstOrDefault(predicate: candiate => StringComparer.InvariantCultureIgnoreCase.Equals(x: candiate.Extension, y: componentFile.Extension));
 
                 if (found != null)
                 {
@@ -71,7 +72,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
                     if (string.IsNullOrWhiteSpace(found.Hash))
                     {
-                        string filename = Path.Combine(this._settings.RootFolder, sourcePhoto.BasePath + componentFile.Extension);
+                        string filename = Path.Combine(path1: this._settings.RootFolder, sourcePhoto.BasePath + componentFile.Extension);
 
                         found.Hash = await Hasher.HashFileAsync(filename);
                     }
@@ -118,7 +119,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
             foreach (ImageSize resize in photoToProcess.ImageSizes)
             {
-                string resizedFileName = this._resizeImageFileLocator.GetResizedFileName(photoToProcess, resize);
+                string resizedFileName = this._resizeImageFileLocator.GetResizedFileName(sourcePhoto: photoToProcess, resized: resize);
 
                 if (!File.Exists(resizedFileName))
                 {
@@ -129,7 +130,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
                 if (resize.Width == imageImageSettings.ThumbnailSize)
                 {
-                    resizedFileName = this._resizeImageFileLocator.GetResizedFileName(photoToProcess, resize, extension: @"png");
+                    resizedFileName = this._resizeImageFileLocator.GetResizedFileName(sourcePhoto: photoToProcess, resized: resize, extension: @"png");
 
                     if (!File.Exists(resizedFileName))
                     {

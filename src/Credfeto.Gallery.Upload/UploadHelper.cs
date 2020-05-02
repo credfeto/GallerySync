@@ -14,7 +14,7 @@ namespace Credfeto.Gallery.Upload
         private readonly Uri _uploadBaseAddress;
 
         public UploadHelper(Uri uploadBaseAddress)
-            : this(uploadBaseAddress, TimeSpan.FromSeconds(value: 600))
+            : this(uploadBaseAddress: uploadBaseAddress, TimeSpan.FromSeconds(value: 600))
         {
         }
 
@@ -30,7 +30,7 @@ namespace Credfeto.Gallery.Upload
             {
                 using (HttpClient client = new HttpClient {BaseAddress = this._uploadBaseAddress, Timeout = this._timeout})
                 {
-                    Console.WriteLine(format: "Uploading ({0}): {1}", MakeUploadTypeText(uploadType), progressText);
+                    Console.WriteLine(format: "Uploading ({0}): {1}", MakeUploadTypeText(uploadType), arg1: progressText);
 
                     const string jsonMimeType = @"application/json";
 
@@ -38,10 +38,10 @@ namespace Credfeto.Gallery.Upload
 
                     string json = JsonSerializer.Serialize(itemToPost);
 
-                    using (StringContent content = new StringContent(json, Encoding.UTF8, jsonMimeType))
+                    using (StringContent content = new StringContent(content: json, encoding: Encoding.UTF8, mediaType: jsonMimeType))
                     {
-                        HttpResponseMessage response = await client.PostAsync(new Uri(uriString: "tasks/sync", UriKind.Relative), content);
-                        Console.WriteLine(format: "Status: {0}", response.StatusCode);
+                        HttpResponseMessage response = await client.PostAsync(new Uri(uriString: "tasks/sync", uriKind: UriKind.Relative), content: content);
+                        Console.WriteLine(format: "Status: {0}", arg0: response.StatusCode);
 
                         if (response.IsSuccessStatusCode)
                         {
@@ -56,7 +56,7 @@ namespace Credfeto.Gallery.Upload
             }
             catch (Exception exception)
             {
-                Console.WriteLine(format: "Error: {0}", exception.Message);
+                Console.WriteLine(format: "Error: {0}", arg0: exception.Message);
 
                 return false;
             }

@@ -27,12 +27,12 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
         public bool TryAdd(string longUrl, string shortUrl)
         {
-            return this._shorternedUrls.TryAdd(longUrl, shortUrl);
+            return this._shorternedUrls.TryAdd(key: longUrl, value: shortUrl);
         }
 
         public bool TryGetValue(string url, out string shortUrl)
         {
-            return this._shorternedUrls.TryGetValue(url, out shortUrl);
+            return this._shorternedUrls.TryGetValue(key: url, value: out shortUrl);
         }
 
         public async Task LoadAsync()
@@ -49,7 +49,8 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
             foreach (string line in lines)
             {
-                if (!line.StartsWith(value: @"http://", StringComparison.OrdinalIgnoreCase) && !line.StartsWith(value: @"https://", StringComparison.OrdinalIgnoreCase))
+                if (!line.StartsWith(value: @"http://", comparisonType: StringComparison.OrdinalIgnoreCase) &&
+                    !line.StartsWith(value: @"https://", comparisonType: StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -74,25 +75,25 @@ namespace Credfeto.Gallery.OutputBuilder.Services
         public bool ShouldGenerateShortUrl(Photo sourcePhoto, string shortUrl, string url)
         {
             // ONly want to generate a short URL, IF the photo has already been uploaded AND is public
-            if (sourcePhoto.UrlSafePath.StartsWith(value: "private/", StringComparison.OrdinalIgnoreCase))
+            if (sourcePhoto.UrlSafePath.StartsWith(value: "private/", comparisonType: StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            return string.IsNullOrWhiteSpace(shortUrl) || StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, url) ||
-                   StringComparer.InvariantCultureIgnoreCase.Equals(shortUrl, Constants.DefaultShortUrl);
+            return string.IsNullOrWhiteSpace(shortUrl) || StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: url) ||
+                   StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: Constants.DefaultShortUrl);
         }
 
         public async Task LogShortUrlAsync(string url, string shortUrl)
         {
-            if (!this.TryAdd(url, shortUrl))
+            if (!this.TryAdd(longUrl: url, shortUrl: shortUrl))
             {
                 return;
             }
 
-            string[] text = {string.Format(format: "{0}\t{1}", url, shortUrl)};
+            string[] text = {string.Format(format: "{0}\t{1}", arg0: url, arg1: shortUrl)};
 
-            await File.AppendAllLinesAsync(this._settings.ShortNamesFile, text);
+            await File.AppendAllLinesAsync(path: this._settings.ShortNamesFile, contents: text);
         }
     }
 }
