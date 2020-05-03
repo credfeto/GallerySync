@@ -20,7 +20,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Credfeto.Gallery.SiteIndexBuilder
 {
-    internal class Program
+    internal static class Program
     {
         private const string ALBUMS_ROOT = "albums";
         private const string ALBUMS_TITLE = "Albums";
