@@ -34,7 +34,7 @@ jobs:
 #    - name: Setup Nuget
 #      run: sudo apt-get install nuget
     - name: Install Build Version Tool
-      run: dotnet tool install --local FunFair.BuildVersion -Source ${{ secrets.FUNFAIR_NUGET_FEED }}
+      run: dotnet tool install --local FunFair.BuildVersion -add-source ${{ secrets.FUNFAIR_NUGET_FEED }}
     - name: Set Define Build Version
       run: dotnet BuildVersion ${{ steps.buildnumber.outputs.build_number }} 
 #    - name: Setup nuget
