@@ -10,12 +10,12 @@ namespace Credfeto.Gallery.Image.Services
     {
         public string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized)
         {
-            return this.IndividualResizeFileName(sourcePhoto, resized, extension: @"jpg");
+            return this.IndividualResizeFileName(sourcePhoto: sourcePhoto, resized: resized, extension: @"jpg");
         }
 
         public string IndividualResizeFileName(Photo sourcePhoto, Image<Rgba32> resized, string extension)
         {
-            string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), resized.Width, resized.Height))
+            string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), arg1: resized.Width, arg2: resized.Height))
                                        .TrimEnd(trimChar: '/')
                                        .TrimStart(trimChar: '-');
 
@@ -24,12 +24,12 @@ namespace Credfeto.Gallery.Image.Services
 
         public string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized)
         {
-            return this.IndividualResizeFileName(sourcePhoto, resized, extension: "jpg");
+            return this.IndividualResizeFileName(sourcePhoto: sourcePhoto, resized: resized, extension: "jpg");
         }
 
         public string IndividualResizeFileName(Photo sourcePhoto, ImageSize resized, string extension)
         {
-            string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), resized.Width, resized.Height))
+            string basePath = UrlNaming.BuildUrlSafePath(string.Format(format: "{0}-{1}x{2}", Path.GetFileName(sourcePhoto.BasePath), arg1: resized.Width, arg2: resized.Height))
                                        .TrimEnd(trimChar: '/')
                                        .TrimStart(trimChar: '-');
 

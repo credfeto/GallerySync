@@ -9,14 +9,14 @@ namespace Credfeto.Gallery.Image
     {
         public static void SetCopyright(ExifProfile exifProfile, string copyright)
         {
-            exifProfile.SetValue(ExifTag.Copyright, copyright);
+            exifProfile.SetValue(tag: ExifTag.Copyright, value: copyright);
         }
 
         public static void SetCreationDate(DateTime creationDate, ExifProfile exifProfile)
         {
             if (creationDate != DateTime.MinValue)
             {
-                exifProfile.SetValue(ExifTag.DateTime, creationDate.Date.ToString(format: "yyyy-MM-dd"));
+                exifProfile.SetValue(tag: ExifTag.DateTime, creationDate.Date.ToString(format: "yyyy-MM-dd"));
             }
         }
 
@@ -24,9 +24,9 @@ namespace Credfeto.Gallery.Image
         {
             if (creationDate != DateTime.MinValue && File.Exists(fileName))
             {
-                File.SetCreationTimeUtc(fileName, creationDate);
-                File.SetLastWriteTimeUtc(fileName, creationDate);
-                File.SetLastAccessTimeUtc(fileName, creationDate);
+                File.SetCreationTimeUtc(path: fileName, creationTimeUtc: creationDate);
+                File.SetLastWriteTimeUtc(path: fileName, lastWriteTimeUtc: creationDate);
+                File.SetLastAccessTimeUtc(path: fileName, lastAccessTimeUtc: creationDate);
             }
         }
 
@@ -34,23 +34,23 @@ namespace Credfeto.Gallery.Image
         {
             if (!string.IsNullOrWhiteSpace(description))
             {
-                exifProfile.SetValue(ExifTag.ImageDescription, description);
+                exifProfile.SetValue(tag: ExifTag.ImageDescription, value: description);
             }
         }
 
         public static void SetLicensing(ExifProfile exifProfile, string licensing)
         {
-            exifProfile.SetValue(ExifTag.UserComment, Encoding.UTF8.GetBytes(licensing));
+            exifProfile.SetValue(tag: ExifTag.UserComment, Encoding.UTF8.GetBytes(licensing));
         }
 
         public static void SetPhotographer(ExifProfile exifProfile, string credit)
         {
-            exifProfile.SetValue(ExifTag.Artist, credit);
+            exifProfile.SetValue(tag: ExifTag.Artist, value: credit);
         }
 
         public static void SetProgram(ExifProfile exifProfile, string program)
         {
-            exifProfile.SetValue(ExifTag.ImageDescription, program);
+            exifProfile.SetValue(tag: ExifTag.ImageDescription, value: program);
         }
     }
 }

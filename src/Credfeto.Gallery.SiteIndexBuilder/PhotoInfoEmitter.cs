@@ -24,7 +24,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         public async Task FileFoundAsync(FileEntry entry)
         {
-            string fullPath = Path.Combine(this._basePath, entry.RelativeFolder, entry.LocalFileName);
+            string fullPath = Path.Combine(path1: this._basePath, path2: entry.RelativeFolder, path3: entry.LocalFileName);
 
             byte[] bytes = await FileHelpers.ReadAllBytesAsync(fullPath);
 

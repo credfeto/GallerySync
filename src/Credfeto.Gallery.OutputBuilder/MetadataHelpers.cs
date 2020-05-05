@@ -17,7 +17,7 @@ namespace Credfeto.Gallery.OutputBuilder
                 return DateTime.MinValue;
             }
 
-            if (DateTime.TryParse(dateTaken.Value, out DateTime value))
+            if (DateTime.TryParse(s: dateTaken.Value, out DateTime value))
             {
                 return value;
             }

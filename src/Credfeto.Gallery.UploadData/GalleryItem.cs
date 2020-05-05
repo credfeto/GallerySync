@@ -44,12 +44,12 @@ namespace Credfeto.Gallery.UploadData
 
         public bool Equals(GalleryItem other)
         {
-            if (ReferenceEquals(objA: null, other))
+            if (ReferenceEquals(objA: null, objB: other))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, other))
+            if (ReferenceEquals(this, objB: other))
             {
                 return true;
             }
@@ -57,19 +57,19 @@ namespace Credfeto.Gallery.UploadData
             return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title &&
                    this.Description == other.Description && this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location &&
                    this.Type == other.Type && this.Previous == other.Previous && this.Next == other.Next && this.Last == other.Last &&
-                   ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes) && ItemUpdateHelpers.CollectionEquals(this.Metadata, other.Metadata) &&
-                   ItemUpdateHelpers.CollectionEquals(this.Keywords, other.Keywords) && ItemUpdateHelpers.CollectionEquals(this.Children, other.Children) &&
-                   ItemUpdateHelpers.CollectionEquals(this.Breadcrumbs, other.Breadcrumbs) && this.First == other.First;
+                   ItemUpdateHelpers.CollectionEquals(lhs: this.ImageSizes, rhs: other.ImageSizes) && ItemUpdateHelpers.CollectionEquals(lhs: this.Metadata, rhs: other.Metadata) &&
+                   ItemUpdateHelpers.CollectionEquals(lhs: this.Keywords, rhs: other.Keywords) && ItemUpdateHelpers.CollectionEquals(lhs: this.Children, rhs: other.Children) &&
+                   ItemUpdateHelpers.CollectionEquals(lhs: this.Breadcrumbs, rhs: other.Breadcrumbs) && this.First == other.First;
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(objA: null, obj))
+            if (ReferenceEquals(objA: null, objB: obj))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, objB: obj))
             {
                 return true;
             }
@@ -110,12 +110,12 @@ namespace Credfeto.Gallery.UploadData
 
         public static bool operator ==(GalleryItem left, GalleryItem right)
         {
-            return Equals(left, right);
+            return Equals(objA: left, objB: right);
         }
 
         public static bool operator !=(GalleryItem left, GalleryItem right)
         {
-            return !Equals(left, right);
+            return !Equals(objA: left, objB: right);
         }
     }
 }

@@ -34,31 +34,31 @@ namespace Credfeto.Gallery.UploadData
 
         public bool Equals(GalleryEntry other)
         {
-            if (ReferenceEquals(objA: null, other))
+            if (ReferenceEquals(objA: null, objB: other))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, other))
+            if (ReferenceEquals(this, objB: other))
             {
                 return true;
             }
 
             return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title &&
                    this.Description == other.Description && this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location &&
-                   this.Rating == other.Rating && ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes) &&
-                   ItemUpdateHelpers.CollectionEquals(this.Children, other.Children) && ItemUpdateHelpers.CollectionEquals(this.Metadata, other.Metadata) &&
-                   ItemUpdateHelpers.CollectionEquals(this.Keywords, other.Keywords);
+                   this.Rating == other.Rating && ItemUpdateHelpers.CollectionEquals(lhs: this.ImageSizes, rhs: other.ImageSizes) &&
+                   ItemUpdateHelpers.CollectionEquals(lhs: this.Children, rhs: other.Children) && ItemUpdateHelpers.CollectionEquals(lhs: this.Metadata, rhs: other.Metadata) &&
+                   ItemUpdateHelpers.CollectionEquals(lhs: this.Keywords, rhs: other.Keywords);
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(objA: null, obj))
+            if (ReferenceEquals(objA: null, objB: obj))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, objB: obj))
             {
                 return true;
             }
@@ -94,12 +94,12 @@ namespace Credfeto.Gallery.UploadData
 
         public static bool operator ==(GalleryEntry left, GalleryEntry right)
         {
-            return Equals(left, right);
+            return Equals(objA: left, objB: right);
         }
 
         public static bool operator !=(GalleryEntry left, GalleryEntry right)
         {
-            return !Equals(left, right);
+            return !Equals(objA: left, objB: right);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Credfeto.Gallery.FileNaming
             using (SHA512 hasher = SHA512.Create())
             {
                 return BitConverter.ToString(hasher.ComputeHash(bytes))
-                                   .Replace(oldValue: "-", string.Empty)
+                                   .Replace(oldValue: "-", newValue: string.Empty)
                                    .ToLowerInvariant();
             }
         }

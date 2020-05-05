@@ -50,12 +50,12 @@ namespace Credfeto.Gallery.OutputBuilder.Services
             Contract.Ensures(Contract.Result<Uri>() != null);
 
             string encodedUrl = HttpUtility.UrlEncode(url.ToString());
-            Uri shortnerUrl = new Uri(string.Format(CultureInfo.InvariantCulture,
+            Uri shortnerUrl = new Uri(string.Format(provider: CultureInfo.InvariantCulture,
                                                     format: "/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}",
-                                                    this._settings.BitlyApiKey,
-                                                    this._settings.BitlyApiUser,
-                                                    encodedUrl),
-                                      UriKind.Relative);
+                                                    arg0: this._settings.BitlyApiKey,
+                                                    arg1: this._settings.BitlyApiUser,
+                                                    arg2: encodedUrl),
+                                      uriKind: UriKind.Relative);
 
             try
             {
@@ -74,7 +74,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
             }
             catch (Exception exception)
             {
-                this._logging.LogError(new EventId(exception.HResult), exception, $"Error: Could not build Short Url: {exception.Message}");
+                this._logging.LogError(new EventId(exception.HResult), exception: exception, $"Error: Could not build Short Url: {exception.Message}");
 
                 return url;
             }
@@ -96,7 +96,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
             static TimeSpan Calculate(int attempts)
             {
-                return attempts > 1 ? TimeSpan.FromSeconds(Math.Pow(x: 2.0, attempts)) : TimeSpan.Zero;
+                return attempts > 1 ? TimeSpan.FromSeconds(Math.Pow(x: 2.0, y: attempts)) : TimeSpan.Zero;
             }
 
             serviceCollection.AddHttpClient(HTTP_CLIENT_NAME)
@@ -104,7 +104,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                              .ConfigurePrimaryHttpMessageHandler(
                                  configureHandler: x => new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate})
                              .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(value: 30)))
-                             .AddTransientHttpErrorPolicy(configurePolicy: p => p.WaitAndRetryAsync(maxRetries, Calculate));
+                             .AddTransientHttpErrorPolicy(configurePolicy: p => p.WaitAndRetryAsync(retryCount: maxRetries, sleepDurationProvider: Calculate));
         }
     }
 }

@@ -13,12 +13,12 @@ namespace Credfeto.Gallery.ObjectModel
 
         public bool Equals(ImageSize other)
         {
-            if (ReferenceEquals(objA: null, other))
+            if (ReferenceEquals(objA: null, objB: other))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, other))
+            if (ReferenceEquals(this, objB: other))
             {
                 return true;
             }
@@ -28,12 +28,12 @@ namespace Credfeto.Gallery.ObjectModel
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(objA: null, obj))
+            if (ReferenceEquals(objA: null, objB: obj))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, objB: obj))
             {
                 return true;
             }
@@ -56,12 +56,12 @@ namespace Credfeto.Gallery.ObjectModel
 
         public static bool operator ==(ImageSize left, ImageSize right)
         {
-            return Equals(left, right);
+            return Equals(objA: left, objB: right);
         }
 
         public static bool operator !=(ImageSize left, ImageSize right)
         {
-            return !Equals(left, right);
+            return !Equals(objA: left, objB: right);
         }
     }
 }

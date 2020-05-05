@@ -14,7 +14,10 @@ namespace Credfeto.Gallery.Scanner
                                                        List<string> extensionsToRetrieveInOrderOfPrecendence,
                                                        List<string> sidecarFiles)
         {
-            Context context = new Context(baseFolder, fileEmitter, extensionsToRetrieveInOrderOfPrecendence, sidecarFiles);
+            Context context = new Context(baseFolder: baseFolder,
+                                          fileEmitter: fileEmitter,
+                                          extensionsToRetrieveInOrderOfPrecendence: extensionsToRetrieveInOrderOfPrecendence,
+                                          sidecarExtensions: sidecarFiles);
 
             await StartScanningAsync(context);
 
@@ -25,7 +28,7 @@ namespace Credfeto.Gallery.Scanner
 
         private static Task StartScanningAsync(Context context)
         {
-            return ScanSubFolderAsync(context.BaseFolder, context);
+            return ScanSubFolderAsync(folder: context.BaseFolder, context: context);
         }
 
         private static async Task<long> ProcessEntriesAsync(Context context)
@@ -49,14 +52,14 @@ namespace Credfeto.Gallery.Scanner
 
         private static async Task ScanSubFolderAsync(string folder, Context context)
         {
-            await FindSubFoldersAsync(folder, context);
+            await FindSubFoldersAsync(folder: folder, context: context);
 
-            FindFiles(folder, context);
+            FindFiles(folder: folder, context: context);
         }
 
         private static void FindFiles(string folder, Context context)
         {
-            string[] raw = Directory.GetFiles(folder, searchPattern: "*");
+            string[] raw = Directory.GetFiles(path: folder, searchPattern: "*");
 
             var grouped = from record in raw
                           let extension = Path.GetExtension(record)
@@ -69,7 +72,7 @@ namespace Credfeto.Gallery.Scanner
                           select new
                                  {
                                      BaseName = matches.Key,
-                                     Items = matches.OrderByDescending(keySelector: match => ExtensionScore(context.ExtensionsToRetrieveInOrderOfPrecendence, match))
+                                     Items = matches.OrderByDescending(keySelector: match => ExtensionScore(scores: context.ExtensionsToRetrieveInOrderOfPrecendence, match: match))
                                                     .ThenBy(Path.GetExtension)
                                                     .Select(selector: match => Path.GetFileName(match))
                                  };
@@ -97,11 +100,11 @@ namespace Credfeto.Gallery.Scanner
 
         private static Task FindSubFoldersAsync(string folder, Context context)
         {
-            string[] folders = Directory.GetDirectories(folder, searchPattern: "*")
+            string[] folders = Directory.GetDirectories(path: folder, searchPattern: "*")
                                         .Where(predicate: subFolder => !IsSkipFolderName(subFolder.Substring(folder.Length + 1)))
                                         .ToArray();
 
-            return Task.WhenAll(folders.Select(selector: subFolder => ScanSubFolderAsync(subFolder, context))
+            return Task.WhenAll(folders.Select(selector: subFolder => ScanSubFolderAsync(folder: subFolder, context: context))
                                        .ToArray());
         }
 
@@ -109,7 +112,7 @@ namespace Credfeto.Gallery.Scanner
         {
             string[] badFolders = {"Sort", ".SyncArchive", ".git", ".svn"};
 
-            return badFolders.Any(predicate: candidate => StringComparer.InvariantCultureIgnoreCase.Equals(folder, candidate));
+            return badFolders.Any(predicate: candidate => StringComparer.InvariantCultureIgnoreCase.Equals(x: folder, y: candidate));
         }
 
         private sealed class Context
@@ -138,7 +141,7 @@ namespace Credfeto.Gallery.Scanner
 
                 if (sidecarExtensions.Any())
                 {
-                    sidecarProcessor = matches => matches.Any(predicate: match => IsNotSidecarExtension(sidecarExtensions, match));
+                    sidecarProcessor = matches => matches.Any(predicate: match => IsNotSidecarExtension(sidecarExtensions: sidecarExtensions, match: match));
                 }
                 else
                 {

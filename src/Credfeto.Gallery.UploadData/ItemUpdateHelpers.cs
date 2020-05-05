@@ -12,119 +12,119 @@ namespace Credfeto.Gallery.UploadData
         {
             if (!StringComparer.InvariantCulture.Equals(oldItem.Path.AsEmpty(), other.Path.AsEmpty()))
             {
-                Console.WriteLine(format: " >> Path Different ({0}) vs ({1})", oldItem.Path, other.Path);
+                Console.WriteLine(format: " >> Path Different ({0}) vs ({1})", arg0: oldItem.Path, arg1: other.Path);
 
                 return false;
             }
 
             if (oldItem.OriginalAlbumPath.AsEmpty() != other.OriginalAlbumPath.AsEmpty())
             {
-                Console.WriteLine(format: " >> OriginalAlbumPath Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> OriginalAlbumPath Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
             if (!StringComparer.InvariantCulture.Equals(oldItem.Title.AsEmpty(), other.Title.AsEmpty()))
             {
-                Console.WriteLine(format: " >> Title Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Title Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
             if (!StringComparer.InvariantCulture.Equals(oldItem.Description.AsEmpty(), other.Description.AsEmpty()))
             {
-                Console.WriteLine(format: " >> Description Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Description Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!DatesEqual(oldItem.DateCreated, other.DateCreated))
+            if (!DatesEqual(lhs: oldItem.DateCreated, rhs: other.DateCreated))
             {
-                Console.WriteLine(format: " >> DateCreated Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> DateCreated Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!DatesEqual(oldItem.DateUpdated, other.DateUpdated))
+            if (!DatesEqual(lhs: oldItem.DateUpdated, rhs: other.DateUpdated))
             {
-                Console.WriteLine(format: " >> DaterUpdated Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> DaterUpdated Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
             if (oldItem.Location != other.Location)
             {
-                Console.WriteLine(format: " >> Location Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Location Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!StringComparer.InvariantCultureIgnoreCase.Equals(oldItem.Type, other.Type))
+            if (!StringComparer.InvariantCultureIgnoreCase.Equals(x: oldItem.Type, y: other.Type))
             {
-                Console.WriteLine(format: " >> Type Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Type Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!ReferenceItemEquals(oldItem.First, other.First))
+            if (!ReferenceItemEquals(lhs: oldItem.First, rhs: other.First))
             {
-                Console.WriteLine(format: " >> First Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> First Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!ReferenceItemEquals(oldItem.Previous, other.Previous))
+            if (!ReferenceItemEquals(lhs: oldItem.Previous, rhs: other.Previous))
             {
-                Console.WriteLine(format: " >> Previous Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Previous Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!ReferenceItemEquals(oldItem.Next, other.Next))
+            if (!ReferenceItemEquals(lhs: oldItem.Next, rhs: other.Next))
             {
-                Console.WriteLine(format: " >> Next Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Next Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!ReferenceItemEquals(oldItem.Last, other.Last))
+            if (!ReferenceItemEquals(lhs: oldItem.Last, rhs: other.Last))
             {
-                Console.WriteLine(format: " >> Last Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Last Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!CollectionEquals(oldItem.ImageSizes, other.ImageSizes))
+            if (!CollectionEquals(lhs: oldItem.ImageSizes, rhs: other.ImageSizes))
             {
-                Console.WriteLine(format: " >> ImageSizes Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> ImageSizes Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!CollectionEquals(oldItem.Metadata, other.Metadata))
+            if (!CollectionEquals(lhs: oldItem.Metadata, rhs: other.Metadata))
             {
-                Console.WriteLine(format: " >> Metadata Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Metadata Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!CollectionEquals(oldItem.Keywords, other.Keywords))
+            if (!CollectionEquals(lhs: oldItem.Keywords, rhs: other.Keywords))
             {
-                Console.WriteLine(format: " >> Keywords Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Keywords Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!CollectionEquals(oldItem.Children, other.Children))
+            if (!CollectionEquals(lhs: oldItem.Children, rhs: other.Children))
             {
-                Console.WriteLine(format: " >> Children Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Children Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
 
-            if (!CollectionEquals(oldItem.Breadcrumbs, other.Breadcrumbs))
+            if (!CollectionEquals(lhs: oldItem.Breadcrumbs, rhs: other.Breadcrumbs))
             {
-                Console.WriteLine(format: " >> Breadcrumbs Different ({0})", oldItem.Path);
+                Console.WriteLine(format: " >> Breadcrumbs Different ({0})", arg0: oldItem.Path);
 
                 return false;
             }
@@ -139,17 +139,17 @@ namespace Credfeto.Gallery.UploadData
 
         private static bool ReferenceItemEquals(GalleryChildItem lhs, GalleryChildItem rhs)
         {
-            if (ReferenceEquals(lhs, objB: null) && ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null) && ReferenceEquals(objA: rhs, objB: null))
             {
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null))
             {
                 return false;
             }
 
-            if (ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: rhs, objB: null))
             {
                 return false;
             }
@@ -159,27 +159,27 @@ namespace Credfeto.Gallery.UploadData
 
         private static bool ReferenceItemEquals(GalleryEntry lhs, GalleryEntry rhs)
         {
-            if (ReferenceEquals(lhs, objB: null) && ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null) && ReferenceEquals(objA: rhs, objB: null))
             {
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null))
             {
                 return false;
             }
 
-            if (ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: rhs, objB: null))
             {
                 return false;
             }
 
-            if (!StringComparer.InvariantCultureIgnoreCase.Equals(lhs.Path, rhs.Path))
+            if (!StringComparer.InvariantCultureIgnoreCase.Equals(x: lhs.Path, y: rhs.Path))
             {
                 return false;
             }
 
-            if (!StringComparer.InvariantCultureIgnoreCase.Equals(lhs.Title, rhs.Title))
+            if (!StringComparer.InvariantCultureIgnoreCase.Equals(x: lhs.Title, y: rhs.Title))
             {
                 return false;
             }
@@ -189,17 +189,17 @@ namespace Credfeto.Gallery.UploadData
 
         public static bool CollectionEquals(List<ImageSize> lhs, List<ImageSize> rhs)
         {
-            if (ReferenceEquals(lhs, rhs))
+            if (ReferenceEquals(objA: lhs, objB: rhs))
             {
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null))
             {
                 return false;
             }
 
-            if (ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: rhs, objB: null))
             {
                 return false;
             }
@@ -215,17 +215,17 @@ namespace Credfeto.Gallery.UploadData
 
         public static bool CollectionEquals(List<GalleryEntry> lhs, List<GalleryEntry> rhs)
         {
-            if (ReferenceEquals(lhs, rhs))
+            if (ReferenceEquals(objA: lhs, objB: rhs))
             {
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null))
             {
                 return false;
             }
 
-            if (ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: rhs, objB: null))
             {
                 return false;
             }
@@ -235,23 +235,23 @@ namespace Credfeto.Gallery.UploadData
                 return false;
             }
 
-            return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => ReferenceItemEquals(candidate, lhsItem)))
+            return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => ReferenceItemEquals(lhs: candidate, rhs: lhsItem)))
                       .All(predicate: rhsItem => rhsItem != null);
         }
 
         public static bool CollectionEquals(List<GalleryChildItem> lhs, List<GalleryChildItem> rhs)
         {
-            if (ReferenceEquals(lhs, rhs))
+            if (ReferenceEquals(objA: lhs, objB: rhs))
             {
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null))
             {
                 return false;
             }
 
-            if (ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: rhs, objB: null))
             {
                 return false;
             }
@@ -261,23 +261,23 @@ namespace Credfeto.Gallery.UploadData
                 return false;
             }
 
-            return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => ReferenceItemEquals(candidate, lhsItem)))
+            return lhs.Select(selector: lhsItem => rhs.FirstOrDefault(predicate: candidate => ReferenceItemEquals(lhs: candidate, rhs: lhsItem)))
                       .All(predicate: rhsItem => rhsItem != null);
         }
 
         public static bool CollectionEquals(List<PhotoMetadata> lhs, List<PhotoMetadata> rhs)
         {
-            if (ReferenceEquals(lhs, rhs))
+            if (ReferenceEquals(objA: lhs, objB: rhs))
             {
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null))
             {
                 return false;
             }
 
-            if (ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: rhs, objB: null))
             {
                 return false;
             }
@@ -293,17 +293,17 @@ namespace Credfeto.Gallery.UploadData
 
         public static bool CollectionEquals(List<string> lhs, List<string> rhs)
         {
-            if (ReferenceEquals(lhs, rhs))
+            if (ReferenceEquals(objA: lhs, objB: rhs))
             {
                 return true;
             }
 
-            if (ReferenceEquals(lhs, objB: null))
+            if (ReferenceEquals(objA: lhs, objB: null))
             {
                 return false;
             }
 
-            if (ReferenceEquals(rhs, objB: null))
+            if (ReferenceEquals(objA: rhs, objB: null))
             {
                 return false;
             }

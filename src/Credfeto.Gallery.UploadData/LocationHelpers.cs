@@ -53,9 +53,9 @@ namespace Credfeto.Gallery.UploadData
                     double y2 = (double) (this._y / this._count);
                     double z2 = (double) (this._z / this._count);
 
-                    double lon2 = Math.Atan2(y2, x2);
+                    double lon2 = Math.Atan2(y: y2, x: x2);
                     double hyp = Math.Sqrt(x2 * x2 + y2 * y2);
-                    double lat2 = Math.Atan2(z2, hyp);
+                    double lat2 = Math.Atan2(y: z2, x: hyp);
 
                     return new Location {Latitude = RadiansToDegrees(lat2), Longitude = RadiansToDegrees(lon2)};
                 }
