@@ -17,12 +17,12 @@ namespace Credfeto.Gallery.Storage
             RotateWithRetry(file + ".2", file + ".3");
             RotateWithRetry(file + ".1", file + ".2");
             RotateWithRetry(file + ".0", file + ".1");
-            RotateWithRetry(file, file + ".1");
+            RotateWithRetry(current: file, file + ".1");
         }
 
         private static bool Rotate(string current, string previous)
         {
-            Console.WriteLine(format: "Moving {0} to {1}", current, previous);
+            Console.WriteLine(format: "Moving {0} to {1}", arg0: current, arg1: previous);
 
             if (!File.Exists(current))
             {
@@ -33,15 +33,15 @@ namespace Credfeto.Gallery.Storage
 
             try
             {
-                File.Move(current, previous);
+                File.Move(sourceFileName: current, destFileName: previous);
 
                 return true;
             }
             catch (Exception exception)
             {
-                Console.WriteLine(format: "ERROR: Failed to move file (FAST): {0}", exception.Message);
+                Console.WriteLine(format: "ERROR: Failed to move file (FAST): {0}", arg0: exception.Message);
 
-                return SlowMove(current, previous);
+                return SlowMove(current: current, previous: previous);
             }
         }
 
@@ -51,7 +51,7 @@ namespace Credfeto.Gallery.Storage
 
             for (int retry = 0; retry < maxRetries; ++retry)
             {
-                if (Rotate(current, previous))
+                if (Rotate(current: current, previous: previous))
                 {
                     return;
                 }
@@ -62,14 +62,14 @@ namespace Credfeto.Gallery.Storage
         {
             try
             {
-                File.Copy(current, previous);
+                File.Copy(sourceFileName: current, destFileName: previous);
                 FileHelpers.DeleteFile(current);
 
                 return true;
             }
             catch (Exception exception)
             {
-                Console.WriteLine(format: "ERROR: Failed to move file (SLOW): {0}", exception.Message);
+                Console.WriteLine(format: "ERROR: Failed to move file (SLOW): {0}", arg0: exception.Message);
 
                 return false;
             }

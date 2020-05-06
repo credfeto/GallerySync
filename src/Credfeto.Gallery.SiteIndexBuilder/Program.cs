@@ -41,7 +41,9 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             new EventDesc
             {
                 Name = "Linkfest",
-                PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(linkfest-harlow)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
+                PathMatch =
+                    new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(linkfest-harlow)-",
+                              RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = "[Linkfest](http://www.linkfestharlow.co.uk/), a free music festival in Harlow Town Park at the bandstand."
             },
             new EventDesc
@@ -284,7 +286,8 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
                     foreach (GalleryEntry sourcePhoto in folder.Children.Where(IsImage))
                     {
-                        string path = EnsureTerminatedPath(UrlNaming.BuildUrlSafePath("/" + EVENTS_ROOT + "/" + found.Name + "/" + year + "/" + date + "/" + pathRest + "/" + sourcePhoto.Title));
+                        string path = EnsureTerminatedPath(
+                            UrlNaming.BuildUrlSafePath("/" + EVENTS_ROOT + "/" + found.Name + "/" + year + "/" + date + "/" + pathRest + "/" + sourcePhoto.Title));
                         string breadcrumbs = EnsureTerminatedBreadcrumbs("\\" + EVENTS_TITLE + "\\" + found.Name + "\\" + year + "\\" + titleDate + "\\" +
                                                                          folder.Title.Replace(titleDate + " - ", newValue: string.Empty) + "\\" + sourcePhoto.Title);
 
@@ -412,8 +415,8 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                     string firstKeywordCharUpper = keywordLower.Substring(startIndex: 0, length: 1)
                                                                .ToUpperInvariant();
 
-                    string path = EnsureTerminatedPath("/" + KEYWORDS_ROOT + "/" + firstKeywordCharLower + "/" + keywordLower + "/" + sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] +
-                                                       "-" + sourcePhotoPathFragments.Last());
+                    string path = EnsureTerminatedPath("/" + KEYWORDS_ROOT + "/" + firstKeywordCharLower + "/" + keywordLower + "/" +
+                                                       sourcePhotoPathFragments[sourcePhotoPathFragments.Length - 2] + "-" + sourcePhotoPathFragments.Last());
 
                     string title = sourcePhotoBreadcrumbFragments.Last();
                     string parentTitle = sourcePhotoBreadcrumbFragments[sourcePhotoBreadcrumbFragments.Length - 2]
@@ -439,7 +442,12 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
                     Console.WriteLine(format: "Item: {0}", arg0: path);
 
-                    await AppendVirtualEntryAsync(contents: contents, parentLevel: parentLevel, path: path, originalPath: sourcePhotoFullPath, title: title, sourcePhoto: sourcePhoto);
+                    await AppendVirtualEntryAsync(contents: contents,
+                                                  parentLevel: parentLevel,
+                                                  path: path,
+                                                  originalPath: sourcePhotoFullPath,
+                                                  title: title,
+                                                  sourcePhoto: sourcePhoto);
                 }
             }
         }
@@ -623,8 +631,10 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                            Previous = previousItem,
                                            Next = nextItem,
                                            Last = lastItem,
-                                           Children = (from childRecord in parentRecord.Children where !IsHiddenItem(childRecord) orderby childRecord.Path select CreateGalleryChildItem(childRecord))
-                                               .ToList(),
+                                           Children = (from childRecord in parentRecord.Children
+                                                       where !IsHiddenItem(childRecord)
+                                                       orderby childRecord.Path
+                                                       select CreateGalleryChildItem(childRecord)).ToList(),
                                            Breadcrumbs = ExtractItemPreadcrumbs(contents: contents, parentRecord: parentRecord)
                                        }).ToList(),
                        deletedItems = new List<string>()
@@ -937,7 +947,12 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                     });
         }
 
-        private static Task AppendVirtualEntryAsync(Dictionary<string, GalleryEntry> contents, string parentLevel, string path, string originalPath, string title, Photo sourcePhoto)
+        private static Task AppendVirtualEntryAsync(Dictionary<string, GalleryEntry> contents,
+                                                    string parentLevel,
+                                                    string path,
+                                                    string originalPath,
+                                                    string title,
+                                                    Photo sourcePhoto)
         {
             ExtractDates(sourcePhoto: sourcePhoto, out DateTime dateCreated, out DateTime dateUpdated);
 
@@ -1035,7 +1050,13 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         {
             string[] notPublishable =
             {
-                MetadataNames.Title, MetadataNames.DateTaken, MetadataNames.Keywords, MetadataNames.Rating, MetadataNames.Latitude, MetadataNames.Longitude, MetadataNames.Comment
+                MetadataNames.Title,
+                MetadataNames.DateTaken,
+                MetadataNames.Keywords,
+                MetadataNames.Rating,
+                MetadataNames.Latitude,
+                MetadataNames.Longitude,
+                MetadataNames.Comment
             };
 
             return notPublishable.All(predicate: item => !StringComparer.InvariantCultureIgnoreCase.Equals(x: item, y: metadata.Name));
@@ -1062,7 +1083,8 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             dateCreated = sourcePhoto.Files.Min(selector: file => file.LastModified);
             dateUpdated = sourcePhoto.Files.Max(selector: file => file.LastModified);
 
-            PhotoMetadata taken = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.DateTaken));
+            PhotoMetadata taken =
+                sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.DateTaken));
 
             if (taken != null)
             {

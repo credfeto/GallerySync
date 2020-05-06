@@ -13,15 +13,15 @@ namespace Credfeto.Gallery.Image
         {
             try
             {
-                using (SixLabors.ImageSharp.Image.Load(bytes, out IImageFormat format))
+                using (SixLabors.ImageSharp.Image.Load(data: bytes, out IImageFormat format))
                 {
                     return format.DefaultMimeType == "image/jpeg";
                 }
             }
             catch (Exception exception)
             {
-                Console.WriteLine(format: "Error: {0}", context);
-                Console.WriteLine(format: "Error: {0}", exception);
+                Console.WriteLine(format: "Error: {0}", arg0: context);
+                Console.WriteLine(format: "Error: {0}", arg0: exception);
 
                 return false;
             }

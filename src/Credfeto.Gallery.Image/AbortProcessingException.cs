@@ -15,7 +15,7 @@ namespace Credfeto.Gallery.Image
         }
 
         public AbortProcessingException(string message, Exception innerException)
-            : base(message, innerException)
+            : base(message: message, innerException: innerException)
         {
         }
     }

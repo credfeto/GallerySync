@@ -26,7 +26,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
             if (Directory.Exists(baseFolder))
             {
-                long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder, emitter, scores.ToList(), sidecarFiles);
+                long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, scores.ToList(), sidecarFiles: sidecarFiles);
 
                 logging.LogInformation($"{baseFolder} : Files Found: {filesFound}");
             }
@@ -44,7 +44,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
             string[] sidecarFiles = {".xmp"};
 
-            long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder, emitter, scores.ToList(), sidecarFiles.ToList());
+            long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, scores.ToList(), sidecarFiles.ToList());
 
             logging.LogInformation($"{baseFolder} : Files Found: {filesFound}");
 
@@ -53,15 +53,15 @@ namespace Credfeto.Gallery.OutputBuilder
 
         public static Task StoreAsync(Photo photo, ISettings settings)
         {
-            string safeUrl = photo.UrlSafePath.Replace(oldChar: '/', Path.DirectorySeparatorChar);
+            string safeUrl = photo.UrlSafePath.Replace(oldChar: '/', newChar: Path.DirectorySeparatorChar);
             safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
             safeUrl += ".info";
 
-            string outputPath = Path.Combine(settings.DatabaseOutputFolder, safeUrl);
+            string outputPath = Path.Combine(path1: settings.DatabaseOutputFolder, path2: safeUrl);
 
             string txt = JsonSerializer.Serialize(photo);
 
-            return FileHelpers.WriteAllBytesAsync(outputPath, Encoding.UTF8.GetBytes(txt), commit: true);
+            return FileHelpers.WriteAllBytesAsync(fileName: outputPath, Encoding.UTF8.GetBytes(txt), commit: true);
         }
     }
 }

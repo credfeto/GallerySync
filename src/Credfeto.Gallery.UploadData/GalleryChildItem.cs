@@ -28,29 +28,29 @@ namespace Credfeto.Gallery.UploadData
 
         public bool Equals(GalleryChildItem other)
         {
-            if (ReferenceEquals(objA: null, other))
+            if (ReferenceEquals(objA: null, objB: other))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, other))
+            if (ReferenceEquals(this, objB: other))
             {
                 return true;
             }
 
             return this.Type == other.Type && this.Location == other.Location && this.DateUpdated == other.DateUpdated && this.DateCreated == other.DateCreated &&
                    this.Description == other.Description && this.Title == other.Title && this.Path == other.Path &&
-                   this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && ItemUpdateHelpers.CollectionEquals(this.ImageSizes, other.ImageSizes);
+                   this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && ItemUpdateHelpers.CollectionEquals(lhs: this.ImageSizes, rhs: other.ImageSizes);
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(objA: null, obj))
+            if (ReferenceEquals(objA: null, objB: obj))
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, obj))
+            if (ReferenceEquals(this, objB: obj))
             {
                 return true;
             }
@@ -83,12 +83,12 @@ namespace Credfeto.Gallery.UploadData
 
         public static bool operator ==(GalleryChildItem left, GalleryChildItem right)
         {
-            return Equals(left, right);
+            return Equals(objA: left, objB: right);
         }
 
         public static bool operator !=(GalleryChildItem left, GalleryChildItem right)
         {
-            return !Equals(left, right);
+            return !Equals(objA: left, objB: right);
         }
     }
 }

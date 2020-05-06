@@ -44,8 +44,8 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
                     continue;
                 }
 
-                string value = loader.Read(doc, nsmgr);
-                StoreValue(loader, props, value);
+                string value = loader.Read(document: doc, nameManager: nsmgr);
+                StoreValue(loader: loader, properties: props, value: value);
             }
 
             return props;
@@ -77,29 +77,30 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
 
             XmlNamespaceManager nsmgr = CreateNamespaceManager(doc);
 
-            if (StringComparer.InvariantCultureIgnoreCase.Equals(propertyName, MetadataNames.Keywords))
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(x: propertyName, y: MetadataNames.Keywords))
             {
-                ElementItemListLoader keywordLoader = new ElementItemListLoader(MetadataNames.Keywords, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
+                ElementItemListLoader keywordLoader =
+                    new ElementItemListLoader(property: MetadataNames.Keywords, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
 
-                string existingRawKeywords = keywordLoader.Read(doc, nsmgr);
+                string existingRawKeywords = keywordLoader.Read(document: doc, nameManager: nsmgr);
                 IEnumerable<string> existingKeywords = from record in existingRawKeywords.Split(separator: ';') select record.ToUpperInvariant();
                 string[] newKeywords = value.Replace(oldChar: ';', newChar: ',')
                                             .Split(separator: ',');
 
                 IEnumerable<string> keywordsToAdd = from record in newKeywords where !existingKeywords.Contains(record.ToUpperInvariant()) select record;
 
-                XmlNode baseNode = doc.SelectSingleNode(xpath: "/x:xmpmeta/rdf:RDF/rdf:Description", nsmgr);
+                XmlNode baseNode = doc.SelectSingleNode(xpath: "/x:xmpmeta/rdf:RDF/rdf:Description", nsmgr: nsmgr);
 
                 if (baseNode == null)
                 {
                     return false;
                 }
 
-                XmlElement node = SelectOrCreateSingleNode(doc, nsmgr, baseNode, path: "dc:subject/rdf:Bag");
+                XmlElement node = SelectOrCreateSingleNode(document: doc, namespaceManager: nsmgr, baseNode: baseNode, path: "dc:subject/rdf:Bag");
 
                 foreach (string word in keywordsToAdd)
                 {
-                    XmlElement keywordElement = CreateElement(doc, nsmgr, node: "rdf:li");
+                    XmlElement keywordElement = CreateElement(document: doc, namespaceManager: nsmgr, node: "rdf:li");
                     XmlText textEntry = doc.CreateTextNode(word);
                     keywordElement.AppendChild(textEntry);
 
@@ -115,7 +116,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
                                                            NewLineOnAttributes = true
                                                        };
 
-                using (XmlWriter w = XmlWriter.Create(fileName, xmlWriterSerttings))
+                using (XmlWriter w = XmlWriter.Create(outputFileName: fileName, settings: xmlWriterSerttings))
                 {
                     doc.Save(w);
 
@@ -154,7 +155,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
             {
                 string namespaceUri = namespaceManager.LookupNamespace(nodeParts[0]);
 
-                return document.CreateElement(nodeParts[0], nodeParts[1], namespaceUri);
+                return document.CreateElement(nodeParts[0], nodeParts[1], namespaceURI: namespaceUri);
             }
 
             return document.CreateElement(nodeParts[0]);
@@ -170,33 +171,33 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
         {
             Contract.Ensures(Contract.Result<IEnumerable<IItemLoader>>() != null);
 
-            yield return new AttributeItemLoader(MetadataNames.CameraManufacturer, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Make");
-            yield return new ElementItemLoader(MetadataNames.CameraManufacturer, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Make");
-            yield return new AttributeItemLoader(MetadataNames.CameraModel, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Model");
-            yield return new ElementItemLoader(MetadataNames.CameraModel, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Model");
-            yield return new AttributeItemLoader(MetadataNames.Orientation, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Orientation");
-            yield return new ElementItemLoader(MetadataNames.Orientation, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Orientation");
-            yield return new AttributeItemLoader(MetadataNames.ExposureTime, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:ExposureTime");
-            yield return new ElementItemLoader(MetadataNames.ExposureTime, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ExposureTime");
-            yield return new AttributeItemLoader(MetadataNames.Aperture, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FNumber");
-            yield return new ElementItemLoader(MetadataNames.Aperture, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FNumber");
-            yield return new AttributeItemLoader(MetadataNames.DateTaken, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:DateTimeOriginal");
-            yield return new ElementItemLoader(MetadataNames.DateTaken, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:DateTimeOriginal");
-            yield return new AttributeItemLoader(MetadataNames.Rating, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
-            yield return new ElementItemLoader(MetadataNames.Rating, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
-            yield return new AttributeItemLoader(MetadataNames.FocalLength, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FocalLength");
-            yield return new ElementItemLoader(MetadataNames.FocalLength, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FocalLength");
+            yield return new AttributeItemLoader(property: MetadataNames.CameraManufacturer, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Make");
+            yield return new ElementItemLoader(property: MetadataNames.CameraManufacturer, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Make");
+            yield return new AttributeItemLoader(property: MetadataNames.CameraModel, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Model");
+            yield return new ElementItemLoader(property: MetadataNames.CameraModel, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Model");
+            yield return new AttributeItemLoader(property: MetadataNames.Orientation, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Orientation");
+            yield return new ElementItemLoader(property: MetadataNames.Orientation, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Orientation");
+            yield return new AttributeItemLoader(property: MetadataNames.ExposureTime, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:ExposureTime");
+            yield return new ElementItemLoader(property: MetadataNames.ExposureTime, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ExposureTime");
+            yield return new AttributeItemLoader(property: MetadataNames.Aperture, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FNumber");
+            yield return new ElementItemLoader(property: MetadataNames.Aperture, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FNumber");
+            yield return new AttributeItemLoader(property: MetadataNames.DateTaken, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:DateTimeOriginal");
+            yield return new ElementItemLoader(property: MetadataNames.DateTaken, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:DateTimeOriginal");
+            yield return new AttributeItemLoader(property: MetadataNames.Rating, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
+            yield return new ElementItemLoader(property: MetadataNames.Rating, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
+            yield return new AttributeItemLoader(property: MetadataNames.FocalLength, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FocalLength");
+            yield return new ElementItemLoader(property: MetadataNames.FocalLength, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FocalLength");
 
             //yield return new AttributeItemLoader(MetadataNames.Lens, "/x:xmpmeta/rdf:RDF/rdf:Description/@aux:Lens");
             //yield return new ElementItemLoader(MetadataNames.Lens, "/x:xmpmeta/rdf:RDF/rdf:Description/aux:Lens");
-            yield return new AttributeItemLoader(MetadataNames.Latitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLatitude");
-            yield return new ElementItemLoader(MetadataNames.Latitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLatitude");
+            yield return new AttributeItemLoader(property: MetadataNames.Latitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLatitude");
+            yield return new ElementItemLoader(property: MetadataNames.Latitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLatitude");
 
-            yield return new AttributeItemLoader(MetadataNames.Longitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLongitude");
-            yield return new ElementItemLoader(MetadataNames.Longitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLongitude");
+            yield return new AttributeItemLoader(property: MetadataNames.Longitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLongitude");
+            yield return new ElementItemLoader(property: MetadataNames.Longitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLongitude");
 
-            yield return new ElementItemLoader(MetadataNames.IsoSpeed, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ISOSpeedRatings/rdf:Seq/rdf:li");
-            yield return new ElementItemListLoader(MetadataNames.Keywords, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
+            yield return new ElementItemLoader(property: MetadataNames.IsoSpeed, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ISOSpeedRatings/rdf:Seq/rdf:li");
+            yield return new ElementItemListLoader(property: MetadataNames.Keywords, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
         }
 
         /// <summary>
@@ -233,39 +234,39 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
 
         private static string NormalizeValue(string name, string value)
         {
-            if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.FocalLength))
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.FocalLength))
             {
-                if (SplitParts(value, out uint v1, out uint v2))
+                if (SplitParts(value: value, out uint v1, out uint v2))
                 {
-                    double d = MetadataNormalizationFunctions.ToReal(v1, v2);
+                    double d = MetadataNormalizationFunctions.ToReal(numerator: v1, denominator: v2);
 
                     return MetadataFormatting.FormatFocalLength(d);
                 }
             }
 
-            if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.Aperture))
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.Aperture))
             {
-                if (SplitParts(value, out uint v1, out uint v2))
+                if (SplitParts(value: value, out uint v1, out uint v2))
                 {
-                    double d = MetadataNormalizationFunctions.ToReal(v1, v2);
+                    double d = MetadataNormalizationFunctions.ToReal(numerator: v1, denominator: v2);
 
                     return MetadataFormatting.FormatFNumber(d);
                 }
             }
 
-            if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.ExposureTime))
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.ExposureTime))
             {
-                if (SplitParts(value, out uint v1, out uint v2))
+                if (SplitParts(value: value, out uint v1, out uint v2))
                 {
-                    double d = MetadataNormalizationFunctions.ToReal(v1, v2);
+                    double d = MetadataNormalizationFunctions.ToReal(numerator: v1, denominator: v2);
 
                     return MetadataFormatting.FormatExposure(d);
                 }
             }
 
-            if (StringComparer.InvariantCultureIgnoreCase.Equals(name, MetadataNames.Orientation))
+            if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.Orientation))
             {
-                if (int.TryParse(value, out int orientation))
+                if (int.TryParse(s: value, out int orientation))
                 {
                     // http://sylvana.net/jpegcrop/exif_orientation.html
                     //  1        2       3      4         5            6           7          8
@@ -317,7 +318,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
             Contract.Requires(baseNode != null);
             Contract.Requires(!string.IsNullOrEmpty(path));
 
-            XmlNode fullNode = baseNode.SelectSingleNode(path, namespaceManager);
+            XmlNode fullNode = baseNode.SelectSingleNode(xpath: path, nsmgr: namespaceManager);
 
             if (fullNode != null)
             {
@@ -331,7 +332,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
 
             while (depth < fragments.Length)
             {
-                XmlNode found = baseNode.SelectSingleNode(fragments[depth], namespaceManager);
+                XmlNode found = baseNode.SelectSingleNode(fragments[depth], nsmgr: namespaceManager);
 
                 if (found == null)
                 {
@@ -346,7 +347,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
             while (depth < fragments.Length)
             {
                 string node = fragments[depth];
-                XmlElement newElement = CreateElement(document, namespaceManager, node);
+                XmlElement newElement = CreateElement(document: document, namespaceManager: namespaceManager, node: node);
                 baseNode.AppendChild(newElement);
                 baseNode = newElement;
                 ++depth;
@@ -367,14 +368,14 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
                 return false;
             }
 
-            if (!uint.TryParse(split[0], out v1))
+            if (!uint.TryParse(split[0], result: out v1))
             {
                 v2 = 0;
 
                 return false;
             }
 
-            if (!uint.TryParse(split[1], out v2))
+            if (!uint.TryParse(split[1], result: out v2))
             {
                 return false;
             }
@@ -399,18 +400,18 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
             Contract.Requires(loader != null);
             Contract.Requires(properties != null);
 
-            if (properties.TryGetValue(loader.Name, out string lastValue))
+            if (properties.TryGetValue(key: loader.Name, out string lastValue))
             {
                 if (string.IsNullOrWhiteSpace(lastValue) && !string.IsNullOrWhiteSpace(value))
                 {
-                    properties[loader.Name] = NormalizeValue(loader.Name, value);
+                    properties[loader.Name] = NormalizeValue(name: loader.Name, value: value);
                 }
             }
             else
             {
                 if (value != null)
                 {
-                    properties.Add(loader.Name, NormalizeValue(loader.Name, value));
+                    properties.Add(key: loader.Name, NormalizeValue(name: loader.Name, value: value));
                 }
             }
         }

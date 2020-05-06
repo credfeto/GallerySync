@@ -79,7 +79,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
             Contract.Requires(document != null);
             Contract.Requires(nameManager != null);
 
-            XmlNodeList imageNodes = document.SelectNodes(this._pathToItem, nameManager);
+            XmlNodeList imageNodes = document.SelectNodes(xpath: this._pathToItem, nsmgr: nameManager);
 
             if (imageNodes == null)
             {

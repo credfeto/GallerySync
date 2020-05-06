@@ -30,14 +30,14 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
         public async Task<string> TryGenerateShortUrlAsync(string url)
         {
-            if (this._shortUrls.TryGetValue(url, out string shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+            if (this._shortUrls.TryGetValue(url: url, out string shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
             {
                 return shortUrl;
             }
 
             await Sempahore.WaitAsync();
 
-            if (this._shortUrls.TryGetValue(url, out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+            if (this._shortUrls.TryGetValue(url: url, shortUrl: out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
             {
                 return shortUrl;
             }
@@ -81,7 +81,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
                     tracking.Add(counter);
 
-                    await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), commit: false);
+                    await FileHelpers.WriteAllBytesAsync(fileName: filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), commit: false);
                 }
                 else
                 {
@@ -92,7 +92,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                         ++counter.Impressions;
                         ++counter.TotalImpressionsEver;
 
-                        await FileHelpers.WriteAllBytesAsync(filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), commit: false);
+                        await FileHelpers.WriteAllBytesAsync(fileName: filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray())), commit: false);
                     }
                 }
 

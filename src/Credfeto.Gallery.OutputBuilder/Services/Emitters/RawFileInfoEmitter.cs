@@ -18,9 +18,9 @@ namespace Credfeto.Gallery.OutputBuilder.Services.Emitters
 
         public async Task FileFoundAsync(FileEntry entry)
         {
-            string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
+            string basePath = Path.Combine(path1: entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
-            Photo item = await CreatePhotoRecordAsync(entry, basePath);
+            Photo item = await CreatePhotoRecordAsync(entry: entry, basePath: basePath);
 
             this.Store(item);
         }
@@ -45,7 +45,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services.Emitters
             TaskFactory<ComponentFile> factory = Task<ComponentFile>.Factory;
 
             Task<ComponentFile>[] tasks = entry.AlternateFileNames.Concat(new[] {entry.LocalFileName})
-                                               .Select(selector: fileName => ReadComponentFileAsync(factory, Path.Combine(entry.Folder, fileName)))
+                                               .Select(selector: fileName => ReadComponentFileAsync(factory: factory, Path.Combine(path1: entry.Folder, path2: fileName)))
                                                .ToArray();
 
             Photo item = new Photo

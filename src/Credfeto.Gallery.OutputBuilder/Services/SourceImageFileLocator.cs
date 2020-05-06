@@ -16,7 +16,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
         public string GetFilename(Photo sourcePhoto)
         {
-            return Path.Combine(this._settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
+            return Path.Combine(path1: this._settings.RootFolder, sourcePhoto.BasePath + sourcePhoto.ImageExtension);
         }
     }
 }

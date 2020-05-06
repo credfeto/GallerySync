@@ -21,9 +21,9 @@ namespace Credfeto.Gallery.OutputBuilder
 
             List<string> fileGroup = new List<string>();
 
-            if (File.Exists(filename.Replace(extension, newValue: ".xmp")))
+            if (File.Exists(filename.Replace(oldValue: extension, newValue: ".xmp")))
             {
-                fileGroup.Add(file.Replace(extension, newValue: ".xmp"));
+                fileGroup.Add(file.Replace(oldValue: extension, newValue: ".xmp"));
             }
 
             FileEntry entry = new FileEntry
@@ -31,7 +31,7 @@ namespace Credfeto.Gallery.OutputBuilder
                                   Folder = folder, RelativeFolder = folder.Substring(settings.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup
                               };
 
-            string basePath = Path.Combine(entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
+            string basePath = Path.Combine(path1: entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
             string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
@@ -52,7 +52,7 @@ namespace Credfeto.Gallery.OutputBuilder
                                                .ToList()
                           };
 
-            List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(photo, settings);
+            List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(sourcePhoto: photo, settings: settings);
 
             foreach (PhotoMetadata item in metadata)
             {

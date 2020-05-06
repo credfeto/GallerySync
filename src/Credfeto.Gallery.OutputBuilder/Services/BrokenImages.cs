@@ -13,7 +13,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
         public void LogBrokenImage(string path, Exception exception)
         {
-            Items.TryAdd(path, exception);
+            Items.TryAdd(key: path, value: exception);
         }
 
         public string[] AllBrokenImages()
@@ -37,7 +37,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                 return "Unknown";
             }
 
-            return string.Concat(method.DeclaringType.FullName, str1: "::", method.Name);
+            return string.Concat(str0: method.DeclaringType.FullName, str1: "::", str2: method.Name);
         }
     }
 }

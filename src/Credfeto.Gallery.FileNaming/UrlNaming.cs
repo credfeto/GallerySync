@@ -20,11 +20,12 @@ namespace Credfeto.Gallery.FileNaming
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1055:UriReturnValuesShouldNotBeStrings", Justification = "Its a fragment")]
         public static string BuildUrlSafePath(string basePath)
         {
-            string root = RemoveDiacritics(basePath.Trim() + "/", compatNorm: true, NormaliseLWithStroke);
+            string root = RemoveDiacritics(basePath.Trim() + "/", compatNorm: true, customFolding: NormaliseLWithStroke);
             root = RemoveApostrophes(root);
 
             return NoHyphensNextToSlash
-                   .Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), REPLACEMENT_CHAR), REPLACEMENT_CHAR),
+                   .Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), replacement: REPLACEMENT_CHAR),
+                                                       replacement: REPLACEMENT_CHAR),
                             replacement: "/")
                    .TrimEnd(REPLACEMENT_CHAR.ToCharArray())
                    .ToLowerInvariant();
@@ -59,14 +60,14 @@ namespace Credfeto.Gallery.FileNaming
 
         internal static IEnumerable<char> RemoveDiacriticsEnum(string src, bool compatNorm)
         {
-            return RemoveDiacritics(src, compatNorm, customFolding: c => c);
+            return RemoveDiacritics(src: src, compatNorm: compatNorm, customFolding: c => c);
         }
 
         public static string RemoveDiacritics(string src, bool compatNorm, Func<char, char> customFolding)
         {
             StringBuilder sb = new StringBuilder();
 
-            foreach (char c in RemoveDiacriticsEnum(src, compatNorm, customFolding))
+            foreach (char c in RemoveDiacriticsEnum(src: src, compatNorm: compatNorm, customFolding: customFolding))
             {
                 sb.Append(c);
             }
@@ -76,7 +77,7 @@ namespace Credfeto.Gallery.FileNaming
 
         public static string RemoveDiacritics(string src, bool compatNorm)
         {
-            return RemoveDiacritics(src, compatNorm, customFolding: c => c);
+            return RemoveDiacritics(src: src, compatNorm: compatNorm, customFolding: c => c);
         }
 
         private static char NormaliseLWithStroke(char c)

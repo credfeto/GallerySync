@@ -15,7 +15,7 @@ namespace Credfeto.Gallery.FileNaming
 
             foreach (int index in indexes.OrderByDescending(keySelector: x => x))
             {
-                builder.Insert(index, separator);
+                builder.Insert(index: index, value: separator);
             }
 
             return builder.ToString();

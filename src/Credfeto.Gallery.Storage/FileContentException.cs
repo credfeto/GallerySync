@@ -16,12 +16,12 @@ namespace Credfeto.Gallery.Storage
         }
 
         public FileContentException(string message, Exception innerException)
-            : base(message, innerException)
+            : base(message: message, innerException: innerException)
         {
         }
 
         protected FileContentException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
+            : base(info: info, context: context)
         {
         }
     }
