@@ -10,7 +10,7 @@ namespace Credfeto.Gallery.OutputBuilder
     {
         public static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
         {
-            PhotoMetadata dateTaken = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.DateTaken);
+            PhotoMetadata dateTaken = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.DATE_TAKEN);
 
             if (dateTaken == null)
             {

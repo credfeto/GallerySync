@@ -59,12 +59,7 @@ namespace Credfeto.Gallery.Image.Services
             }
         }
 
-        public async Task<IReadOnlyList<ImageSize>> BuildImagesAsync(Photo sourcePhoto,
-                                                                     List<string> filesCreated,
-                                                                     DateTime creationDate,
-                                                                     string url,
-                                                                     string shortUrl,
-                                                                     IImageSettings imageSettings)
+        public async Task<IReadOnlyList<ImageSize>> BuildImagesAsync(Photo sourcePhoto, List<string> filesCreated, DateTime creationDate, string url, string shortUrl, IImageSettings imageSettings)
         {
             string rawExtension = sourcePhoto.ImageExtension.TrimStart(trimChar: '.')
                                              .ToUpperInvariant();
@@ -104,8 +99,7 @@ namespace Credfeto.Gallery.Image.Services
 
                     using (Image<Rgba32> resized = ResizeImage(image: sourceBitmap, maximumDimension: dimension))
                     {
-                        string resizedFileName =
-                            this._resizeImageFileLocator.GetResizedFileName(sourcePhoto: sourcePhoto, new ImageSize {Width = resized.Width, Height = resized.Height});
+                        string resizedFileName = this._resizeImageFileLocator.GetResizedFileName(sourcePhoto: sourcePhoto, new ImageSize {Width = resized.Width, Height = resized.Height});
 
                         ApplyWatermark(imageToAddWatermarkTo: resized, url: shortUrl, imageSettings: imageSettings);
 
@@ -134,8 +128,7 @@ namespace Credfeto.Gallery.Image.Services
                             throw new AbortProcessingException(string.Format(format: "File {0} produced an invalid image", arg0: filename));
                         }
 
-                        filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" +
-                                         this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto: sourcePhoto, resized: resized));
+                        filesCreated.Add(HashNaming.PathifyHash(sourcePhoto.PathHash) + "\\" + this._imageFilenameGeneration.IndividualResizeFileName(sourcePhoto: sourcePhoto, resized: resized));
 
                         if (resized.Width == imageSettings.ThumbnailSize)
                         {
@@ -174,13 +167,7 @@ namespace Credfeto.Gallery.Image.Services
         ///     Block of bytes representing the image.
         /// </returns>
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Is fallback position where it retries.")]
-        public byte[] SaveImageAsJpegBytes(Image<Rgba32> image,
-                                           long compressionQuality,
-                                           string url,
-                                           string shortUrl,
-                                           List<PhotoMetadata> metadata,
-                                           DateTime creationDate,
-                                           IImageSettings imageSettings)
+        public byte[] SaveImageAsJpegBytes(Image<Rgba32> image, long compressionQuality, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, IImageSettings imageSettings)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
@@ -345,7 +332,7 @@ namespace Credfeto.Gallery.Image.Services
         private static string ExtractDescription(List<PhotoMetadata> metadata, string url, DateTime creationDate)
         {
             string description = string.Empty;
-            PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Comment));
+            PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.COMMENT));
 
             if (desc != null)
             {

@@ -198,7 +198,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 double d = MetadataNormalizationFunctions.ToApexValue(MetadataNormalizationFunctions.ToReal(aperture[0], aperture[1]));
 
-                AppendMetadata(metadata: metadata, name: MetadataNames.Aperture, MetadataFormatting.FormatAperture(d));
+                AppendMetadata(metadata: metadata, name: MetadataNames.APERTURE, MetadataFormatting.FormatAperture(d));
             }
         }
 
@@ -206,7 +206,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             if (reader.GetTagValue(tag: ExifTags.Artist, out string artist))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.Photographer, value: artist);
+                AppendMetadata(metadata: metadata, name: MetadataNames.PHOTOGRAPHER, value: artist);
             }
         }
 
@@ -214,7 +214,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             if (reader.GetTagValue(tag: ExifTags.Make, out string cameraMake))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.CameraManufacturer, value: cameraMake);
+                AppendMetadata(metadata: metadata, name: MetadataNames.CAMERA_MANUFACTURER, value: cameraMake);
             }
         }
 
@@ -222,7 +222,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             if (reader.GetTagValue(tag: ExifTags.Model, out string cameraModel))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.CameraModel, value: cameraModel);
+                AppendMetadata(metadata: metadata, name: MetadataNames.CAMERA_MODEL, value: cameraModel);
             }
         }
 
@@ -230,7 +230,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             if (reader.GetTagValue(tag: ExifTags.Artist, out string copyright))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.Copyright, value: copyright);
+                AppendMetadata(metadata: metadata, name: MetadataNames.COPYRIGHT, value: copyright);
             }
         }
 
@@ -238,15 +238,15 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             if (reader.GetTagValue(tag: ExifTags.DateTimeDigitized, out DateTime whenTaken))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.DateTaken, value: whenTaken);
+                AppendMetadata(metadata: metadata, name: MetadataNames.DATE_TAKEN, value: whenTaken);
             }
             else if (reader.GetTagValue(tag: ExifTags.DateTime, result: out whenTaken))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.DateTaken, value: whenTaken);
+                AppendMetadata(metadata: metadata, name: MetadataNames.DATE_TAKEN, value: whenTaken);
             }
             else if (reader.GetTagValue(tag: ExifTags.DateTimeOriginal, result: out whenTaken))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.DateTaken, value: whenTaken);
+                AppendMetadata(metadata: metadata, name: MetadataNames.DATE_TAKEN, value: whenTaken);
             }
         }
 
@@ -256,7 +256,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 double d = MetadataNormalizationFunctions.ToReal(exposureTime[0], exposureTime[1]);
 
-                AppendMetadata(metadata: metadata, name: MetadataNames.ExposureTime, MetadataFormatting.FormatExposure(d));
+                AppendMetadata(metadata: metadata, name: MetadataNames.EXPOSURE_TIME, MetadataFormatting.FormatExposure(d));
             }
         }
 
@@ -266,7 +266,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 double d = MetadataNormalizationFunctions.ClosestFStop(MetadataNormalizationFunctions.ToReal(fNumber[0], fNumber[1]));
 
-                AppendMetadata(metadata: metadata, name: MetadataNames.Aperture, MetadataFormatting.FormatFNumber(d));
+                AppendMetadata(metadata: metadata, name: MetadataNames.APERTURE, MetadataFormatting.FormatFNumber(d));
             }
         }
 
@@ -276,7 +276,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 double d = MetadataNormalizationFunctions.ToReal(focalLength[0], focalLength[1]);
 
-                AppendMetadata(metadata: metadata, name: MetadataNames.FocalLength, MetadataFormatting.FormatFocalLength(d));
+                AppendMetadata(metadata: metadata, name: MetadataNames.FOCAL_LENGTH, MetadataFormatting.FormatFocalLength(d));
             }
         }
 
@@ -308,8 +308,8 @@ namespace Credfeto.Gallery.OutputBuilder
                     longitude = -longitude;
                 }
 
-                AppendMetadata(metadata: metadata, name: MetadataNames.Latitude, value: latitude);
-                AppendMetadata(metadata: metadata, name: MetadataNames.Longitude, value: longitude);
+                AppendMetadata(metadata: metadata, name: MetadataNames.LATITUDE, value: latitude);
+                AppendMetadata(metadata: metadata, name: MetadataNames.LONGITUDE, value: longitude);
             }
         }
 
@@ -317,7 +317,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             if (reader.GetTagValue(tag: ExifTags.PhotographicSensitivity, out ushort isoSpeed))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.IsoSpeed, value: isoSpeed);
+                AppendMetadata(metadata: metadata, name: MetadataNames.ISO_SPEED, value: isoSpeed);
             }
         }
 
@@ -349,7 +349,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 Dictionary<string, string> properties = XmpFile.ExtractProperties(sidecarFileName);
 
-                if (properties.TryGetValue(key: MetadataNames.Latitude, out string latStr) && properties.TryGetValue(key: MetadataNames.Longitude, out string lngStr))
+                if (properties.TryGetValue(key: MetadataNames.LATITUDE, out string latStr) && properties.TryGetValue(key: MetadataNames.LONGITUDE, out string lngStr))
                 {
                     string[] latParts = latStr.Split(separator: ',');
                     string[] lngParts = lngStr.Split(separator: ',');
@@ -360,8 +360,8 @@ namespace Credfeto.Gallery.OutputBuilder
                         double lat = ExtractGpsMetadataDegreesMinutesSeconds(parts: latParts, positive: 'N', negative: 'S');
                         double lng = ExtractGpsMetadataDegreesMinutesSeconds(parts: lngParts, positive: 'E', negative: 'W');
 
-                        AppendMetadata(metadata: metadata, name: MetadataNames.Latitude, value: lat);
-                        AppendMetadata(metadata: metadata, name: MetadataNames.Longitude, value: lng);
+                        AppendMetadata(metadata: metadata, name: MetadataNames.LATITUDE, value: lat);
+                        AppendMetadata(metadata: metadata, name: MetadataNames.LONGITUDE, value: lng);
                     }
                     else if (latParts.Length == 2 && lngParts.Length == 2)
                     {
@@ -369,8 +369,8 @@ namespace Credfeto.Gallery.OutputBuilder
                         double lat = ExtractGpsMetadataDegreesMinutes(parts: latParts, positive: 'N', negative: 'S');
                         double lng = ExtractGpsMetadataDegreesMinutes(parts: lngParts, positive: 'E', negative: 'W');
 
-                        AppendMetadata(metadata: metadata, name: MetadataNames.Latitude, value: lat);
-                        AppendMetadata(metadata: metadata, name: MetadataNames.Longitude, value: lng);
+                        AppendMetadata(metadata: metadata, name: MetadataNames.LATITUDE, value: lat);
+                        AppendMetadata(metadata: metadata, name: MetadataNames.LONGITUDE, value: lng);
                     }
                 }
 
@@ -392,23 +392,23 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             if (!string.IsNullOrWhiteSpace(tag.Title))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.Title, value: tag.Title);
+                AppendMetadata(metadata: metadata, name: MetadataNames.TITLE, value: tag.Title);
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Comment) && !IsStupidManufacturerComment(tag.Comment))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.Comment, value: tag.Comment);
+                AppendMetadata(metadata: metadata, name: MetadataNames.COMMENT, value: tag.Comment);
             }
 
             string keywords = string.Join(separator: ",", value: tag.Keywords);
 
             if (!string.IsNullOrWhiteSpace(keywords))
             {
-                PhotoMetadata existing = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.Keywords);
+                PhotoMetadata existing = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.KEYWORDS);
 
                 if (existing == null)
                 {
-                    AppendMetadata(metadata: metadata, name: MetadataNames.Keywords, value: keywords);
+                    AppendMetadata(metadata: metadata, name: MetadataNames.KEYWORDS, value: keywords);
                 }
                 else
                 {
@@ -421,64 +421,64 @@ namespace Credfeto.Gallery.OutputBuilder
                     metadata.Remove(existing);
                 }
 
-                AppendMetadata(metadata: metadata, name: MetadataNames.Keywords, value: keywords);
+                AppendMetadata(metadata: metadata, name: MetadataNames.KEYWORDS, value: keywords);
             }
 
-            AppendMetadata(metadata: metadata, name: MetadataNames.Rating, tag.Rating.GetValueOrDefault(defaultValue: 1));
+            AppendMetadata(metadata: metadata, name: MetadataNames.RATING, tag.Rating.GetValueOrDefault(defaultValue: 1));
 
             if (tag.DateTime.HasValue)
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.DateTaken, value: tag.DateTime.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.DATE_TAKEN, value: tag.DateTime.Value);
             }
 
-            AppendMetadata(metadata: metadata, name: MetadataNames.Orientation, tag.Orientation.ToString());
+            AppendMetadata(metadata: metadata, name: MetadataNames.ORIENTATION, tag.Orientation.ToString());
 
             if (tag.Latitude.HasValue && tag.Longitude.HasValue)
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.Latitude, value: tag.Latitude.Value);
-                AppendMetadata(metadata: metadata, name: MetadataNames.Longitude, value: tag.Longitude.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.LATITUDE, value: tag.Latitude.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.LONGITUDE, value: tag.Longitude.Value);
             }
 
             if (tag.Altitude.HasValue)
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.Altitude, value: tag.Altitude.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.ALTITUDE, value: tag.Altitude.Value);
             }
 
             if (tag.ExposureTime.HasValue)
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.ExposureTime, MetadataFormatting.FormatExposure(d: tag.ExposureTime.Value, bucket: false));
+                AppendMetadata(metadata: metadata, name: MetadataNames.EXPOSURE_TIME, MetadataFormatting.FormatExposure(d: tag.ExposureTime.Value, bucket: false));
             }
 
             if (tag.FNumber.HasValue)
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.Aperture, MetadataFormatting.FormatFNumber(tag.FNumber.Value));
+                AppendMetadata(metadata: metadata, name: MetadataNames.APERTURE, MetadataFormatting.FormatFNumber(tag.FNumber.Value));
             }
 
             if (tag.ISOSpeedRatings.HasValue)
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.IsoSpeed, value: tag.ISOSpeedRatings.Value);
+                AppendMetadata(metadata: metadata, name: MetadataNames.ISO_SPEED, value: tag.ISOSpeedRatings.Value);
             }
 
             if (tag.FocalLength.HasValue)
             {
                 AppendMetadata(metadata: metadata,
-                               name: MetadataNames.FocalLength,
+                               name: MetadataNames.FOCAL_LENGTH,
                                MetadataFormatting.FormatFocalLength(d: tag.FocalLength.Value, (int) tag.FocalLengthIn35mmFilm.GetValueOrDefault(defaultValue: 0)));
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Make))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.CameraManufacturer, value: tag.Make);
+                AppendMetadata(metadata: metadata, name: MetadataNames.CAMERA_MANUFACTURER, value: tag.Make);
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Model))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.CameraModel, value: tag.Model);
+                AppendMetadata(metadata: metadata, name: MetadataNames.CAMERA_MODEL, value: tag.Model);
             }
 
             if (!string.IsNullOrWhiteSpace(tag.Creator))
             {
-                AppendMetadata(metadata: metadata, name: MetadataNames.Photographer, value: tag.Creator);
+                AppendMetadata(metadata: metadata, name: MetadataNames.PHOTOGRAPHER, value: tag.Creator);
             }
         }
 
@@ -488,7 +488,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 if (!string.IsNullOrWhiteSpace(userComment) && !IsStupidManufacturerComment(userComment))
                 {
-                    AppendMetadata(metadata: metadata, name: MetadataNames.Comment, value: userComment);
+                    AppendMetadata(metadata: metadata, name: MetadataNames.COMMENT, value: userComment);
                 }
             }
         }
@@ -500,7 +500,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
         private static bool IsLocation(KeyValuePair<string, string> keyValuePair)
         {
-            string[] p = {MetadataNames.Latitude, MetadataNames.Longitude};
+            string[] p = {MetadataNames.LATITUDE, MetadataNames.LONGITUDE};
 
             return p.Any(predicate: v => StringComparer.InvariantCultureIgnoreCase.Equals(x: v, y: keyValuePair.Key));
         }
