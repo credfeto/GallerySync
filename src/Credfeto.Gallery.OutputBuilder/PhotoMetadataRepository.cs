@@ -15,6 +15,15 @@ namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class PhotoMetadataRepository
     {
+        private static readonly JsonSerializerOptions SerialiserOptions = new JsonSerializerOptions
+                                                                          {
+                                                                              PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                                                                              DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                                                                              IgnoreNullValues = true,
+                                                                              WriteIndented = true,
+                                                                              PropertyNameCaseInsensitive = true
+                                                                          };
+
         public static async Task<Photo[]> LoadRepositoryAsync(string baseFolder, ILogger logging)
         {
             logging.LogInformation($"Loading Repository from {baseFolder}...");
@@ -44,7 +53,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
             string[] sidecarFiles = {".xmp"};
 
-            long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, scores.ToList(), sidecarFiles.ToList());
+            long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, extensionsToRetrieveInOrderOfPrecendence: scores, sidecarFiles: sidecarFiles);
 
             logging.LogInformation($"{baseFolder} : Files Found: {filesFound}");
 
@@ -59,7 +68,7 @@ namespace Credfeto.Gallery.OutputBuilder
 
             string outputPath = Path.Combine(path1: settings.DatabaseOutputFolder, path2: safeUrl);
 
-            string txt = JsonSerializer.Serialize(photo);
+            string txt = JsonSerializer.Serialize(value: photo, options: SerialiserOptions);
 
             return FileHelpers.WriteAllBytesAsync(fileName: outputPath, Encoding.UTF8.GetBytes(txt), commit: true);
         }

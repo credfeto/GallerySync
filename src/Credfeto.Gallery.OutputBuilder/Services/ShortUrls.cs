@@ -49,8 +49,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
             foreach (string line in lines)
             {
-                if (!line.StartsWith(value: @"http://", comparisonType: StringComparison.OrdinalIgnoreCase) &&
-                    !line.StartsWith(value: @"https://", comparisonType: StringComparison.OrdinalIgnoreCase))
+                if (!line.StartsWith(value: @"http://", comparisonType: StringComparison.OrdinalIgnoreCase) && !line.StartsWith(value: @"https://", comparisonType: StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -81,7 +80,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
             }
 
             return string.IsNullOrWhiteSpace(shortUrl) || StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: url) ||
-                   StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: Constants.DefaultShortUrl);
+                   StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: Constants.DEFAULT_SHORT_URL);
         }
 
         public async Task LogShortUrlAsync(string url, string shortUrl)

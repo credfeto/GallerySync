@@ -9,10 +9,7 @@ namespace Credfeto.Gallery.Scanner
 {
     public static class DirectoryScanner
     {
-        public static async Task<long> ScanFolderAsync(string baseFolder,
-                                                       IFileEmitter fileEmitter,
-                                                       List<string> extensionsToRetrieveInOrderOfPrecendence,
-                                                       List<string> sidecarFiles)
+        public static async Task<long> ScanFolderAsync(string baseFolder, IFileEmitter fileEmitter, IReadOnlyList<string> extensionsToRetrieveInOrderOfPrecendence, IReadOnlyList<string> sidecarFiles)
         {
             Context context = new Context(baseFolder: baseFolder,
                                           fileEmitter: fileEmitter,
@@ -92,10 +89,15 @@ namespace Credfeto.Gallery.Scanner
             }
         }
 
-        private static int ExtensionScore(List<string> scores, string match)
+        private static int ExtensionScore(IReadOnlyList<string> scores, string match)
         {
-            return scores.IndexOf(Path.GetExtension(match)
-                                      .ToLowerInvariant());
+            string extension = Path.GetExtension(match)
+                                   .ToLowerInvariant();
+
+            var found = scores.Select((c, i) => new {Ext = c, Index = i})
+                              .FirstOrDefault(x => extension == x.Ext);
+
+            return found?.Index ?? -1;
         }
 
         private static Task FindSubFoldersAsync(string folder, Context context)
@@ -119,7 +121,7 @@ namespace Credfeto.Gallery.Scanner
         {
             private readonly Func<IEnumerable<string>, bool> _cannotBeSoleExtensionMatch;
 
-            public Context(string baseFolder, IFileEmitter fileEmitter, List<string> extensionsToRetrieveInOrderOfPrecendence, List<string> sidecarExtensions)
+            public Context(string baseFolder, IFileEmitter fileEmitter, IReadOnlyList<string> extensionsToRetrieveInOrderOfPrecendence, IReadOnlyList<string> sidecarExtensions)
             {
                 this.BaseFolder = baseFolder;
                 this.FileEmitter = fileEmitter;
@@ -131,11 +133,11 @@ namespace Credfeto.Gallery.Scanner
 
             public IFileEmitter FileEmitter { get; }
 
-            public List<string> ExtensionsToRetrieveInOrderOfPrecendence { get; }
+            public IReadOnlyList<string> ExtensionsToRetrieveInOrderOfPrecendence { get; }
 
             public ConcurrentQueue<FileEntry> FilesToProcess { get; } = new ConcurrentQueue<FileEntry>();
 
-            private static Func<IEnumerable<string>, bool> BuildSidecarProcessor(List<string> sidecarExtensions)
+            private static Func<IEnumerable<string>, bool> BuildSidecarProcessor(IReadOnlyList<string> sidecarExtensions)
             {
                 Func<IEnumerable<string>, bool> sidecarProcessor;
 
@@ -151,7 +153,7 @@ namespace Credfeto.Gallery.Scanner
                 return sidecarProcessor;
             }
 
-            private static bool IsNotSidecarExtension(List<string> sidecarExtensions, string match)
+            private static bool IsNotSidecarExtension(IReadOnlyList<string> sidecarExtensions, string match)
             {
                 return !sidecarExtensions.Contains(Path.GetExtension(match)
                                                        .ToLowerInvariant());

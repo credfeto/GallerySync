@@ -34,7 +34,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
         {
             if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
             {
-                this._logging.LogInformation($" +++ Metadata update: Metadata version out of date. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
+                this._logging.LogInformation($" +++ Metadata update: Metadata version out of date. (Current: {targetPhoto.Version} Expected: {Constants.CURRENT_METADATA_VERSION})");
 
                 return true;
             }
@@ -53,8 +53,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
             foreach (ComponentFile componentFile in targetPhoto.Files)
             {
-                ComponentFile found =
-                    sourcePhoto.Files.FirstOrDefault(predicate: candiate => StringComparer.InvariantCultureIgnoreCase.Equals(x: candiate.Extension, y: componentFile.Extension));
+                ComponentFile found = sourcePhoto.Files.FirstOrDefault(predicate: candiate => StringComparer.InvariantCultureIgnoreCase.Equals(x: candiate.Extension, y: componentFile.Extension));
 
                 if (found != null)
                 {
@@ -99,8 +98,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
         {
             if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
             {
-                this._logging.LogInformation(
-                    $" +++ Metadata update: Metadata version Requires rebuild. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
+                this._logging.LogInformation($" +++ Metadata update: Metadata version Requires rebuild. (Current: {targetPhoto.Version} Expected: {Constants.CURRENT_METADATA_VERSION})");
 
                 return true;
             }

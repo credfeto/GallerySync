@@ -54,9 +54,8 @@ namespace Credfeto.Gallery.OutputBuilder.Services
         {
             ConcurrentDictionary<string, bool> items = new ConcurrentDictionary<string, bool>();
 
-            await Task.WhenAll(
-                source.Select(selector: sourcePhoto => this.ProcessSinglePhotoAsync(target: target, sourcePhoto: sourcePhoto, items: items, imageImageSettings: imageImageSettings))
-                      .ToArray());
+            await Task.WhenAll(source.Select(selector: sourcePhoto => this.ProcessSinglePhotoAsync(target: target, sourcePhoto: sourcePhoto, items: items, imageImageSettings: imageImageSettings))
+                                     .ToArray());
 
             return new HashSet<string>(items.Keys);
         }
@@ -110,7 +109,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                 }
                 else
                 {
-                    shortUrl = Constants.DefaultShortUrl;
+                    shortUrl = Constants.DEFAULT_SHORT_URL;
                 }
 
                 if (build || rebuild || rebuildMetadata)
@@ -153,13 +152,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
             GC.GetTotalMemory(forceFullCollection: true);
         }
 
-        private async Task ProcessOneFileAsync(Photo sourcePhoto,
-                                               Photo targetPhoto,
-                                               bool rebuild,
-                                               bool rebuildMetadata,
-                                               string url,
-                                               string shortUrl,
-                                               IImageSettings imageImageSettings)
+        private async Task ProcessOneFileAsync(Photo sourcePhoto, Photo targetPhoto, bool rebuild, bool rebuildMetadata, string url, string shortUrl, IImageSettings imageImageSettings)
         {
             this._logging.LogInformation(rebuild ? $"Rebuild: {sourcePhoto.UrlSafePath}" : $"Build: {sourcePhoto.UrlSafePath}");
 
@@ -209,12 +202,12 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                 sourcePhoto.ImageSizes = targetPhoto.ImageSizes;
             }
 
-            sourcePhoto.Version = Constants.CurrentMetadataVersion;
+            sourcePhoto.Version = Constants.CURRENT_METADATA_VERSION;
 
             if (targetPhoto != null)
             {
                 targetPhoto.UpdateTargetWithSourceProperties(sourcePhoto);
-                targetPhoto.Version = Constants.CurrentMetadataVersion;
+                targetPhoto.Version = Constants.CURRENT_METADATA_VERSION;
 
                 if (buildImages)
                 {

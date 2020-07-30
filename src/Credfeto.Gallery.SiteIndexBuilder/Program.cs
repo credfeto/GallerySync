@@ -574,7 +574,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                 if (oldData != null)
                 {
                     List<string> deletedItems = FindDeletedItems(oldData: oldData, data: data);
-                    data.deletedItems.AddRange(deletedItems.OrderBy(keySelector: x => x));
+                    data.DeletedItems.AddRange(deletedItems.OrderBy(keySelector: x => x));
 
                     await Task.WhenAll(QueueUploadChangesAsync(data: data, oldData: oldData), QueueUploadItemsToDeleteAsync(data: data, deletedItems: deletedItems));
                 }
@@ -598,8 +598,8 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         {
             return new GallerySiteIndex
                    {
-                       version = GALLERY_JSON_VERSION,
-                       items = (from parentRecord in contents.Values
+                       Version = GALLERY_JSON_VERSION,
+                       Items = (from parentRecord in contents.Values
                                 orderby parentRecord.Path
                                 let siblings = GetSiblings(contents: contents, entry: parentRecord)
                                 let firstItem = GetFirstItem(siblings: siblings, parentRecord: parentRecord)
@@ -627,7 +627,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                                .ToList(),
                                            Breadcrumbs = ExtractItemPreadcrumbs(contents: contents, parentRecord: parentRecord)
                                        }).ToList(),
-                       deletedItems = new List<string>()
+                       DeletedItems = new List<string>()
                    };
         }
 
@@ -681,17 +681,17 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
         {
-            List<string> oldItems = oldData.items.Select(selector: r => r.Path)
+            List<string> oldItems = oldData.Items.Select(selector: r => r.Path)
                                            .ToList();
-            List<string> newItems = data.items.Select(selector: r => r.Path)
+            List<string> newItems = data.Items.Select(selector: r => r.Path)
                                         .ToList();
 
             List<string> deletedItems = oldItems.Where(predicate: oldItem => !newItems.Contains(oldItem))
                                                 .ToList();
 
-            if (oldData.deletedItems != null)
+            if (oldData.DeletedItems != null)
             {
-                foreach (string oldDeletedItem in oldData.deletedItems)
+                foreach (string oldDeletedItem in oldData.DeletedItems)
                 {
                     if (!newItems.Contains(oldDeletedItem) && !deletedItems.Contains(oldDeletedItem))
                     {
@@ -711,7 +711,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static IOrderedEnumerable<GalleryItem> UploadOrdering(GallerySiteIndex data)
         {
-            return data.items.OrderBy(StrictTypeOrdering)
+            return data.Items.OrderBy(StrictTypeOrdering)
                        .ThenBy(keySelector: candidate => candidate.Path);
         }
 
@@ -729,7 +729,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static async Task QueueOneNewOrModifiedItemAsync(GallerySiteIndex data, GallerySiteIndex oldData, GalleryItem item)
         {
-            GalleryItem oldItem = oldData.items.FirstOrDefault(predicate: candidate => candidate.Path == item.Path);
+            GalleryItem oldItem = oldData.Items.FirstOrDefault(predicate: candidate => candidate.Path == item.Path);
 
             if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem: oldItem, other: item))
             {
@@ -741,7 +741,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         {
             string key = BuildUploadQueueHash(item);
 
-            UploadQueueItem queueItem = new UploadQueueItem {Version = data.version, Item = item, UploadType = uploadType};
+            UploadQueueItem queueItem = new UploadQueueItem {Version = data.Version, Item = item, UploadType = uploadType};
 
             string filename = BuildQueueItemFileName(key);
 
@@ -789,15 +789,15 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static GallerySiteIndex CreateItemToPost(UploadQueueItem item)
         {
-            GallerySiteIndex itemToPost = new GallerySiteIndex {version = item.Version, items = new List<GalleryItem>(), deletedItems = new List<string>()};
+            GallerySiteIndex itemToPost = new GallerySiteIndex {Version = item.Version, Items = new List<GalleryItem>(), DeletedItems = new List<string>()};
 
             if (item.UploadType == UploadType.DELETE_ITEM)
             {
-                itemToPost.deletedItems.Add(item.Item.Path);
+                itemToPost.DeletedItems.Add(item.Item.Path);
             }
             else
             {
-                itemToPost.items.Add(item.Item);
+                itemToPost.Items.Add(item.Item);
             }
 
             return itemToPost;
