@@ -23,7 +23,7 @@
   <ItemGroup>
     <PackageReference Include="ExifLib.Standard" Version="1.7.0" />
     <PackageReference Include="Credfeto.ImageLoader.Interfaces" Version="0.2.1.87-master" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.6"/>
     <PackageReference Include="QRCoder" Version="1.3.9" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0007" />
     <PackageReference Include="Taglib-Sharp-NetStandard" Version="1.0.0" />
