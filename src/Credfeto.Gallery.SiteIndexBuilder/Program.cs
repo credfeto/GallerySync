@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Gallery.FileNaming;
 using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.Repository.Emitters;
 using Credfeto.Gallery.Scanner;
 using Credfeto.Gallery.Storage;
 using Credfeto.Gallery.Upload;
