@@ -78,6 +78,15 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static readonly SemaphoreSlim EntrySemaphore = new SemaphoreSlim(initialCount: 1);
 
+        private static readonly JsonSerializerOptions SiteIndexSerializer = new JsonSerializerOptions
+                                                                            {
+                                                                                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                                                                                DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                                                                                IgnoreNullValues = true,
+                                                                                WriteIndented = true,
+                                                                                PropertyNameCaseInsensitive = true
+                                                                            };
+
         private static async Task<int> Main(string[] args)
         {
             Console.WriteLine(value: "Credfeto.Gallery.SiteIndexBuilder");
@@ -564,7 +573,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
                 try
                 {
-                    oldData = JsonSerializer.Deserialize<GallerySiteIndex>(decoded);
+                    oldData = JsonSerializer.Deserialize<GallerySiteIndex>(json: decoded, options: SiteIndexSerializer);
                 }
                 catch
                 {
@@ -745,7 +754,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
             string filename = BuildQueueItemFileName(key);
 
-            string json = JsonSerializer.Serialize(queueItem);
+            string json = JsonSerializer.Serialize(value: queueItem, options: SiteIndexSerializer);
 
             return FileHelpers.WriteAllBytesAsync(fileName: filename, Encoding.UTF8.GetBytes(json), commit: true);
         }

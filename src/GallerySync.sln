@@ -27,6 +27,8 @@ ProjectSection(SolutionItems) = preProject
 	global.json = global.json
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Credfeto.Gallery.Repository", "Credfeto.Gallery.Repository\Credfeto.Gallery.Repository.csproj", "{69E6FCB1-4F64-4E57-A44C-BC3BA762961E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,10 @@ Global
 		{74ED470B-4F10-40E7-9136-CC7F812B0820}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74ED470B-4F10-40E7-9136-CC7F812B0820}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74ED470B-4F10-40E7-9136-CC7F812B0820}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69E6FCB1-4F64-4E57-A44C-BC3BA762961E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69E6FCB1-4F64-4E57-A44C-BC3BA762961E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69E6FCB1-4F64-4E57-A44C-BC3BA762961E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69E6FCB1-4F64-4E57-A44C-BC3BA762961E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

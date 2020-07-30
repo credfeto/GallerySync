@@ -1,12 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Credfeto.Gallery.ObjectModel;
+using Credfeto.Gallery.Repository;
 using Credfeto.Gallery.Scanner;
-using Credfeto.Gallery.Storage;
 
 namespace Credfeto.Gallery.SiteIndexBuilder
 {
@@ -26,9 +24,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         {
             string fullPath = Path.Combine(path1: this._basePath, path2: entry.RelativeFolder, path3: entry.LocalFileName);
 
-            byte[] bytes = await FileHelpers.ReadAllBytesAsync(fullPath);
-
-            Photo photo = JsonSerializer.Deserialize<Photo>(Encoding.UTF8.GetString(bytes));
+            Photo photo = await PhotoMetadataRepository.LoadAsync(fullPath);
 
             this._photos.Add(photo);
         }

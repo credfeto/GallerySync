@@ -10,6 +10,7 @@ namespace Credfeto.Gallery.Upload
 {
     public sealed class UploadHelper
     {
+        private readonly JsonSerializerOptions _serializerOptions;
         private readonly TimeSpan _timeout;
         private readonly Uri _uploadBaseAddress;
 
@@ -22,6 +23,15 @@ namespace Credfeto.Gallery.Upload
         {
             this._uploadBaseAddress = uploadBaseAddress ?? throw new ArgumentNullException(nameof(uploadBaseAddress));
             this._timeout = timeout;
+
+            this._serializerOptions = new JsonSerializerOptions
+                                      {
+                                          PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                                          DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                                          IgnoreNullValues = true,
+                                          WriteIndented = true,
+                                          PropertyNameCaseInsensitive = true
+                                      };
         }
 
         public async Task<bool> UploadItemAsync(GallerySiteIndex itemToPost, string progressText, UploadType uploadType)
@@ -36,7 +46,7 @@ namespace Credfeto.Gallery.Upload
 
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(jsonMimeType));
 
-                    string json = JsonSerializer.Serialize(itemToPost);
+                    string json = JsonSerializer.Serialize(value: itemToPost, options: this._serializerOptions);
 
                     using (StringContent content = new StringContent(content: json, encoding: Encoding.UTF8, mediaType: jsonMimeType))
                     {

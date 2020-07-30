@@ -8,7 +8,7 @@ using Credfeto.Gallery.FileNaming;
 using Credfeto.Gallery.ObjectModel;
 using Credfeto.Gallery.Scanner;
 
-namespace Credfeto.Gallery.OutputBuilder.Services.Emitters
+namespace Credfeto.Gallery.Repository.Emitters
 {
     public sealed class RawFileInfoEmitter : IFileEmitter
     {

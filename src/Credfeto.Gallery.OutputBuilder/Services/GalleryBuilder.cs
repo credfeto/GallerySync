@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Credfeto.Gallery.Image;
 using Credfeto.Gallery.ObjectModel;
 using Credfeto.Gallery.OutputBuilder.Interfaces;
+using Credfeto.Gallery.Repository;
 using Microsoft.Extensions.Logging;
 
 namespace Credfeto.Gallery.OutputBuilder.Services
@@ -214,11 +215,11 @@ namespace Credfeto.Gallery.OutputBuilder.Services
                     //?
                 }
 
-                await PhotoMetadataRepository.StoreAsync(photo: targetPhoto, settings: this._settings);
+                await PhotoMetadataRepository.StoreAsync(photo: targetPhoto, databaseOutputFolder: this._settings.DatabaseOutputFolder);
             }
             else
             {
-                await PhotoMetadataRepository.StoreAsync(photo: sourcePhoto, settings: this._settings);
+                await PhotoMetadataRepository.StoreAsync(photo: sourcePhoto, databaseOutputFolder: this._settings.DatabaseOutputFolder);
             }
         }
     }

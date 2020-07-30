@@ -5,15 +5,14 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Credfeto.Gallery.ObjectModel;
-using Credfeto.Gallery.OutputBuilder.Interfaces;
-using Credfeto.Gallery.OutputBuilder.Services.Emitters;
+using Credfeto.Gallery.Repository.Emitters;
 using Credfeto.Gallery.Scanner;
 using Credfeto.Gallery.Storage;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Gallery.OutputBuilder
+namespace Credfeto.Gallery.Repository
 {
-    internal static class PhotoMetadataRepository
+    public static class PhotoMetadataRepository
     {
         private static readonly JsonSerializerOptions SerialiserOptions = new JsonSerializerOptions
                                                                           {
@@ -60,17 +59,26 @@ namespace Credfeto.Gallery.OutputBuilder
             return emitter.Photos;
         }
 
-        public static Task StoreAsync(Photo photo, ISettings settings)
+        public static Task StoreAsync(Photo photo, string databaseOutputFolder)
         {
             string safeUrl = photo.UrlSafePath.Replace(oldChar: '/', newChar: Path.DirectorySeparatorChar);
             safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
             safeUrl += ".info";
 
-            string outputPath = Path.Combine(path1: settings.DatabaseOutputFolder, path2: safeUrl);
+            string outputPath = Path.Combine(path1: databaseOutputFolder, path2: safeUrl);
 
+            // TODO: use aysnc serialize
             string txt = JsonSerializer.Serialize(value: photo, options: SerialiserOptions);
 
             return FileHelpers.WriteAllBytesAsync(fileName: outputPath, Encoding.UTF8.GetBytes(txt), commit: true);
+        }
+
+        public static async Task<Photo> LoadAsync(string fileName)
+        {
+            byte[] bytes = await FileHelpers.ReadAllBytesAsync(fileName);
+
+            // TODO: use aysnc deserialize
+            return JsonSerializer.Deserialize<Photo>(Encoding.UTF8.GetString(bytes), options: SerialiserOptions);
         }
     }
 }
