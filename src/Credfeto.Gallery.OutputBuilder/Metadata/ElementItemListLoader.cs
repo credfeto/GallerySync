@@ -94,7 +94,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
                 {
                     if (sb.Length != 0)
                     {
-                        sb.Append(value: ";");
+                        sb.Append(value: ';');
                     }
 
                     sb.Append(imageNode.Value.Trim());
@@ -106,7 +106,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
                 {
                     if (sb.Length != 0)
                     {
-                        sb.Append(value: ";");
+                        sb.Append(value: ';');
                     }
 
                     sb.Append(imageNode.InnerText.Trim());
