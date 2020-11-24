@@ -31,7 +31,7 @@
     <ProjectReference Include="..\Credfeto.Gallery.Scanner\Credfeto.Gallery.Scanner.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Credfeto.ImageLoader.Core" Version="0.2.1.87-master" />
+    <PackageReference Include="Credfeto.ImageLoader.Core" Version="1.0.0.2" />
     <PackageReference Include="Credfeto.ImageLoader.Interfaces" Version="0.2.1.87-master" />
     <PackageReference Include="Credfeto.ImageLoader.Photoshop" Version="0.2.1.87-master" />
     <PackageReference Include="Credfeto.ImageLoader.Raw" Version="0.2.1.87-master" />
