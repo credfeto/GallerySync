@@ -33,7 +33,7 @@
   <ItemGroup>
     <PackageReference Include="Credfeto.ImageLoader.Core" Version="0.2.1.87-master" />
     <PackageReference Include="Credfeto.ImageLoader.Interfaces" Version="0.2.1.87-master" />
-    <PackageReference Include="Credfeto.ImageLoader.Photoshop" Version="0.2.1.87-master" />
+    <PackageReference Include="Credfeto.ImageLoader.Photoshop" Version="1.0.0.2" />
     <PackageReference Include="Credfeto.ImageLoader.Raw" Version="0.2.1.87-master" />
     <PackageReference Include="Credfeto.ImageLoader.Standard" Version="0.2.1.87-master" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.9" />
