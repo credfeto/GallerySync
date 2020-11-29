@@ -18,7 +18,6 @@ using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Quantization;
-using SixLabors.Primitives;
 
 namespace Credfeto.Gallery.Image.Services
 {
@@ -73,7 +72,7 @@ namespace Credfeto.Gallery.Image.Services
                 return Array.Empty<ImageSize>();
             }
 
-            List<ImageSize> sizes = new List<ImageSize>();
+            List<ImageSize> sizes = new();
 
             IReadOnlyList<int> imageSizes = StandardImageSizesWithThumbnailSize(imageSettings);
 
@@ -237,7 +236,7 @@ namespace Credfeto.Gallery.Image.Services
             using (Image<Rgba32> watermark = SixLabors.ImageSharp.Image.Load(watermarkFilename)
                                                       .CloneAs<Rgba32>())
             {
-                watermark.Mutate(operation: pc => { pc.BackgroundColor(Rgba32.Transparent); });
+                watermark.Mutate(operation: pc => pc.BackgroundColor(Color.Transparent));
 
                 int width = watermark.Width;
                 int height = watermark.Height;
@@ -246,7 +245,7 @@ namespace Credfeto.Gallery.Image.Services
                 {
                     if (qr != null)
                     {
-                        qr.Mutate(operation: px => px.BackgroundColor(Rgba32.Transparent));
+                        qr.Mutate(operation: px => px.BackgroundColor(Color.Transparent));
 
                         int qrWidth = qr.Width;
                         int qrHeight = qr.Height;
@@ -425,9 +424,9 @@ namespace Credfeto.Gallery.Image.Services
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            using (MemoryStream ms = new MemoryStream())
+            using (MemoryStream ms = new())
             {
-                JpegEncoder encoder = new JpegEncoder {Quality = (int) compression};
+                JpegEncoder encoder = new() {Quality = (int) compression};
 
                 image.SaveAsJpeg(stream: ms, encoder: encoder);
 
@@ -452,9 +451,9 @@ namespace Credfeto.Gallery.Image.Services
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
 
-            using (MemoryStream ms = new MemoryStream())
+            using (MemoryStream ms = new())
             {
-                JpegEncoder encoder = new JpegEncoder {Quality = 75};
+                JpegEncoder encoder = new() {Quality = 75};
 
                 image.SaveAsJpeg(stream: ms, encoder: encoder);
 
@@ -469,9 +468,9 @@ namespace Credfeto.Gallery.Image.Services
 
             SetMetadataProperties(image: image, url: url, metadata: metadata, creationDate: creationDate);
 
-            using (MemoryStream ms = new MemoryStream())
+            using (MemoryStream ms = new())
             {
-                PngEncoder encoder = new PngEncoder {CompressionLevel = 9, Quantizer = new WuQuantizer(), ColorType = PngColorType.Palette};
+                PngEncoder encoder = new() {CompressionLevel = PngCompressionLevel.BestCompression, Quantizer = new WuQuantizer(), ColorType = PngColorType.Palette};
                 image.SaveAsPng(stream: ms, encoder: encoder);
 
                 return ms.ToArray();

@@ -5,7 +5,7 @@ using Credfeto.Gallery.Image;
 
 namespace Credfeto.Gallery.OutputBuilder.Services
 {
-    internal class ImageSettings : IImageSettings
+    public sealed class ImageSettings : IImageSettings
     {
         public ImageSettings(string defaultShortUrl, int thumbnailSize, string imageMaximumDimensions, long jpegOutputQuality, string watermarkImage, string shortUrlsPath)
         {

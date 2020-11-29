@@ -40,7 +40,7 @@ namespace Credfeto.Gallery.Image
         ///     Only 0, 90, 180 and 270 degrees are supported.
         /// </remarks>
         public static void RotateImageIfNecessary<TPixel>(Image<TPixel> image, int degrees)
-            where TPixel : struct, IPixel<TPixel>
+            where TPixel : unmanaged, IPixel<TPixel>
         {
             Contract.Requires(image != null);
 
