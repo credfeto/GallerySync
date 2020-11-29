@@ -10,6 +10,6 @@ namespace Credfeto.Gallery.Scanner
 
         public string LocalFileName { get; set; }
 
-        public List<string> AlternateFileNames { get; set; }
+        public IReadOnlyList<string> AlternateFileNames { get; set; }
     }
 }

@@ -39,34 +39,34 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static readonly EventDesc[] Events =
         {
-            new EventDesc
+            new()
             {
                 Name = "Linkfest",
                 PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(linkfest-harlow)-", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = "[Linkfest](http://www.linkfestharlow.co.uk/), a free music festival in Harlow Town Park at the bandstand."
             },
-            new EventDesc
+            new()
             {
                 Name = "Barleylands - Essex Country Show",
                 PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(barleylands-essex-country-show)-",
                                       RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = "[Essex Country show](http://www.barleylands.co.uk/essex-country-show) at Barleylands, Billericay."
             },
-            new EventDesc
+            new()
             {
                 Name = "Moreton Boxing Day Tug Of War",
                 PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(moreton-boxing-day-tug-of-war)-",
                                       RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = "The annual tug-of war over the Cripsey Brook at Moreton, Essex."
             },
-            new EventDesc
+            new()
             {
                 Name = "Greenwich Tall Ships Festival",
                 PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(greenwich-tall-ships-festival)-",
                                       RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase),
                 Description = ""
             },
-            new EventDesc
+            new()
             {
                 Name = "Rock School - Lets Rock The Park",
                 PathMatch = new Regex(pattern: @"^/albums/(\d{4})/(\d{4})-(\d{2})-(\d{2})-(rock-school-lets-rock-the-park)-",
@@ -77,9 +77,9 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static bool _ignoreExisting;
 
-        private static readonly SemaphoreSlim EntrySemaphore = new SemaphoreSlim(initialCount: 1);
+        private static readonly SemaphoreSlim EntrySemaphore = new(initialCount: 1);
 
-        private static readonly JsonSerializerOptions SiteIndexSerializer = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions SiteIndexSerializer = new()
                                                                             {
                                                                                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                                                                                 DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
@@ -149,13 +149,13 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static async Task ProcessGalleryAsync()
         {
-            Dictionary<string, GalleryEntry> contents = new Dictionary<string, GalleryEntry>();
+            Dictionary<string, GalleryEntry> contents = new();
 
             Photo[] target = await LoadRepositoryAsync(Settings.DatabaseInputFolder);
 
             await AppendRootEntryAsync(contents);
 
-            Dictionary<string, KeywordEntry> keywords = new Dictionary<string, KeywordEntry>();
+            Dictionary<string, KeywordEntry> keywords = new();
 
             foreach (Photo sourcePhoto in target)
             {
@@ -205,7 +205,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         {
             IEnumerable<string> files = Directory.EnumerateFiles(path: Settings.QueueFolder, searchPattern: "*.queue");
 
-            ConcurrentBag<UploadQueueItem> loaded = new ConcurrentBag<UploadQueueItem>();
+            ConcurrentBag<UploadQueueItem> loaded = new();
 
             await Task.WhenAll(files.Select(selector: file => LoadOneQueuedFileAsync(file: file, loaded: loaded)));
 
@@ -228,9 +228,9 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             Console.WriteLine(format: "Loading Repository from {0}...", arg0: baseFolder);
             string[] scores = {".info"};
 
-            List<string> sidecarFiles = new List<string>();
+            List<string> sidecarFiles = new();
 
-            PhotoInfoEmitter emitter = new PhotoInfoEmitter(baseFolder);
+            PhotoInfoEmitter emitter = new(baseFolder);
 
             if (Directory.Exists(baseFolder))
             {
@@ -344,7 +344,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static async Task UploadQueuedItemsAsync(List<UploadQueueItem> inputSession)
         {
-            LoadContext context = new LoadContext();
+            LoadContext context = new();
 
             // Only upload creates and updates.
             foreach (UploadQueueItem item in inputSession.Where(predicate: item => item.UploadType != UploadType.DELETE_ITEM))
@@ -495,7 +495,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
             {
                 if (entry.Children != null && entry.Children.Any())
                 {
-                    List<Location> locations = new List<Location>();
+                    List<Location> locations = new();
 
                     AppendChildLocations(entry: entry, locations: locations);
 
@@ -606,7 +606,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static GallerySiteIndex ProduceSiteIndex(Dictionary<string, GalleryEntry> contents)
         {
-            return new GallerySiteIndex
+            return new()
                    {
                        Version = GALLERY_JSON_VERSION,
                        Items = (from parentRecord in contents.Values
@@ -643,7 +643,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static List<GalleryChildItem> ExtractItemPreadcrumbs(Dictionary<string, GalleryEntry> contents, GalleryEntry parentRecord)
         {
-            List<GalleryChildItem> items = new List<GalleryChildItem>();
+            List<GalleryChildItem> items = new();
 
             string[] breadcrumbFragments = parentRecord.Path.Split(separator: '/')
                                                        .Where(IsNotEmpty)
@@ -751,7 +751,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         {
             string key = BuildUploadQueueHash(item);
 
-            UploadQueueItem queueItem = new UploadQueueItem {Version = data.Version, Item = item, UploadType = uploadType};
+            UploadQueueItem queueItem = new() {Version = data.Version, Item = item, UploadType = uploadType};
 
             string filename = BuildQueueItemFileName(key);
 
@@ -778,7 +778,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
         private static async Task<bool> UploadOneItemAsync(UploadQueueItem item)
         {
             // TODO - move the intialization etc somewhere else.
-            UploadHelper uh = new UploadHelper(new Uri(Settings.WebServerBaseAddress));
+            UploadHelper uh = new(new Uri(Settings.WebServerBaseAddress));
 
             GallerySiteIndex itemToPost = CreateItemToPost(item);
 
@@ -799,7 +799,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static GallerySiteIndex CreateItemToPost(UploadQueueItem item)
         {
-            GallerySiteIndex itemToPost = new GallerySiteIndex {Version = item.Version, Items = new List<GalleryItem>(), DeletedItems = new List<string>()};
+            GallerySiteIndex itemToPost = new() {Version = item.Version, Items = new List<GalleryItem>(), DeletedItems = new List<string>()};
 
             if (item.UploadType == UploadType.DELETE_ITEM)
             {
@@ -853,7 +853,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static GalleryChildItem CreateGalleryChildItem(GalleryEntry firstRecord)
         {
-            return new GalleryChildItem
+            return new()
                    {
                        Path = firstRecord.Path,
                        OriginalAlbumPath = firstRecord.OriginalAlbumPath,
@@ -936,7 +936,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                         Description = description,
                                         Children = new List<GalleryEntry>(),
                                         Location = location,
-                                        ImageSizes = sourcePhoto.ImageSizes,
+                                        ImageSizes = sourcePhoto.ImageSizes.ToList(),
                                         Rating = rating,
                                         Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
                                                               .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
@@ -970,7 +970,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
                                         Description = description,
                                         Children = new List<GalleryEntry>(),
                                         Location = location,
-                                        ImageSizes = sourcePhoto.ImageSizes,
+                                        ImageSizes = sourcePhoto.ImageSizes.ToList(),
                                         Rating = rating,
                                         Metadata = sourcePhoto.Metadata.Where(IsPublishableMetadata)
                                                               .OrderBy(keySelector: item => item.Name.ToLowerInvariant())
@@ -1198,7 +1198,7 @@ namespace Credfeto.Gallery.SiteIndexBuilder
 
         private static async Task AppendRootEntryAsync(Dictionary<string, GalleryEntry> contents)
         {
-            GalleryEntry entry = new GalleryEntry
+            GalleryEntry entry = new()
                                  {
                                      Path = "/",
                                      OriginalAlbumPath = null,

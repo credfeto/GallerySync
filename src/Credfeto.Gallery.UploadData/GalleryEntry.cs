@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Credfeto.Gallery.FileNaming;
 using Credfeto.Gallery.ObjectModel;
 
@@ -16,6 +17,8 @@ namespace Credfeto.Gallery.UploadData
 
         public string Description { get; set; }
 
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1002:DoNotExposeGenericLists", Justification = "Existing API")]
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA5362:ChildrenParticipatesInPotentialReferenceCycle", Justification = "Existing API")]
         public List<GalleryEntry> Children { get; set; }
 
         public DateTime DateCreated { get; set; }
@@ -24,12 +27,15 @@ namespace Credfeto.Gallery.UploadData
 
         public Location Location { get; set; }
 
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1002:DoNotExposeGenericLists", Justification = "Existing API")]
         public List<ImageSize> ImageSizes { get; set; }
 
         public int Rating { get; set; }
 
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1002:DoNotExposeGenericLists", Justification = "Existing API")]
         public List<PhotoMetadata> Metadata { get; set; }
 
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1002:DoNotExposeGenericLists", Justification = "Existing API")]
         public List<string> Keywords { get; set; }
 
         public bool Equals(GalleryEntry other)
@@ -44,11 +50,10 @@ namespace Credfeto.Gallery.UploadData
                 return true;
             }
 
-            return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title &&
-                   this.Description == other.Description && this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location &&
-                   this.Rating == other.Rating && ItemUpdateHelpers.CollectionEquals(lhs: this.ImageSizes, rhs: other.ImageSizes) &&
-                   ItemUpdateHelpers.CollectionEquals(lhs: this.Children, rhs: other.Children) && ItemUpdateHelpers.CollectionEquals(lhs: this.Metadata, rhs: other.Metadata) &&
-                   ItemUpdateHelpers.CollectionEquals(lhs: this.Keywords, rhs: other.Keywords);
+            return this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && this.Title == other.Title && this.Description == other.Description &&
+                   this.DateCreated == other.DateCreated && this.DateUpdated == other.DateUpdated && this.Location == other.Location && this.Rating == other.Rating &&
+                   ItemUpdateHelpers.CollectionEquals(lhs: this.ImageSizes, rhs: other.ImageSizes) && ItemUpdateHelpers.CollectionEquals(lhs: this.Children, rhs: other.Children) &&
+                   ItemUpdateHelpers.CollectionEquals(lhs: this.Metadata, rhs: other.Metadata) && ItemUpdateHelpers.CollectionEquals(lhs: this.Keywords, rhs: other.Keywords);
         }
 
         public override bool Equals(object obj)

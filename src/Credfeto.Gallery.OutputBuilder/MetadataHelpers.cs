@@ -8,7 +8,7 @@ namespace Credfeto.Gallery.OutputBuilder
 {
     internal static class MetadataHelpers
     {
-        public static DateTime ExtractCreationDate(List<PhotoMetadata> metadata)
+        public static DateTime ExtractCreationDate(IReadOnlyList<PhotoMetadata> metadata)
         {
             PhotoMetadata dateTaken = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.DATE_TAKEN);
 

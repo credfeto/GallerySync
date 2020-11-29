@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Credfeto.Gallery.ObjectModel;
 using SixLabors.ImageSharp;
@@ -10,6 +11,7 @@ namespace Credfeto.Gallery.Image
     public interface IImageExtraction
     {
         Task<IReadOnlyList<ImageSize>> BuildImagesAsync(Photo sourcePhoto,
+                                                        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1002:DoNotExposeGenericLists", Justification = "Existing API")]
                                                         List<string> filesCreated,
                                                         DateTime creationDate,
                                                         string url,
@@ -36,7 +38,7 @@ namespace Credfeto.Gallery.Image
                                     long compressionQuality,
                                     string url,
                                     string shortUrl,
-                                    List<PhotoMetadata> metadata,
+                                    IReadOnlyList<PhotoMetadata> metadata,
                                     DateTime creationDate,
                                     IImageSettings imageSettings);
 

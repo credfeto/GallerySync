@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Credfeto.Gallery.FileNaming;
 using Credfeto.Gallery.ObjectModel;
 
@@ -8,6 +9,7 @@ namespace Credfeto.Gallery.UploadData
     [Serializable]
     public class GalleryChildItem : IEquatable<GalleryChildItem>
     {
+        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1002:DoNotExposeGenericLists", Justification = "Existing API")]
         public List<ImageSize> ImageSizes { get; set; }
 
         public string Type { get; set; }
@@ -39,8 +41,8 @@ namespace Credfeto.Gallery.UploadData
             }
 
             return this.Type == other.Type && this.Location == other.Location && this.DateUpdated == other.DateUpdated && this.DateCreated == other.DateCreated &&
-                   this.Description == other.Description && this.Title == other.Title && this.Path == other.Path &&
-                   this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() && ItemUpdateHelpers.CollectionEquals(lhs: this.ImageSizes, rhs: other.ImageSizes);
+                   this.Description == other.Description && this.Title == other.Title && this.Path == other.Path && this.OriginalAlbumPath.AsEmpty() == other.OriginalAlbumPath.AsEmpty() &&
+                   ItemUpdateHelpers.CollectionEquals(lhs: this.ImageSizes, rhs: other.ImageSizes);
         }
 
         public override bool Equals(object obj)

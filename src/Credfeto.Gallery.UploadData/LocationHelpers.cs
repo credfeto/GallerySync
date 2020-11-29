@@ -6,7 +6,7 @@ namespace Credfeto.Gallery.UploadData
 {
     public static class LocationHelpers
     {
-        public static Location GetCenterFromDegrees(List<Location> locations)
+        public static Location GetCenterFromDegrees(IReadOnlyList<Location> locations)
         {
             if (locations.Count == 0)
             {
@@ -23,7 +23,7 @@ namespace Credfeto.Gallery.UploadData
 
         private static Location CenterFromDegreesCollection(IEnumerable<Location> locations)
         {
-            LocationNormalizer tracker = new LocationNormalizer();
+            LocationNormalizer tracker = new();
 
             foreach (Location position in locations)
             {

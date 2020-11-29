@@ -187,7 +187,7 @@ namespace Credfeto.Gallery.UploadData
             return true;
         }
 
-        public static bool CollectionEquals(List<ImageSize> lhs, List<ImageSize> rhs)
+        public static bool CollectionEquals(IReadOnlyList<ImageSize> lhs, IReadOnlyList<ImageSize> rhs)
         {
             if (ReferenceEquals(objA: lhs, objB: rhs))
             {
@@ -213,7 +213,7 @@ namespace Credfeto.Gallery.UploadData
                       .All(predicate: rhsItem => rhsItem != null);
         }
 
-        public static bool CollectionEquals(List<GalleryEntry> lhs, List<GalleryEntry> rhs)
+        public static bool CollectionEquals(IReadOnlyList<GalleryEntry> lhs, IReadOnlyList<GalleryEntry> rhs)
         {
             if (ReferenceEquals(objA: lhs, objB: rhs))
             {
@@ -239,7 +239,7 @@ namespace Credfeto.Gallery.UploadData
                       .All(predicate: rhsItem => rhsItem != null);
         }
 
-        public static bool CollectionEquals(List<GalleryChildItem> lhs, List<GalleryChildItem> rhs)
+        public static bool CollectionEquals(IReadOnlyList<GalleryChildItem> lhs, IReadOnlyList<GalleryChildItem> rhs)
         {
             if (ReferenceEquals(objA: lhs, objB: rhs))
             {
@@ -265,7 +265,7 @@ namespace Credfeto.Gallery.UploadData
                       .All(predicate: rhsItem => rhsItem != null);
         }
 
-        public static bool CollectionEquals(List<PhotoMetadata> lhs, List<PhotoMetadata> rhs)
+        public static bool CollectionEquals(IReadOnlyList<PhotoMetadata> lhs, IReadOnlyList<PhotoMetadata> rhs)
         {
             if (ReferenceEquals(objA: lhs, objB: rhs))
             {
@@ -291,7 +291,7 @@ namespace Credfeto.Gallery.UploadData
                       .All(predicate: rhsItem => rhsItem != null);
         }
 
-        public static bool CollectionEquals(List<string> lhs, List<string> rhs)
+        public static bool CollectionEquals(IReadOnlyList<string> lhs, IReadOnlyList<string> rhs)
         {
             if (ReferenceEquals(objA: lhs, objB: rhs))
             {

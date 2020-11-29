@@ -20,11 +20,11 @@ namespace Credfeto.Gallery.ObjectModel
 
         public string ImageExtension { get; set; }
 
-        public List<ComponentFile> Files { get; set; }
+        public IReadOnlyList<ComponentFile> Files { get; set; }
 
-        public List<PhotoMetadata> Metadata { get; set; }
+        public IReadOnlyList<PhotoMetadata> Metadata { get; set; }
 
-        public List<ImageSize> ImageSizes { get; set; }
+        public IReadOnlyList<ImageSize> ImageSizes { get; set; }
 
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1056:UriPropertiesShouldNotBeStrings", Justification = "Serialized as string")]
         public string ShortUrl { get; set; }

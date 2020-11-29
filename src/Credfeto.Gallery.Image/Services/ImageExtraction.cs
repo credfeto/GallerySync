@@ -166,7 +166,13 @@ namespace Credfeto.Gallery.Image.Services
         ///     Block of bytes representing the image.
         /// </returns>
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Is fallback position where it retries.")]
-        public byte[] SaveImageAsJpegBytes(Image<Rgba32> image, long compressionQuality, string url, string shortUrl, List<PhotoMetadata> metadata, DateTime creationDate, IImageSettings imageSettings)
+        public byte[] SaveImageAsJpegBytes(Image<Rgba32> image,
+                                           long compressionQuality,
+                                           string url,
+                                           string shortUrl,
+                                           IReadOnlyList<PhotoMetadata> metadata,
+                                           DateTime creationDate,
+                                           IImageSettings imageSettings)
         {
             Contract.Requires(image != null);
             Contract.Requires(compressionQuality > 0);
@@ -328,7 +334,7 @@ namespace Credfeto.Gallery.Image.Services
             }
         }
 
-        private static string ExtractDescription(List<PhotoMetadata> metadata, string url, DateTime creationDate)
+        private static string ExtractDescription(IReadOnlyList<PhotoMetadata> metadata, string url, DateTime creationDate)
         {
             string description = string.Empty;
             PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.COMMENT));
@@ -461,7 +467,7 @@ namespace Credfeto.Gallery.Image.Services
             }
         }
 
-        private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, List<PhotoMetadata> metadata, DateTime creationDate)
+        private static byte[] SaveImageAsPng(Image<Rgba32> image, string url, IReadOnlyList<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
             Contract.Ensures(Contract.Result<byte[]>() != null);
@@ -514,7 +520,7 @@ namespace Credfeto.Gallery.Image.Services
         /// <param name="url"></param>
         /// <param name="metadata"></param>
         /// <param name="creationDate"></param>
-        private static void SetMetadataProperties(Image<Rgba32> image, string url, List<PhotoMetadata> metadata, DateTime creationDate)
+        private static void SetMetadataProperties(Image<Rgba32> image, string url, IReadOnlyList<PhotoMetadata> metadata, DateTime creationDate)
         {
             Contract.Requires(image != null);
 
