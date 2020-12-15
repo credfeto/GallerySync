@@ -9,20 +9,7 @@ Please ADD ALL Changes to the UNRELASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- FF-1429 - Updated Microsoft.VisualStudio.Threading.Analyzers to 16.8.51
-- FF-1429 - Updated Microsoft.Extensions to 3.1.9
-- FF-1429 - Updated Roslynator.Analyzers to 3.0.0
-- FF-1429 - Updated Microsoft.VisualStudio.Threading.Analyzers to 16.8.50
-- FF-1429 - Updated SonarAnalyzer.CSharp to 8.14.0.22654
-- FF-1429 - Updated Microsoft.CodeAnalysis.FxCopAnalyzers to 3.3.0
-- FF-1429 - Updated SonarAnalyzer.CSharp to 8.11.0.20529
-- FF-1429 - Updated Microsoft.VisualStudio.Threading.Analyzers to 16.7.54
-- FF-1429 - Updated SonarAnalyzer.CSharp to 8.10.0.19839
-- FF-1429 - Updated SonarAnalyzer.CSharp to 8.9.0.19135
-- FF-1429 - Updated SonarAnalyzer.CSharp to 8.8.0.18411
-- FF-1429 - Updated AsyncFixer to 1.3.0
-- FF-1429 - Updated AsyncFixer to 1.1.8
-- Updated to .net 5.0
+- Updated dependent components
 ### Removed
 ### Deployment Changes
 
