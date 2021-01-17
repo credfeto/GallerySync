@@ -50,12 +50,12 @@ namespace Credfeto.Gallery.OutputBuilder.Services
             Contract.Ensures(Contract.Result<Uri>() != null);
 
             string encodedUrl = HttpUtility.UrlEncode(url.ToString());
-            Uri shortnerUrl = new Uri(string.Format(provider: CultureInfo.InvariantCulture,
-                                                    format: "/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}",
-                                                    arg0: this._settings.BitlyApiKey,
-                                                    arg1: this._settings.BitlyApiUser,
-                                                    arg2: encodedUrl),
-                                      uriKind: UriKind.Relative);
+            Uri shortnerUrl = new(string.Format(provider: CultureInfo.InvariantCulture,
+                                                format: "/v3/shorten?apiKey={0}&login={1}&format=txt&longurl={2}",
+                                                arg0: this._settings.BitlyApiKey,
+                                                arg1: this._settings.BitlyApiUser,
+                                                arg2: encodedUrl),
+                                  uriKind: UriKind.Relative);
 
             try
             {
@@ -101,8 +101,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
             serviceCollection.AddHttpClient(HTTP_CLIENT_NAME)
                              .ConfigureHttpClient(ConfigureClient)
-                             .ConfigurePrimaryHttpMessageHandler(
-                                 configureHandler: x => new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate})
+                             .ConfigurePrimaryHttpMessageHandler(configureHandler: _ => new HttpClientHandler {AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate})
                              .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(value: 30)))
                              .AddTransientHttpErrorPolicy(configurePolicy: p => p.WaitAndRetryAsync(retryCount: maxRetries, sleepDurationProvider: Calculate));
         }

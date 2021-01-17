@@ -18,6 +18,7 @@
     <Product>Photo Gallery</Product>
     <PackageLicense>https://raw.githubusercontent.com/credfeto/GallerySync/master/LICENSE</PackageLicense>
     <NeutralLanguage>en-GB</NeutralLanguage>
+    <PackageReleaseNotes>$(ReleaseNotes)</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyTitle>Credfeto.Gallery.OutputBuilder</AssemblyTitle>

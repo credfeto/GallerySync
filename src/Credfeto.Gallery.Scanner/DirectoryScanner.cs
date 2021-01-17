@@ -11,10 +11,10 @@ namespace Credfeto.Gallery.Scanner
     {
         public static async Task<long> ScanFolderAsync(string baseFolder, IFileEmitter fileEmitter, IReadOnlyList<string> extensionsToRetrieveInOrderOfPrecendence, IReadOnlyList<string> sidecarFiles)
         {
-            Context context = new Context(baseFolder: baseFolder,
-                                          fileEmitter: fileEmitter,
-                                          extensionsToRetrieveInOrderOfPrecendence: extensionsToRetrieveInOrderOfPrecendence,
-                                          sidecarExtensions: sidecarFiles);
+            Context context = new(baseFolder: baseFolder,
+                                  fileEmitter: fileEmitter,
+                                  extensionsToRetrieveInOrderOfPrecendence: extensionsToRetrieveInOrderOfPrecendence,
+                                  sidecarExtensions: sidecarFiles);
 
             await StartScanningAsync(context);
 
@@ -135,7 +135,7 @@ namespace Credfeto.Gallery.Scanner
 
             public IReadOnlyList<string> ExtensionsToRetrieveInOrderOfPrecendence { get; }
 
-            public ConcurrentQueue<FileEntry> FilesToProcess { get; } = new ConcurrentQueue<FileEntry>();
+            public ConcurrentQueue<FileEntry> FilesToProcess { get; } = new();
 
             private static Func<IEnumerable<string>, bool> BuildSidecarProcessor(IReadOnlyList<string> sidecarExtensions)
             {
@@ -147,7 +147,7 @@ namespace Credfeto.Gallery.Scanner
                 }
                 else
                 {
-                    sidecarProcessor = matches => true;
+                    sidecarProcessor = _ => true;
                 }
 
                 return sidecarProcessor;
