@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SupportedExtensionAttribute.cs" company="Twaddle Software">
 //   Copyright (c) Twaddle Software
 // </copyright>
@@ -55,8 +55,7 @@ namespace Credfeto.Gallery.Image
 
         /// <summary>
         ///     The object invariant.
-        /// </summary>
-        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1811:AvoidUncalledPrivateCode", Justification = "Required for Code Contracts")]
+        /// </summary>        [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1811:AvoidUncalledPrivateCode", Justification = "Required for Code Contracts")]
         [SuppressMessage(category: "Microsoft.Performance", checkId: "CA1822:MarkMembersAsStatic", Justification = "Required for Code Contracts")]
         [ContractInvariantMethod]
         private void ObjectInvariant()

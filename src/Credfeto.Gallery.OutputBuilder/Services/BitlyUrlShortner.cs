@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
@@ -19,8 +19,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
     /// </summary>
     /// <remarks>
     ///     Get free key from https://bitly.com/a/your_api_key for up to 1000000 shortenings per day.
-    /// </remarks>
-    [SuppressMessage(category: "Microsoft.Naming", checkId: "CA1704:IdentifiersShouldBeSpelledCorrectly", Justification = "Bitly is name of site.")]
+    /// </remarks>    [SuppressMessage(category: "Microsoft.Naming", checkId: "CA1704:IdentifiersShouldBeSpelledCorrectly", Justification = "Bitly is name of site.")]
     public sealed class BitlyUrlShortner : IUrlShortner
     {
         private const string HTTP_CLIENT_NAME = @"Bitly";
@@ -42,8 +41,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
         /// <param name="url">The URL to shorten.</param>
         /// <returns>
         ///     The shortened version of the URL.
-        /// </returns>
-        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Many possible exceptions")]
+        /// </returns>        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Many possible exceptions")]
         public async Task<Uri> ShortenAsync(Uri url)
         {
             Contract.Requires(url != null);
