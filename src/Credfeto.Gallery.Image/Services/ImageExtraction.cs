@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -164,8 +164,7 @@ namespace Credfeto.Gallery.Image.Services
         /// <param name="creationDate"></param>
         /// <returns>
         ///     Block of bytes representing the image.
-        /// </returns>
-        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Is fallback position where it retries.")]
+        /// </returns>        [SuppressMessage(category: "Microsoft.Design", checkId: "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Is fallback position where it retries.")]
         public byte[] SaveImageAsJpegBytes(Image<Rgba32> image,
                                            long compressionQuality,
                                            string url,

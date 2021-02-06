@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SupportedExtensionAttribute.cs" company="Twaddle Software">
 //   Copyright (c) Twaddle Software
 // </copyright>
@@ -52,6 +52,7 @@ namespace Credfeto.Gallery.Image
                 return this._extension;
             }
         }
+
 
         /// <summary>
         ///     The object invariant.
