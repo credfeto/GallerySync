@@ -1,84 +1,43 @@
 "C#":
- - src/**/*.cs
- - src/**/*.csproj
-
-"Powershell":
- - **/*.ps1
- - **/*.psm1
+    - src/**/*.cs
+    - src/**/*.csproj
 
 "SQL":
- - db/**/*
- - tools/**/*.sql
+    - db/**/*
+    - tools/**/*.sql
 
 "Solidity":
- - src/**/*.sol
+    - src/**/*.sol
 
 "unit-tests":
- - src/*.Tests.*/**/*
- - src/*.Tests.Integration.*/**/*
- - src/*.Tests/**/*
- - src/*.Tests.Integration/**/*
+    - src/*.Tests.*/**/*
+    - src/*.Tests.Integration.*/**/*
+    - src/*.Tests/**/*
+    - src/*.Tests.Integration/**/*
 
 ".NET update":
- - src/global.json
+    - src/global.json
 
 "Config Change":
- - src/**/*.json
+    - src/**/*.json
 
 "Static Code Analysis Rules":
- - src/CodeAnalysis.ruleset
+    - src/CodeAnalysis.ruleset
 
 "Migration Script":
- - tools/MigrationScripts/**/*
+    - tools/MigrationScripts/**/*
 
 "Legal Text":
- - tools/LegalText/**/*
+    - tools/LegalText/**/*
 
 "Change Log":
- - CHANGELOG.md
+    - CHANGELOG.md
 
 "Read Me":
- - README.md
+    - README.md
 
 "Setup":
- - SETUP.md
+    - SETUP.md
 
 "github-actions":
- - .github/workflows/*.yml
-
-"BuildHelpers":
- - src/BuildHelpers/**/*
-
-"Credfeto.Gallery.DeleteCorruptImage":
- - src/Credfeto.Gallery.DeleteCorruptImage/**/*
-
-"Credfeto.Gallery.FileNaming":
- - src/Credfeto.Gallery.FileNaming/**/*
-
-"Credfeto.Gallery.Image":
- - src/Credfeto.Gallery.Image/**/*
-
-"Credfeto.Gallery.ObjectModel":
- - src/Credfeto.Gallery.ObjectModel/**/*
-
-"Credfeto.Gallery.OutputBuilder":
- - src/Credfeto.Gallery.OutputBuilder/**/*
-
-"Credfeto.Gallery.Repository":
- - src/Credfeto.Gallery.Repository/**/*
-
-"Credfeto.Gallery.Scanner":
- - src/Credfeto.Gallery.Scanner/**/*
-
-"Credfeto.Gallery.SiteIndexBuilder":
- - src/Credfeto.Gallery.SiteIndexBuilder/**/*
-
-"Credfeto.Gallery.Storage":
- - src/Credfeto.Gallery.Storage/**/*
-
-"Credfeto.Gallery.Upload":
- - src/Credfeto.Gallery.Upload/**/*
-
-"Credfeto.Gallery.UploadData":
- - src/Credfeto.Gallery.UploadData/**/*
-
+    - ".github/workflows/*.yml"
