@@ -11,11 +11,11 @@ namespace Credfeto.Gallery.FileNaming
     {
         private const string REPLACEMENT_CHAR = "-";
 
-        private static readonly Regex AcceptableUrlCharacters = new Regex(pattern: @"[^\w\-/]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex AcceptableUrlCharacters = new(pattern: @"[^\w\-/]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private static readonly Regex NoRepeatingHyphens = new Regex(pattern: @"(\-{2,})", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex NoRepeatingHyphens = new(pattern: @"(\-{2,})", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private static readonly Regex NoHyphensNextToSlash = new Regex(pattern: @"(\-*/\-*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex NoHyphensNextToSlash = new(pattern: @"(\-*/\-*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         [SuppressMessage(category: "Microsoft.Design", checkId: "CA1055:UriReturnValuesShouldNotBeStrings", Justification = "Its a fragment")]
         public static string BuildUrlSafePath(string basePath)
@@ -24,8 +24,7 @@ namespace Credfeto.Gallery.FileNaming
             root = RemoveApostrophes(root);
 
             return NoHyphensNextToSlash
-                   .Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), replacement: REPLACEMENT_CHAR),
-                                                       replacement: REPLACEMENT_CHAR),
+                   .Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), replacement: REPLACEMENT_CHAR), replacement: REPLACEMENT_CHAR),
                             replacement: "/")
                    .TrimEnd(REPLACEMENT_CHAR.ToCharArray())
                    .ToLowerInvariant();
@@ -65,7 +64,7 @@ namespace Credfeto.Gallery.FileNaming
 
         public static string RemoveDiacritics(string src, bool compatNorm, Func<char, char> customFolding)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             foreach (char c in RemoveDiacriticsEnum(src: src, compatNorm: compatNorm, customFolding: customFolding))
             {

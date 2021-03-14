@@ -14,7 +14,7 @@ namespace Credfeto.Gallery.Repository
 {
     public static class PhotoMetadataRepository
     {
-        private static readonly JsonSerializerOptions SerialiserOptions = new JsonSerializerOptions
+        private static readonly JsonSerializerOptions SerialiserOptions = new()
                                                                           {
                                                                               PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                                                                               DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
@@ -28,9 +28,9 @@ namespace Credfeto.Gallery.Repository
             logging.LogInformation($"Loading Repository from {baseFolder}...");
             string[] scores = {".info"};
 
-            List<string> sidecarFiles = new List<string>();
+            List<string> sidecarFiles = new();
 
-            PhotoInfoEmitter emitter = new PhotoInfoEmitter(baseFolder);
+            PhotoInfoEmitter emitter = new(baseFolder);
 
             if (Directory.Exists(baseFolder))
             {
@@ -46,7 +46,7 @@ namespace Credfeto.Gallery.Repository
         {
             logging.LogInformation($"Loading Repository from {baseFolder}...");
 
-            RawFileInfoEmitter emitter = new RawFileInfoEmitter();
+            RawFileInfoEmitter emitter = new();
 
             string[] scores = {".xmp", ".jpg", ".cr2", ".mrw", ".rw2", ".tif", ".tiff", ".psd"};
 

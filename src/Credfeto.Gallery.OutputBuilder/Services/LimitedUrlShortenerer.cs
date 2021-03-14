@@ -14,7 +14,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 {
     public sealed class LimitedUrlShortenerer : ILimitedUrlShortener
     {
-        private static readonly SemaphoreSlim Sempahore = new SemaphoreSlim(initialCount: 1);
+        private static readonly SemaphoreSlim Sempahore = new(initialCount: 1);
         private readonly ILogger<LimitedUrlShortenerer> _logging;
 
         private readonly JsonSerializerOptions _serializerOptions;
@@ -56,7 +56,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
             {
                 string filename = this._settings.ShortNamesFile + ".tracking.json";
 
-                List<ShortenerCount> tracking = new List<ShortenerCount>();
+                List<ShortenerCount> tracking = new();
 
                 if (File.Exists(filename))
                 {

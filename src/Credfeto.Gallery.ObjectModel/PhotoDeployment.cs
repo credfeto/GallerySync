@@ -6,6 +6,6 @@ namespace Credfeto.Gallery.ObjectModel
     [Serializable]
     public class PhotoDeployment
     {
-        public Dictionary<string, Photo> Photos { get; } = new Dictionary<string, Photo>();
+        public Dictionary<string, Photo> Photos { get; } = new();
     }
 }

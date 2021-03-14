@@ -107,4 +107,3 @@ namespace Credfeto.Gallery.OutputBuilder.Services
         }
     }
 }
-

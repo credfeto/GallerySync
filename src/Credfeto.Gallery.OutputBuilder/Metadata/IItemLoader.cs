@@ -15,10 +15,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
     /// <summary>
     ///     The item loader.
     /// </summary>
-    [SuppressMessage(category: "Microsoft.Design",
-                     checkId: "CA1059:MembersShouldNotExposeCertainConcreteTypes",
-                     MessageId = "System.Xml.XmlDocument",
-                     Justification = "Better API")]
+    [SuppressMessage(category: "Microsoft.Design", checkId: "CA1059:MembersShouldNotExposeCertainConcreteTypes", MessageId = "System.Xml.XmlDocument", Justification = "Better API")]
     internal interface IItemLoader
     {
         /// <summary>
@@ -44,4 +41,3 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
         string Read(XmlDocument document, XmlNamespaceManager nameManager);
     }
 }
-

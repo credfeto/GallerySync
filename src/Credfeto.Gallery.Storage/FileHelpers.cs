@@ -8,7 +8,7 @@ namespace Credfeto.Gallery.Storage
 {
     public static class FileHelpers
     {
-        private static readonly SemaphoreSlim CommitLock = new SemaphoreSlim(initialCount: 1);
+        private static readonly SemaphoreSlim CommitLock = new(initialCount: 1);
 
         public static Task WriteAllBytesAsync(string fileName, byte[] bytes, bool commit)
         {
@@ -204,7 +204,7 @@ namespace Credfeto.Gallery.Storage
 
                     Commands.Stage(repository: repo, path: localFile);
 
-                    Signature author = new Signature(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", when: DateTime.UtcNow);
+                    Signature author = new(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", when: DateTime.UtcNow);
                     Signature committer = author;
 
                     repo.Commit($"Updated {localFile}", author: author, committer: committer);

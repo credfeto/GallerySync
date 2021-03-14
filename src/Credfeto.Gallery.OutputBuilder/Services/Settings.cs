@@ -4,13 +4,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 {
     public sealed class Settings : ISettings
     {
-        public Settings(string bitlyApiKey,
-                        string bitlyApiUser,
-                        string rootFolder,
-                        string databaseOutputFolder,
-                        string imagesOutputPath,
-                        string brokenImagesFile,
-                        string shortNamesFile)
+        public Settings(string bitlyApiKey, string bitlyApiUser, string rootFolder, string databaseOutputFolder, string imagesOutputPath, string brokenImagesFile, string shortNamesFile)
         {
             this.BitlyApiKey = bitlyApiKey;
             this.BitlyApiUser = bitlyApiUser;

@@ -38,7 +38,7 @@ namespace Credfeto.Gallery.Upload
         {
             try
             {
-                using (HttpClient client = new HttpClient {BaseAddress = this._uploadBaseAddress, Timeout = this._timeout})
+                using (HttpClient client = new() {BaseAddress = this._uploadBaseAddress, Timeout = this._timeout})
                 {
                     Console.WriteLine(format: "Uploading ({0}): {1}", MakeUploadTypeText(uploadType), arg1: progressText);
 
@@ -48,7 +48,7 @@ namespace Credfeto.Gallery.Upload
 
                     string json = JsonSerializer.Serialize(value: itemToPost, options: this._serializerOptions);
 
-                    using (StringContent content = new StringContent(content: json, encoding: Encoding.UTF8, mediaType: jsonMimeType))
+                    using (StringContent content = new(content: json, encoding: Encoding.UTF8, mediaType: jsonMimeType))
                     {
                         HttpResponseMessage response = await client.PostAsync(new Uri(uriString: "tasks/sync", uriKind: UriKind.Relative), content: content);
                         Console.WriteLine(format: "Status: {0}", arg0: response.StatusCode);

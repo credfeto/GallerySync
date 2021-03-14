@@ -12,7 +12,7 @@ namespace Credfeto.Gallery.Repository.Emitters
 {
     public sealed class RawFileInfoEmitter : IFileEmitter
     {
-        private readonly ConcurrentBag<Photo> _photos = new ConcurrentBag<Photo>();
+        private readonly ConcurrentBag<Photo> _photos = new();
 
         public Photo[] Photos => this.OrderedPhotos();
 
@@ -40,7 +40,7 @@ namespace Credfeto.Gallery.Repository.Emitters
         {
             string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
-            List<ComponentFile> componentFiles = new List<ComponentFile>();
+            List<ComponentFile> componentFiles = new();
 
             TaskFactory<ComponentFile> factory = Task<ComponentFile>.Factory;
 
@@ -48,7 +48,7 @@ namespace Credfeto.Gallery.Repository.Emitters
                                                .Select(selector: fileName => ReadComponentFileAsync(factory: factory, Path.Combine(path1: entry.Folder, path2: fileName)))
                                                .ToArray();
 
-            Photo item = new Photo
+            Photo item = new()
                          {
                              BasePath = basePath,
                              UrlSafePath = urlSafePath,
@@ -71,7 +71,7 @@ namespace Credfeto.Gallery.Repository.Emitters
 
         private static ComponentFile ReadComponentFile(string fileName)
         {
-            FileInfo info = new FileInfo(fileName);
+            FileInfo info = new(fileName);
             string extension = info.Extension.ToLowerInvariant();
 
             return new ComponentFile {Extension = extension, Hash = string.Empty, LastModified = info.LastWriteTimeUtc, FileSize = info.Length};

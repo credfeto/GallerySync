@@ -86,7 +86,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
                 return string.Empty;
             }
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             foreach (XmlElement imageNode in imageNodes)
             {

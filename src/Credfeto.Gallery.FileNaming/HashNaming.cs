@@ -11,7 +11,7 @@ namespace Credfeto.Gallery.FileNaming
 
             int[] indexes = {2, 4, 8, 12, 20};
 
-            StringBuilder builder = new StringBuilder(pathHash);
+            StringBuilder builder = new(pathHash);
 
             foreach (int index in indexes.OrderByDescending(keySelector: x => x))
             {
