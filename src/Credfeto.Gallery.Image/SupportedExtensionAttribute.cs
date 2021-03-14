@@ -53,7 +53,6 @@ namespace Credfeto.Gallery.Image
             }
         }
 
-
         /// <summary>
         ///     The object invariant.
         /// </summary>

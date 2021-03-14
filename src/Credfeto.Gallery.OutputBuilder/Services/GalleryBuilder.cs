@@ -53,7 +53,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
         private async Task<HashSet<string>> ProcessAsync(Photo[] source, Photo[] target, IImageSettings imageImageSettings)
         {
-            ConcurrentDictionary<string, bool> items = new ConcurrentDictionary<string, bool>();
+            ConcurrentDictionary<string, bool> items = new();
 
             await Task.WhenAll(source.Select(selector: sourcePhoto => this.ProcessSinglePhotoAsync(target: target, sourcePhoto: sourcePhoto, items: items, imageImageSettings: imageImageSettings))
                                      .ToArray());
@@ -172,7 +172,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 
             bool buildImages = targetPhoto == null || rebuild || !targetPhoto.ImageSizes.HasAny();
 
-            List<string> filesCreated = new List<string>();
+            List<string> filesCreated = new();
 
             if (buildImages)
             {

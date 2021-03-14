@@ -9,7 +9,7 @@ namespace Credfeto.Gallery.OutputBuilder.Services
 {
     public sealed class BrokenImageTracker : IBrokenImageTracker
     {
-        private static readonly ConcurrentDictionary<string, Exception> Items = new ConcurrentDictionary<string, Exception>();
+        private static readonly ConcurrentDictionary<string, Exception> Items = new();
 
         public void LogBrokenImage(string path, Exception exception)
         {

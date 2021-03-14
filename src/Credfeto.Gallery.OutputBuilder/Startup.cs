@@ -18,7 +18,7 @@ namespace Credfeto.Gallery.OutputBuilder
     {
         public static ServiceCollection RegisterServices(string[] args)
         {
-            ServiceCollection serviceCollection = new ServiceCollection();
+            ServiceCollection serviceCollection = new();
 
             Log.Logger = new LoggerConfiguration().Enrich.FromLogContext()
                                                   .WriteTo.Console()

@@ -28,9 +28,9 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
 
             Contract.Ensures(Contract.Result<Dictionary<string, string>>() != null);
 
-            Dictionary<string, string> props = new Dictionary<string, string>();
+            Dictionary<string, string> props = new();
 
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new();
             doc.Load(fileName);
 
             XmlNamespaceManager nsmgr = CreateNamespaceManager(doc);
@@ -72,14 +72,14 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
             Contract.Requires(!string.IsNullOrEmpty(propertyName));
             Contract.Requires(!string.IsNullOrEmpty(value));
 
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new();
             doc.Load(fileName);
 
             XmlNamespaceManager nsmgr = CreateNamespaceManager(doc);
 
             if (StringComparer.InvariantCultureIgnoreCase.Equals(x: propertyName, y: MetadataNames.KEYWORDS))
             {
-                ElementItemListLoader keywordLoader = new ElementItemListLoader(property: MetadataNames.KEYWORDS, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
+                ElementItemListLoader keywordLoader = new(property: MetadataNames.KEYWORDS, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
 
                 string existingRawKeywords = keywordLoader.Read(document: doc, nameManager: nsmgr);
                 IEnumerable<string> existingKeywords = from record in existingRawKeywords.Split(separator: ';') select record.ToUpperInvariant();
@@ -106,7 +106,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
                     node.AppendChild(keywordElement);
                 }
 
-                XmlWriterSettings xmlWriterSerttings = new XmlWriterSettings
+                XmlWriterSettings xmlWriterSerttings = new()
                                                        {
                                                            OmitXmlDeclaration = true,
                                                            Encoding = Encoding.UTF8,
@@ -214,7 +214,7 @@ namespace Credfeto.Gallery.OutputBuilder.Metadata
 
             Contract.Ensures(Contract.Result<XmlNamespaceManager>() != null);
 
-            XmlNamespaceManager nsmgr = new XmlNamespaceManager(document.NameTable);
+            XmlNamespaceManager nsmgr = new(document.NameTable);
             nsmgr.AddNamespace(prefix: "x", uri: "adobe:ns:meta/");
             nsmgr.AddNamespace(prefix: "rdf", uri: "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
             nsmgr.AddNamespace(prefix: "tiff", uri: "http://ns.adobe.com/tiff/1.0/");

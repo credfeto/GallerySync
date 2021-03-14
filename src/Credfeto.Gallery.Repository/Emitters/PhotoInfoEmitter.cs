@@ -10,7 +10,7 @@ namespace Credfeto.Gallery.Repository.Emitters
     public class PhotoInfoEmitter : IFileEmitter
     {
         private readonly string _basePath;
-        private readonly ConcurrentBag<Photo> _photos = new ConcurrentBag<Photo>();
+        private readonly ConcurrentBag<Photo> _photos = new();
 
         public PhotoInfoEmitter(string basePath)
         {

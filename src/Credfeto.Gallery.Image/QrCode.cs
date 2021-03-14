@@ -15,17 +15,17 @@ namespace Credfeto.Gallery.Image
 
             try
             {
-                using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+                using (QRCodeGenerator qrGenerator = new())
                 {
                     QRCodeData qrCodeData = qrGenerator.CreateQrCode(plainText: url, eccLevel: QRCodeGenerator.ECCLevel.H);
 
-                    using (PngByteQRCode qrCode = new PngByteQRCode(qrCodeData))
+                    using (PngByteQRCode qrCode = new(qrCodeData))
                     {
                         int moduleSize = QR_MODULE_SIZE;
 
                         byte[] data = qrCode.GetGraphic(moduleSize);
 
-                        using (MemoryStream stream = new MemoryStream(buffer: data, writable: false))
+                        using (MemoryStream stream = new(buffer: data, writable: false))
                         {
                             return SixLabors.ImageSharp.Image.Load(stream.ToArray());
                         }

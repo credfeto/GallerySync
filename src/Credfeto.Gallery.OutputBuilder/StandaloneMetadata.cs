@@ -19,23 +19,20 @@ namespace Credfeto.Gallery.OutputBuilder
             string file = Path.GetFileName(filename);
             string extension = Path.GetExtension(filename);
 
-            List<string> fileGroup = new List<string>();
+            List<string> fileGroup = new();
 
             if (File.Exists(filename.Replace(oldValue: extension, newValue: ".xmp")))
             {
                 fileGroup.Add(file.Replace(oldValue: extension, newValue: ".xmp"));
             }
 
-            FileEntry entry = new FileEntry
-                              {
-                                  Folder = folder, RelativeFolder = folder.Substring(settings.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup
-                              };
+            FileEntry entry = new() {Folder = folder, RelativeFolder = folder.Substring(settings.RootFolder.Length + 1), LocalFileName = file, AlternateFileNames = fileGroup};
 
             string basePath = Path.Combine(path1: entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
             string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
-            Photo photo = new Photo
+            Photo photo = new()
                           {
                               BasePath = basePath,
                               UrlSafePath = urlSafePath,

@@ -46,7 +46,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             string rootFolder = settings.RootFolder;
 
-            List<PhotoMetadata> metadata = new List<PhotoMetadata>();
+            List<PhotoMetadata> metadata = new();
 
             ExtractXmpMetadata(sourcePhoto: sourcePhoto, metadata: metadata, rootFolder: rootFolder);
 
@@ -72,7 +72,7 @@ namespace Credfeto.Gallery.OutputBuilder
         {
             TryIgnore(action: () =>
                               {
-                                  ExifReader reader = new ExifReader(fileName);
+                                  ExifReader reader = new(fileName);
 
                                   TryIgnore(action: () => ExtractXmpDateTime(metadata: metadata, reader: reader));
 
@@ -106,7 +106,7 @@ namespace Credfeto.Gallery.OutputBuilder
             {
                 byte[] data = File.ReadAllBytes(fileName);
 
-                using (MemoryStream ms = new MemoryStream(buffer: data, writable: false))
+                using (MemoryStream ms = new(buffer: data, writable: false))
                 {
                     TagLib.File.IFileAbstraction fa = new StreamFileAbstraction(name: fileName, readStream: ms, writeStream: Stream.Null);
 
