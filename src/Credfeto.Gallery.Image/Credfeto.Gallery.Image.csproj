@@ -31,7 +31,7 @@
     <PackageReference Include="Credfeto.ImageLoader.Interfaces" Version="1.0.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta11" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta12" />
     <PackageReference Include="Taglib-Sharp-NetStandard" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
