@@ -45,6 +45,7 @@ Please ADD ALL Changes to the UNRELASED SECTION and not a specific release
 - FF-1429 - Updated SonarAnalyzer.CSharp to 8.27.0.35380
 - FF-1429 - Updated SonarAnalyzer.CSharp to 8.28.0.36354
 - FF-1429 - Updated Roslynator.Analyzers to 3.2.2
+- FF-1429 - Updated SonarAnalyzer.CSharp to 8.29.0.36737
 ### Removed
 ### Deployment Changes
 
