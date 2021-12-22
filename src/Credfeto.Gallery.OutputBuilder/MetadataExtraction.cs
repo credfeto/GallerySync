@@ -138,7 +138,7 @@ internal static class MetadataExtraction
     {
         string xmp = File.ReadAllText(fileName);
 
-        XmpTag tag = null;
+        XmpTag tag;
 
         try
         {

@@ -81,27 +81,21 @@ internal static class MetadataFormatting
 
     public static string FormatFocalLength(double d, int filmEquivalent = 0)
     {
-        string sz = string.Empty;
-
-        if (d != 0.0)
+        if (d == 0.0)
         {
-            if (filmEquivalent != 0)
-            {
-                // sprintf_s(sz, len, "%.1fmm (%dmm film eq)", d, filmEquivalent);
-                sz = string.Format(format: "{0:0.#}mm ({1}mm film eq)", arg0: d, arg1: filmEquivalent);
-            }
-            else
-            {
-                //sprintf_s(sz, len, d < 1 ? "%.1fmm" : "%.0fmm", d);
-                sz = string.Format(d < 1 ? "{0:0.#}mm" : "{0:0}mm", arg0: d);
-            }
+            return "0mm";
+        }
+
+        if (filmEquivalent == 0)
+        {
+            //sprintf_s(sz, len, d < 1 ? "%.1fmm" : "%.0fmm", d);
+            return string.Format(d < 1 ? "{0:0.#}mm" : "{0:0}mm", arg0: d);
         }
         else
         {
-            sz = "0mm";
+            // sprintf_s(sz, len, "%.1fmm (%dmm film eq)", d, filmEquivalent);
+            return string.Format(format: "{0:0.#}mm ({1}mm film eq)", arg0: d, arg1: filmEquivalent);
         }
-
-        return sz;
     }
 
     private static int ExpRound(double d)

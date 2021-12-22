@@ -80,13 +80,6 @@ public sealed class ImageExtraction : IImageExtraction
 
         using (Image<Rgba32> sourceBitmap = await this._imageLoader.LoadImageAsync(filename))
         {
-            if (sourceBitmap == null)
-            {
-                this._logging.LogWarning($"Could not load : {filename}");
-
-                return null;
-            }
-
             this._logging.LogInformation($"Loaded: {filename}");
 
             int sourceImageWidth = sourceBitmap.Width;
@@ -266,14 +259,8 @@ public sealed class ImageExtraction : IImageExtraction
                         return;
                     }
 
-                    imageToAddWatermarkTo.Mutate(operation: pc =>
-                                                            {
-                                                                pc.DrawImage(image: qr,
-                                                                             new Point(x: qrXPos, y: qrYPos),
-                                                                             colorBlending: PixelColorBlendingMode.Overlay,
-                                                                             alphaComposition: PixelAlphaCompositionMode.SrcOver,
-                                                                             opacity: 1);
-                                                            });
+                    // ReSharper disable once AccessToDisposedClosure
+                    imageToAddWatermarkTo.Mutate(operation: pc => DrawImage(pc: pc, qr: qr, qrXPos: qrXPos, qrYPos: qrYPos));
                 }
             }
 
@@ -285,15 +272,19 @@ public sealed class ImageExtraction : IImageExtraction
             int x = imageToAddWatermarkTo.Width - width;
             int y = imageToAddWatermarkTo.Height - height;
 
-            imageToAddWatermarkTo.Mutate(operation: pc =>
-                                                    {
-                                                        pc.DrawImage(image: watermark,
-                                                                     new Point(x: x, y: y),
-                                                                     colorBlending: PixelColorBlendingMode.Overlay,
-                                                                     alphaComposition: PixelAlphaCompositionMode.SrcOver,
-                                                                     opacity: 1);
-                                                    });
+            // ReSharper disable once AccessToDisposedClosure
+            imageToAddWatermarkTo.Mutate(operation: pc => DrawQrCode(pc: pc, watermark: watermark, x: x, y: y));
         }
+    }
+
+    private static void DrawQrCode(IImageProcessingContext pc, Image<Rgba32> watermark, int x, int y)
+    {
+        pc.DrawImage(image: watermark, new Point(x: x, y: y), colorBlending: PixelColorBlendingMode.Overlay, alphaComposition: PixelAlphaCompositionMode.SrcOver, opacity: 1);
+    }
+
+    private static void DrawImage(IImageProcessingContext pc, Image<Rgba32> qr, int qrXPos, int qrYPos)
+    {
+        pc.DrawImage(image: qr, new Point(x: qrXPos, y: qrYPos), colorBlending: PixelColorBlendingMode.Overlay, alphaComposition: PixelAlphaCompositionMode.SrcOver, opacity: 1);
     }
 
     /// <summary>
