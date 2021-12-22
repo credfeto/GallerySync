@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -83,7 +84,7 @@ internal static class Program
                                                                         {
                                                                             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                                                                             DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                                                                            IgnoreNullValues = true,
+                                                                            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                                                                             WriteIndented = true,
                                                                             PropertyNameCaseInsensitive = true
                                                                         };
@@ -324,7 +325,7 @@ internal static class Program
 
     private static bool HasChildren(GalleryEntry item)
     {
-        return item.Children != null && item.Children.Any();
+        return item.Children != null && item.Children.Count != 0;
     }
 
     private static bool HasPhotoChildren(GalleryEntry item)
@@ -337,9 +338,9 @@ internal static class Program
         return item.Path.StartsWith(value: "/albums/", comparisonType: StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsImage(GalleryEntry candiate)
+    private static bool IsImage(GalleryEntry candidate)
     {
-        return candiate.ImageSizes != null && candiate.ImageSizes.Any();
+        return candidate.ImageSizes != null && candidate.ImageSizes.Count != 0;
     }
 
     private static async Task UploadQueuedItemsAsync(List<UploadQueueItem> inputSession)
@@ -493,18 +494,20 @@ internal static class Program
     {
         foreach (GalleryEntry entry in contents.Values.Where(predicate: candidate => candidate.Location == null))
         {
-            if (entry.Children != null && entry.Children.Any())
+            if (entry.Children == null || entry.Children.Count == 0)
             {
-                List<Location> locations = new();
+                continue;
+            }
 
-                AppendChildLocations(entry: entry, locations: locations);
+            List<Location> locations = new();
 
-                Location location = LocationHelpers.GetCenterFromDegrees(locations);
+            AppendChildLocations(entry: entry, locations: locations);
 
-                if (location != null)
-                {
-                    entry.Location = location;
-                }
+            Location location = LocationHelpers.GetCenterFromDegrees(locations);
+
+            if (location != null)
+            {
+                entry.Location = location;
             }
         }
     }
@@ -513,7 +516,7 @@ internal static class Program
     {
         foreach (GalleryEntry child in entry.Children)
         {
-            if (child.Children != null && child.Children.Any())
+            if (child.Children != null && child.Children.Count != 0)
             {
                 AppendChildLocations(entry: child, locations: locations);
             }
@@ -625,7 +628,7 @@ internal static class Program
                                        DateCreated = parentRecord.DateCreated,
                                        DateUpdated = parentRecord.DateUpdated,
                                        Location = parentRecord.Location,
-                                       Type = parentRecord.Children.Any() ? "folder" : "photo",
+                                       Type = parentRecord.Children.Count != 0 ? "folder" : "photo",
                                        ImageSizes = parentRecord.ImageSizes ?? new List<ImageSize>(),
                                        Metadata = parentRecord.Metadata ?? new List<PhotoMetadata>(),
                                        Keywords = parentRecord.Keywords ?? new List<string>(),
@@ -864,7 +867,7 @@ internal static class Program
                    DateCreated = firstRecord.DateCreated,
                    DateUpdated = firstRecord.DateUpdated,
                    Location = firstRecord.Location,
-                   Type = firstRecord.Children.Any() ? "folder" : "photo",
+                   Type = firstRecord.Children.Count != 0 ? "folder" : "photo",
                    ImageSizes = firstRecord.ImageSizes ?? new List<ImageSize>()
                };
     }

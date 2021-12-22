@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.Gallery.OutputBuilder.Interfaces;
@@ -32,7 +33,7 @@ public sealed class LimitedUrlShortenerer : ILimitedUrlShortener
                                   {
                                       PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                                       DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                                      IgnoreNullValues = true,
+                                      DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                                       WriteIndented = true,
                                       PropertyNameCaseInsensitive = true
                                   };

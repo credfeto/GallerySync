@@ -64,7 +64,7 @@ public sealed class ShortUrls : IShortUrls
 
             if (this.TryAdd(process[0], process[1]))
             {
-                this._logging.LogDebug(message: "Loaded Short Url {process[1]} for {process[0]}");
+                this._logging.LogDebug(message: $"Loaded Short Url {process[1]} for {process[0]}");
             }
         }
 
