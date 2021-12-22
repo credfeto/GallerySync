@@ -10,115 +10,114 @@ using Credfeto.Gallery.OutputBuilder.Interfaces;
 using Credfeto.Gallery.Storage;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Gallery.OutputBuilder.Services
+namespace Credfeto.Gallery.OutputBuilder.Services;
+
+public sealed class LimitedUrlShortenerer : ILimitedUrlShortener
 {
-    public sealed class LimitedUrlShortenerer : ILimitedUrlShortener
+    private static readonly SemaphoreSlim Sempahore = new(initialCount: 1);
+    private readonly ILogger<LimitedUrlShortenerer> _logging;
+
+    private readonly JsonSerializerOptions _serializerOptions;
+    private readonly ISettings _settings;
+    private readonly IShortUrls _shortUrls;
+    private readonly IUrlShortner _urlShortener;
+
+    public LimitedUrlShortenerer(IUrlShortner urlShortener, IShortUrls shortUrls, ISettings settings, ILogger<LimitedUrlShortenerer> logging)
     {
-        private static readonly SemaphoreSlim Sempahore = new(initialCount: 1);
-        private readonly ILogger<LimitedUrlShortenerer> _logging;
+        this._urlShortener = urlShortener;
+        this._shortUrls = shortUrls;
+        this._settings = settings;
+        this._logging = logging;
+        this._serializerOptions = new JsonSerializerOptions
+                                  {
+                                      PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                                      DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                                      IgnoreNullValues = true,
+                                      WriteIndented = true,
+                                      PropertyNameCaseInsensitive = true
+                                  };
+    }
 
-        private readonly JsonSerializerOptions _serializerOptions;
-        private readonly ISettings _settings;
-        private readonly IShortUrls _shortUrls;
-        private readonly IUrlShortner _urlShortener;
-
-        public LimitedUrlShortenerer(IUrlShortner urlShortener, IShortUrls shortUrls, ISettings settings, ILogger<LimitedUrlShortenerer> logging)
+    public async Task<string> TryGenerateShortUrlAsync(string url)
+    {
+        if (this._shortUrls.TryGetValue(url: url, out string shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
         {
-            this._urlShortener = urlShortener;
-            this._shortUrls = shortUrls;
-            this._settings = settings;
-            this._logging = logging;
-            this._serializerOptions = new JsonSerializerOptions
-                                      {
-                                          PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                                          DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                                          IgnoreNullValues = true,
-                                          WriteIndented = true,
-                                          PropertyNameCaseInsensitive = true
-                                      };
+            return shortUrl;
         }
 
-        public async Task<string> TryGenerateShortUrlAsync(string url)
+        await Sempahore.WaitAsync();
+
+        if (this._shortUrls.TryGetValue(url: url, shortUrl: out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
         {
-            if (this._shortUrls.TryGetValue(url: url, out string shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+            return shortUrl;
+        }
+
+        try
+        {
+            string filename = this._settings.ShortNamesFile + ".tracking.json";
+
+            List<ShortenerCount> tracking = new();
+
+            if (File.Exists(filename))
             {
-                return shortUrl;
+                byte[] bytes = await FileHelpers.ReadAllBytesAsync(filename);
+
+                ShortenerCount[] items = JsonSerializer.Deserialize<ShortenerCount[]>(Encoding.UTF8.GetString(bytes), options: this._serializerOptions);
+
+                tracking.AddRange(items);
             }
 
-            await Sempahore.WaitAsync();
+            const int maxImpressionsPerMonth = 100;
 
-            if (this._shortUrls.TryGetValue(url: url, shortUrl: out shortUrl) && !string.IsNullOrWhiteSpace(shortUrl))
+            DateTime now = DateTime.UtcNow;
+
+            ShortenerCount counter = tracking.FirstOrDefault(predicate: item => item.Year == now.Year && item.Month == now.Month);
+
+            if (counter == null)
             {
-                return shortUrl;
-            }
+                counter = new ShortenerCount();
 
-            try
-            {
-                string filename = this._settings.ShortNamesFile + ".tracking.json";
+                long totalImpressionsEver = 0L;
 
-                List<ShortenerCount> tracking = new();
-
-                if (File.Exists(filename))
+                foreach (ShortenerCount month in tracking)
                 {
-                    byte[] bytes = await FileHelpers.ReadAllBytesAsync(filename);
-
-                    ShortenerCount[] items = JsonSerializer.Deserialize<ShortenerCount[]>(Encoding.UTF8.GetString(bytes), options: this._serializerOptions);
-
-                    tracking.AddRange(items);
+                    totalImpressionsEver += month.Impressions;
                 }
 
-                const int maxImpressionsPerMonth = 100;
+                counter.Year = now.Year;
+                counter.Month = now.Month;
+                counter.Impressions = 1;
+                counter.TotalImpressionsEver = totalImpressionsEver;
 
-                DateTime now = DateTime.UtcNow;
+                tracking.Add(counter);
 
-                ShortenerCount counter = tracking.FirstOrDefault(predicate: item => item.Year == now.Year && item.Month == now.Month);
-
-                if (counter == null)
+                await FileHelpers.WriteAllBytesAsync(fileName: filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray(), options: this._serializerOptions)), commit: false);
+            }
+            else
+            {
+                if (counter.Impressions < maxImpressionsPerMonth)
                 {
-                    counter = new ShortenerCount();
-
-                    long totalImpressionsEver = 0L;
-
-                    foreach (ShortenerCount month in tracking)
-                    {
-                        totalImpressionsEver += month.Impressions;
-                    }
-
-                    counter.Year = now.Year;
-                    counter.Month = now.Month;
-                    counter.Impressions = 1;
-                    counter.TotalImpressionsEver = totalImpressionsEver;
-
-                    tracking.Add(counter);
+                    this._logging.LogInformation(message: "Bitly Impressions for {counter.Impressions}");
+                    this._logging.LogInformation(message: "Bitly Impressions total {counter.TotalImpressionsEver}");
+                    ++counter.Impressions;
+                    ++counter.TotalImpressionsEver;
 
                     await FileHelpers.WriteAllBytesAsync(fileName: filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray(), options: this._serializerOptions)), commit: false);
                 }
-                else
-                {
-                    if (counter.Impressions < maxImpressionsPerMonth)
-                    {
-                        this._logging.LogInformation(message: "Bitly Impressions for {counter.Impressions}");
-                        this._logging.LogInformation(message: "Bitly Impressions total {counter.TotalImpressionsEver}");
-                        ++counter.Impressions;
-                        ++counter.TotalImpressionsEver;
-
-                        await FileHelpers.WriteAllBytesAsync(fileName: filename, Encoding.UTF8.GetBytes(JsonSerializer.Serialize(tracking.ToArray(), options: this._serializerOptions)), commit: false);
-                    }
-                }
-
-                if (counter.Impressions < maxImpressionsPerMonth)
-                {
-                    Uri shortened = await this._urlShortener.ShortenAsync(new Uri(url));
-
-                    return shortened.ToString();
-                }
-
-                return url;
             }
-            finally
+
+            if (counter.Impressions < maxImpressionsPerMonth)
             {
-                Sempahore.Release();
+                Uri shortened = await this._urlShortener.ShortenAsync(new Uri(url));
+
+                return shortened.ToString();
             }
+
+            return url;
+        }
+        finally
+        {
+            Sempahore.Release();
         }
     }
 }

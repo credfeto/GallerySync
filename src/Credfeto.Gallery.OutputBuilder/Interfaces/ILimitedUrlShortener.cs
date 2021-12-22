@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace Credfeto.Gallery.OutputBuilder.Interfaces
+namespace Credfeto.Gallery.OutputBuilder.Interfaces;
+
+public interface ILimitedUrlShortener
 {
-    public interface ILimitedUrlShortener
-    {
-        Task<string> TryGenerateShortUrlAsync(string url);
-    }
+    Task<string> TryGenerateShortUrlAsync(string url);
 }

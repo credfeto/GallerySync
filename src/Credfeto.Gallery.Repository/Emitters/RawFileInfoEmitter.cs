@@ -8,73 +8,72 @@ using Credfeto.Gallery.FileNaming;
 using Credfeto.Gallery.ObjectModel;
 using Credfeto.Gallery.Scanner;
 
-namespace Credfeto.Gallery.Repository.Emitters
+namespace Credfeto.Gallery.Repository.Emitters;
+
+public sealed class RawFileInfoEmitter : IFileEmitter
 {
-    public sealed class RawFileInfoEmitter : IFileEmitter
+    private readonly ConcurrentBag<Photo> _photos = new();
+
+    public Photo[] Photos => this.OrderedPhotos();
+
+    public async Task FileFoundAsync(FileEntry entry)
     {
-        private readonly ConcurrentBag<Photo> _photos = new();
+        string basePath = Path.Combine(path1: entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
 
-        public Photo[] Photos => this.OrderedPhotos();
+        Photo item = await CreatePhotoRecordAsync(entry: entry, basePath: basePath);
 
-        public async Task FileFoundAsync(FileEntry entry)
-        {
-            string basePath = Path.Combine(path1: entry.RelativeFolder, Path.GetFileNameWithoutExtension(entry.LocalFileName));
+        this.Store(item);
+    }
 
-            Photo item = await CreatePhotoRecordAsync(entry: entry, basePath: basePath);
+    private Photo[] OrderedPhotos()
+    {
+        return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
+                   .ToArray();
+    }
 
-            this.Store(item);
-        }
+    private void Store(Photo photo)
+    {
+        this._photos.Add(photo);
+    }
 
-        private Photo[] OrderedPhotos()
-        {
-            return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
-                       .ToArray();
-        }
+    private static async Task<Photo> CreatePhotoRecordAsync(FileEntry entry, string basePath)
+    {
+        string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
 
-        private void Store(Photo photo)
-        {
-            this._photos.Add(photo);
-        }
+        List<ComponentFile> componentFiles = new();
 
-        private static async Task<Photo> CreatePhotoRecordAsync(FileEntry entry, string basePath)
-        {
-            string urlSafePath = UrlNaming.BuildUrlSafePath(basePath);
+        TaskFactory<ComponentFile> factory = Task<ComponentFile>.Factory;
 
-            List<ComponentFile> componentFiles = new();
+        Task<ComponentFile>[] tasks = entry.AlternateFileNames.Concat(new[] { entry.LocalFileName })
+                                           .Select(selector: fileName => ReadComponentFileAsync(factory: factory, Path.Combine(path1: entry.Folder, path2: fileName)))
+                                           .ToArray();
 
-            TaskFactory<ComponentFile> factory = Task<ComponentFile>.Factory;
+        Photo item = new()
+                     {
+                         BasePath = basePath,
+                         UrlSafePath = urlSafePath,
+                         PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
+                         ImageExtension = Path.GetExtension(entry.LocalFileName),
+                         Files = componentFiles
+                     };
 
-            Task<ComponentFile>[] tasks = entry.AlternateFileNames.Concat(new[] {entry.LocalFileName})
-                                               .Select(selector: fileName => ReadComponentFileAsync(factory: factory, Path.Combine(path1: entry.Folder, path2: fileName)))
-                                               .ToArray();
+        ComponentFile[] results = await Task.WhenAll(tasks);
 
-            Photo item = new()
-                         {
-                             BasePath = basePath,
-                             UrlSafePath = urlSafePath,
-                             PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
-                             ImageExtension = Path.GetExtension(entry.LocalFileName),
-                             Files = componentFiles
-                         };
+        componentFiles.AddRange(results);
 
-            ComponentFile[] results = await Task.WhenAll(tasks);
+        return item;
+    }
 
-            componentFiles.AddRange(results);
+    private static Task<ComponentFile> ReadComponentFileAsync(TaskFactory<ComponentFile> factory, string fileName)
+    {
+        return factory.StartNew(function: () => ReadComponentFile(fileName));
+    }
 
-            return item;
-        }
+    private static ComponentFile ReadComponentFile(string fileName)
+    {
+        FileInfo info = new(fileName);
+        string extension = info.Extension.ToLowerInvariant();
 
-        private static Task<ComponentFile> ReadComponentFileAsync(TaskFactory<ComponentFile> factory, string fileName)
-        {
-            return factory.StartNew(function: () => ReadComponentFile(fileName));
-        }
-
-        private static ComponentFile ReadComponentFile(string fileName)
-        {
-            FileInfo info = new(fileName);
-            string extension = info.Extension.ToLowerInvariant();
-
-            return new ComponentFile {Extension = extension, Hash = string.Empty, LastModified = info.LastWriteTimeUtc, FileSize = info.Length};
-        }
+        return new ComponentFile { Extension = extension, Hash = string.Empty, LastModified = info.LastWriteTimeUtc, FileSize = info.Length };
     }
 }

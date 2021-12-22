@@ -3,39 +3,38 @@ using QRCoder;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Credfeto.Gallery.Image
+namespace Credfeto.Gallery.Image;
+
+public static class QrCode
 {
-    public static class QrCode
+    private const int QR_MODULE_SIZE = 2;
+
+    public static Image<Rgba32> EncodeUrl(string url)
     {
-        private const int QR_MODULE_SIZE = 2;
+        //url = "https://www.markridgwell.co.uk/";
 
-        public static Image<Rgba32> EncodeUrl(string url)
+        try
         {
-            //url = "https://www.markridgwell.co.uk/";
-
-            try
+            using (QRCodeGenerator qrGenerator = new())
             {
-                using (QRCodeGenerator qrGenerator = new())
+                QRCodeData qrCodeData = qrGenerator.CreateQrCode(plainText: url, eccLevel: QRCodeGenerator.ECCLevel.H);
+
+                using (PngByteQRCode qrCode = new(qrCodeData))
                 {
-                    QRCodeData qrCodeData = qrGenerator.CreateQrCode(plainText: url, eccLevel: QRCodeGenerator.ECCLevel.H);
+                    int moduleSize = QR_MODULE_SIZE;
 
-                    using (PngByteQRCode qrCode = new(qrCodeData))
+                    byte[] data = qrCode.GetGraphic(moduleSize);
+
+                    using (MemoryStream stream = new(buffer: data, writable: false))
                     {
-                        int moduleSize = QR_MODULE_SIZE;
-
-                        byte[] data = qrCode.GetGraphic(moduleSize);
-
-                        using (MemoryStream stream = new(buffer: data, writable: false))
-                        {
-                            return SixLabors.ImageSharp.Image.Load(stream.ToArray());
-                        }
+                        return SixLabors.ImageSharp.Image.Load(stream.ToArray());
                     }
                 }
             }
-            catch
-            {
-                return null;
-            }
+        }
+        catch
+        {
+            return null;
         }
     }
 }

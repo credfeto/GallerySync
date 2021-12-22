@@ -1,15 +1,14 @@
 ﻿using System.Collections.Generic;
 
-namespace Credfeto.Gallery.Image
+namespace Credfeto.Gallery.Image;
+
+public interface IImageSettings
 {
-    public interface IImageSettings
-    {
-        int ThumbnailSize { get; }
+    int ThumbnailSize { get; }
 
-        IReadOnlyList<int> ImageMaximumDimensions { get; }
+    IReadOnlyList<int> ImageMaximumDimensions { get; }
 
-        long JpegOutputQuality { get; }
+    long JpegOutputQuality { get; }
 
-        string WatermarkImage { get; }
-    }
+    string WatermarkImage { get; }
 }

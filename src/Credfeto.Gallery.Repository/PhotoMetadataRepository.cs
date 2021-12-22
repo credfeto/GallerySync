@@ -10,75 +10,74 @@ using Credfeto.Gallery.Scanner;
 using Credfeto.Gallery.Storage;
 using Microsoft.Extensions.Logging;
 
-namespace Credfeto.Gallery.Repository
+namespace Credfeto.Gallery.Repository;
+
+public static class PhotoMetadataRepository
 {
-    public static class PhotoMetadataRepository
+    private static readonly JsonSerializerOptions SerialiserOptions = new()
+                                                                      {
+                                                                          PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                                                                          DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+                                                                          IgnoreNullValues = true,
+                                                                          WriteIndented = true,
+                                                                          PropertyNameCaseInsensitive = true
+                                                                      };
+
+    public static async Task<Photo[]> LoadRepositoryAsync(string baseFolder, ILogger logging)
     {
-        private static readonly JsonSerializerOptions SerialiserOptions = new()
-                                                                          {
-                                                                              PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                                                                              DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                                                                              IgnoreNullValues = true,
-                                                                              WriteIndented = true,
-                                                                              PropertyNameCaseInsensitive = true
-                                                                          };
+        logging.LogInformation($"Loading Repository from {baseFolder}...");
+        string[] scores = { ".info" };
 
-        public static async Task<Photo[]> LoadRepositoryAsync(string baseFolder, ILogger logging)
+        List<string> sidecarFiles = new();
+
+        PhotoInfoEmitter emitter = new(baseFolder);
+
+        if (Directory.Exists(baseFolder))
         {
-            logging.LogInformation($"Loading Repository from {baseFolder}...");
-            string[] scores = {".info"};
-
-            List<string> sidecarFiles = new();
-
-            PhotoInfoEmitter emitter = new(baseFolder);
-
-            if (Directory.Exists(baseFolder))
-            {
-                long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, scores.ToList(), sidecarFiles: sidecarFiles);
-
-                logging.LogInformation($"{baseFolder} : Files Found: {filesFound}");
-            }
-
-            return emitter.Photos;
-        }
-
-        public static async Task<Photo[]> LoadEmptyRepositoryAsync(string baseFolder, ILogger logging)
-        {
-            logging.LogInformation($"Loading Repository from {baseFolder}...");
-
-            RawFileInfoEmitter emitter = new();
-
-            string[] scores = {".xmp", ".jpg", ".cr2", ".mrw", ".rw2", ".tif", ".tiff", ".psd"};
-
-            string[] sidecarFiles = {".xmp"};
-
-            long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, extensionsToRetrieveInOrderOfPrecendence: scores, sidecarFiles: sidecarFiles);
+            long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, scores.ToList(), sidecarFiles: sidecarFiles);
 
             logging.LogInformation($"{baseFolder} : Files Found: {filesFound}");
-
-            return emitter.Photos;
         }
 
-        public static Task StoreAsync(Photo photo, string databaseOutputFolder)
-        {
-            string safeUrl = photo.UrlSafePath.Replace(oldChar: '/', newChar: Path.DirectorySeparatorChar);
-            safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
-            safeUrl += ".info";
+        return emitter.Photos;
+    }
 
-            string outputPath = Path.Combine(path1: databaseOutputFolder, path2: safeUrl);
+    public static async Task<Photo[]> LoadEmptyRepositoryAsync(string baseFolder, ILogger logging)
+    {
+        logging.LogInformation($"Loading Repository from {baseFolder}...");
 
-            // TODO: use aysnc serialize
-            string txt = JsonSerializer.Serialize(value: photo, options: SerialiserOptions);
+        RawFileInfoEmitter emitter = new();
 
-            return FileHelpers.WriteAllBytesAsync(fileName: outputPath, Encoding.UTF8.GetBytes(txt), commit: true);
-        }
+        string[] scores = { ".xmp", ".jpg", ".cr2", ".mrw", ".rw2", ".tif", ".tiff", ".psd" };
 
-        public static async Task<Photo> LoadAsync(string fileName)
-        {
-            byte[] bytes = await FileHelpers.ReadAllBytesAsync(fileName);
+        string[] sidecarFiles = { ".xmp" };
 
-            // TODO: use aysnc deserialize
-            return JsonSerializer.Deserialize<Photo>(Encoding.UTF8.GetString(bytes), options: SerialiserOptions);
-        }
+        long filesFound = await DirectoryScanner.ScanFolderAsync(baseFolder: baseFolder, fileEmitter: emitter, extensionsToRetrieveInOrderOfPrecendence: scores, sidecarFiles: sidecarFiles);
+
+        logging.LogInformation($"{baseFolder} : Files Found: {filesFound}");
+
+        return emitter.Photos;
+    }
+
+    public static Task StoreAsync(Photo photo, string databaseOutputFolder)
+    {
+        string safeUrl = photo.UrlSafePath.Replace(oldChar: '/', newChar: Path.DirectorySeparatorChar);
+        safeUrl = safeUrl.TrimEnd(Path.DirectorySeparatorChar);
+        safeUrl += ".info";
+
+        string outputPath = Path.Combine(path1: databaseOutputFolder, path2: safeUrl);
+
+        // TODO: use aysnc serialize
+        string txt = JsonSerializer.Serialize(value: photo, options: SerialiserOptions);
+
+        return FileHelpers.WriteAllBytesAsync(fileName: outputPath, Encoding.UTF8.GetBytes(txt), commit: true);
+    }
+
+    public static async Task<Photo> LoadAsync(string fileName)
+    {
+        byte[] bytes = await FileHelpers.ReadAllBytesAsync(fileName);
+
+        // TODO: use aysnc deserialize
+        return JsonSerializer.Deserialize<Photo>(Encoding.UTF8.GetString(bytes), options: SerialiserOptions);
     }
 }

@@ -1,19 +1,18 @@
-﻿namespace Credfeto.Gallery.OutputBuilder.Interfaces
+﻿namespace Credfeto.Gallery.OutputBuilder.Interfaces;
+
+public interface ISettings
 {
-    public interface ISettings
-    {
-        string RootFolder { get; }
+    string RootFolder { get; }
 
-        string BitlyApiKey { get; }
+    string BitlyApiKey { get; }
 
-        string BitlyApiUser { get; }
+    string BitlyApiUser { get; }
 
-        string DatabaseOutputFolder { get; }
+    string DatabaseOutputFolder { get; }
 
-        public string ImagesOutputPath { get; }
+    public string ImagesOutputPath { get; }
 
-        string BrokenImagesFile { get; }
+    string BrokenImagesFile { get; }
 
-        string ShortNamesFile { get; }
-    }
+    string ShortNamesFile { get; }
 }

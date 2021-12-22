@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Credfeto.Gallery.Image;
 
-namespace Credfeto.Gallery.OutputBuilder.Interfaces
+namespace Credfeto.Gallery.OutputBuilder.Interfaces;
+
+public interface IGalleryBuilder
 {
-    public interface IGalleryBuilder
-    {
-        public Task ProcessGalleryAsync(IImageSettings imageImageSettings);
-    }
+    public Task ProcessGalleryAsync(IImageSettings imageImageSettings);
 }

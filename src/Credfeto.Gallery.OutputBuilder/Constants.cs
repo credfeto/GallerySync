@@ -1,33 +1,32 @@
-﻿namespace Credfeto.Gallery.OutputBuilder
-{
-    public static class Constants
-    {
-        // V1 = Original
-        // V2 = fix to GPS...  broke Image sizes
-        // V3 = fix image sizes
-        // V4 = Another metadata fix - so it doesn't randomly wipe out items
-        // V5 = Broken images - force re-generate of all images
-        public const int CURRENT_METADATA_VERSION = 5;
+﻿namespace Credfeto.Gallery.OutputBuilder;
 
-        public const string DEFAULT_SHORT_URL = "https://www.markridgwell.co.uk/";
+public static class Constants
+{
+    // V1 = Original
+    // V2 = fix to GPS...  broke Image sizes
+    // V3 = fix image sizes
+    // V4 = Another metadata fix - so it doesn't randomly wipe out items
+    // V5 = Broken images - force re-generate of all images
+    public const int CURRENT_METADATA_VERSION = 5;
+
+    public const string DEFAULT_SHORT_URL = "https://www.markridgwell.co.uk/";
+}
+
+public static class MetadataVersionHelpers
+{
+    public static bool IsOutOfDate(int version)
+    {
+        return version < Constants.CURRENT_METADATA_VERSION;
     }
 
-    public static class MetadataVersionHelpers
+    public static bool RequiresRebuild(int version)
     {
-        public static bool IsOutOfDate(int version)
+        if (version < 5)
         {
-            return version < Constants.CURRENT_METADATA_VERSION;
+            // Broken images - force re-generate of all images
+            return true;
         }
 
-        public static bool RequiresRebuild(int version)
-        {
-            if (version < 5)
-            {
-                // Broken images - force re-generate of all images
-                return true;
-            }
-
-            return false;
-        }
+        return false;
     }
 }

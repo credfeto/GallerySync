@@ -1,9 +1,8 @@
-﻿namespace Credfeto.Gallery.UploadData
+﻿namespace Credfeto.Gallery.UploadData;
+
+public enum UploadType
 {
-    public enum UploadType
-    {
-        NEW_ITEM,
-        UPDATE_ITEM,
-        DELETE_ITEM
-    }
+    NEW_ITEM,
+    UPDATE_ITEM,
+    DELETE_ITEM
 }

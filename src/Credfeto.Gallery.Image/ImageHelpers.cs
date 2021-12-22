@@ -5,72 +5,71 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
-namespace Credfeto.Gallery.Image
-{
-    internal static class ImageHelpers
-    {
-        public static bool IsValidJpegImage(byte[] bytes, string context)
-        {
-            try
-            {
-                using (SixLabors.ImageSharp.Image.Load(data: bytes, out IImageFormat format))
-                {
-                    return format.DefaultMimeType == "image/jpeg";
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(format: "Error: {0}", arg0: context);
-                Console.WriteLine(format: "Error: {0}", arg0: exception);
+namespace Credfeto.Gallery.Image;
 
-                return false;
+internal static class ImageHelpers
+{
+    public static bool IsValidJpegImage(byte[] bytes, string context)
+    {
+        try
+        {
+            using (SixLabors.ImageSharp.Image.Load(data: bytes, out IImageFormat format))
+            {
+                return format.DefaultMimeType == "image/jpeg";
             }
         }
-
-        /// <summary>
-        ///     Rotates the image if necessary.
-        /// </summary>
-        /// <param name="image">
-        ///     The image.
-        /// </param>
-        /// <param name="degrees">
-        ///     The degrees to rotate.
-        /// </param>
-        /// <remarks>
-        ///     Only 0, 90, 180 and 270 degrees are supported.
-        /// </remarks>
-        public static void RotateImageIfNecessary<TPixel>(Image<TPixel> image, int degrees)
-            where TPixel : unmanaged, IPixel<TPixel>
+        catch (Exception exception)
         {
-            Contract.Requires(image != null);
+            Console.WriteLine(format: "Error: {0}", arg0: context);
+            Console.WriteLine(format: "Error: {0}", arg0: exception);
 
-            Contract.Requires(degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270);
+            return false;
+        }
+    }
 
-            switch (degrees)
-            {
-                case 0: // No need to rotate
+    /// <summary>
+    ///     Rotates the image if necessary.
+    /// </summary>
+    /// <param name="image">
+    ///     The image.
+    /// </param>
+    /// <param name="degrees">
+    ///     The degrees to rotate.
+    /// </param>
+    /// <remarks>
+    ///     Only 0, 90, 180 and 270 degrees are supported.
+    /// </remarks>
+    public static void RotateImageIfNecessary<TPixel>(Image<TPixel> image, int degrees)
+        where TPixel : unmanaged, IPixel<TPixel>
+    {
+        Contract.Requires(image != null);
 
-                    return;
+        Contract.Requires(degrees == 0 || degrees == 90 || degrees == 180 || degrees == 270);
 
-                case 90: // Rotate 90 degrees clockwise
-                    image.Mutate(operation: ctx => ctx.Rotate(degrees: 90));
+        switch (degrees)
+        {
+            case 0: // No need to rotate
 
-                    return;
+                return;
 
-                case 180: // Rotate upside down
-                    image.Mutate(operation: ctx => ctx.Rotate(degrees: 180));
+            case 90: // Rotate 90 degrees clockwise
+                image.Mutate(operation: ctx => ctx.Rotate(degrees: 90));
 
-                    return;
+                return;
 
-                case 270: // Rotate 90 degrees anti-clockwise
-                    image.Mutate(operation: ctx => ctx.Rotate(degrees: 270));
+            case 180: // Rotate upside down
+                image.Mutate(operation: ctx => ctx.Rotate(degrees: 180));
 
-                    return;
+                return;
 
-                default: // unknown - so can't rotate;
+            case 270: // Rotate 90 degrees anti-clockwise
+                image.Mutate(operation: ctx => ctx.Rotate(degrees: 270));
 
-                    return;
-            }
+                return;
+
+            default: // unknown - so can't rotate;
+
+                return;
         }
     }
 }

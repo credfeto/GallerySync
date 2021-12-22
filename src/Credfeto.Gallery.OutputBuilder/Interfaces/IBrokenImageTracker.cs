@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace Credfeto.Gallery.OutputBuilder.Interfaces
-{
-    public interface IBrokenImageTracker
-    {
-        void LogBrokenImage(string path, Exception exception);
+namespace Credfeto.Gallery.OutputBuilder.Interfaces;
 
-        string[] AllBrokenImages();
-    }
+public interface IBrokenImageTracker
+{
+    void LogBrokenImage(string path, Exception exception);
+
+    string[] AllBrokenImages();
 }

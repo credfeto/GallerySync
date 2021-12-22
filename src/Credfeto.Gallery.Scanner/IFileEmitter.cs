@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace Credfeto.Gallery.Scanner
+namespace Credfeto.Gallery.Scanner;
+
+public interface IFileEmitter
 {
-    public interface IFileEmitter
-    {
-        Task FileFoundAsync(FileEntry entry);
-    }
+    Task FileFoundAsync(FileEntry entry);
 }

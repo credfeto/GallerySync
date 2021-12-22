@@ -1,9 +1,8 @@
 ﻿using Credfeto.Gallery.ObjectModel;
 
-namespace Credfeto.Gallery.Image
+namespace Credfeto.Gallery.Image;
+
+public interface ISourceImageFileLocator
 {
-    public interface ISourceImageFileLocator
-    {
-        string GetFilename(Photo sourcePhoto);
-    }
+    string GetFilename(Photo sourcePhoto);
 }
