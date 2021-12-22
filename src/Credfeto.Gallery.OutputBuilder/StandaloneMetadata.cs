@@ -14,7 +14,7 @@ internal static class StandaloneMetadata
 {
     public static IReadOnlyList<PhotoMetadata> ReadMetadata(string filename, ISettings settings, ILogger logging)
     {
-        string folder = Path.GetDirectoryName(filename);
+        string folder = Path.GetDirectoryName(filename)!;
         string file = Path.GetFileName(filename);
         string extension = Path.GetExtension(filename);
 

@@ -31,8 +31,8 @@ internal static class Program
 
         ILogger logging = loggerFactory.CreateLogger(categoryName: "Credfeto.Gallery.OutputBuilder");
 
-        ISettings settings = serviceProvider.GetService<ISettings>();
-        IImageSettings imageSettings = serviceProvider.GetService<IImageSettings>();
+        ISettings settings = serviceProvider.GetRequiredService<ISettings>();
+        IImageSettings imageSettings = serviceProvider.GetRequiredService<IImageSettings>();
 
         logging.LogInformation($"Source: {settings.RootFolder}");
         logging.LogInformation($"Output: {settings.DatabaseOutputFolder}");
@@ -46,15 +46,15 @@ internal static class Program
 
         try
         {
-            IShortUrls shortUrls = serviceProvider.GetService<IShortUrls>();
+            IShortUrls shortUrls = serviceProvider.GetRequiredService<IShortUrls>();
 
             await shortUrls.LoadAsync();
 
-            IImageLoader imageLoader = serviceProvider.GetService<IImageLoader>();
+            IImageLoader imageLoader = serviceProvider.GetRequiredService<IImageLoader>();
 
             logging.LogInformation($"Supported Extensions: {string.Join(separator: ", ", values: imageLoader.SupportedExtensions)}");
 
-            IGalleryBuilder galleryBuilder = serviceProvider.GetService<IGalleryBuilder>();
+            IGalleryBuilder galleryBuilder = serviceProvider.GetRequiredService<IGalleryBuilder>();
 
             await galleryBuilder.ProcessGalleryAsync(imageSettings);
 
