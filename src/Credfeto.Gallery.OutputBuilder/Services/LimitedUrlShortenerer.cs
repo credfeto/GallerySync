@@ -98,8 +98,8 @@ public sealed class LimitedUrlShortenerer : ILimitedUrlShortener
             {
                 if (counter.Impressions < maxImpressionsPerMonth)
                 {
-                    this._logging.LogInformation(message: "Bitly Impressions for {counter.Impressions}");
-                    this._logging.LogInformation(message: "Bitly Impressions total {counter.TotalImpressionsEver}");
+                    this._logging.LogInformation(message: $"Bitly Impressions for {counter.Impressions}");
+                    this._logging.LogInformation(message: $"Bitly Impressions total {counter.TotalImpressionsEver}");
                     ++counter.Impressions;
                     ++counter.TotalImpressionsEver;
 

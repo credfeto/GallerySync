@@ -254,17 +254,7 @@ internal static class Program
                 continue;
             }
 
-            EventDesc found = null;
-
-            foreach (EventDesc eventEntry in Events)
-            {
-                if (eventEntry.PathMatch.IsMatch(folder.Path))
-                {
-                    found = eventEntry;
-
-                    break;
-                }
-            }
+            EventDesc found = Array.Find(array: Events, match: eventEntry => eventEntry.PathMatch.IsMatch(folder.Path));
 
             if (found != null)
             {
@@ -696,10 +686,8 @@ internal static class Program
 
     private static List<string> FindDeletedItems(GallerySiteIndex oldData, GallerySiteIndex data)
     {
-        List<string> oldItems = oldData.Items.Select(selector: r => r.Path)
-                                       .ToList();
-        List<string> newItems = data.Items.Select(selector: r => r.Path)
-                                    .ToList();
+        List<string> oldItems = oldData.Items.ConvertAll(r => r.Path);
+        List<string> newItems = data.Items.ConvertAll(r => r.Path);
 
         List<string> deletedItems = oldItems.Where(predicate: oldItem => !newItems.Contains(oldItem))
                                             .ToList();
