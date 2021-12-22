@@ -34,7 +34,7 @@ public sealed class RebuildDetection : IRebuildDetection
     {
         if (MetadataVersionHelpers.IsOutOfDate(targetPhoto.Version))
         {
-            this._logging.LogInformation($" +++ Metadata update: Metadata version out of date. (Current: {targetPhoto.Version} Expected: {Constants.CURRENT_METADATA_VERSION})");
+            this._logging.LogInformation($" +++ Metadata update: Metadata version out of date. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
 
             return true;
         }
@@ -98,7 +98,7 @@ public sealed class RebuildDetection : IRebuildDetection
     {
         if (MetadataVersionHelpers.RequiresRebuild(targetPhoto.Version))
         {
-            this._logging.LogInformation($" +++ Metadata update: Metadata version Requires rebuild. (Current: {targetPhoto.Version} Expected: {Constants.CURRENT_METADATA_VERSION})");
+            this._logging.LogInformation($" +++ Metadata update: Metadata version Requires rebuild. (Current: {targetPhoto.Version} Expected: {Constants.CurrentMetadataVersion})");
 
             return true;
         }

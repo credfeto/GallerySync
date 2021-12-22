@@ -335,7 +335,7 @@ public sealed class ImageExtraction : IImageExtraction
     private static string ExtractDescription(IReadOnlyList<PhotoMetadata> metadata, string url, DateTime creationDate)
     {
         string description = string.Empty;
-        PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.COMMENT));
+        PhotoMetadata desc = metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Comment));
 
         if (desc != null)
         {

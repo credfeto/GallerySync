@@ -110,7 +110,7 @@ public sealed class GalleryBuilder : IGalleryBuilder
             }
             else
             {
-                shortUrl = Constants.DEFAULT_SHORT_URL;
+                shortUrl = Constants.DefaultShortUrl;
             }
 
             if (build || rebuild || rebuildMetadata)
@@ -203,12 +203,12 @@ public sealed class GalleryBuilder : IGalleryBuilder
             sourcePhoto.ImageSizes = targetPhoto.ImageSizes;
         }
 
-        sourcePhoto.Version = Constants.CURRENT_METADATA_VERSION;
+        sourcePhoto.Version = Constants.CurrentMetadataVersion;
 
         if (targetPhoto != null)
         {
             targetPhoto.UpdateTargetWithSourceProperties(sourcePhoto);
-            targetPhoto.Version = Constants.CURRENT_METADATA_VERSION;
+            targetPhoto.Version = Constants.CurrentMetadataVersion;
 
             if (buildImages)
             {

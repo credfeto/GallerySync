@@ -80,7 +80,7 @@ public sealed class ShortUrls : IShortUrls
         }
 
         return string.IsNullOrWhiteSpace(shortUrl) || StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: url) ||
-               StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: Constants.DEFAULT_SHORT_URL);
+               StringComparer.InvariantCultureIgnoreCase.Equals(x: shortUrl, y: Constants.DefaultShortUrl);
     }
 
     public async Task LogShortUrlAsync(string url, string shortUrl)

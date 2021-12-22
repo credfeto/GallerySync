@@ -10,7 +10,7 @@ internal static class MetadataHelpers
 {
     public static DateTime ExtractCreationDate(IReadOnlyList<PhotoMetadata> metadata)
     {
-        PhotoMetadata dateTaken = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.DATE_TAKEN);
+        PhotoMetadata dateTaken = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.DateTaken);
 
         if (dateTaken == null)
         {

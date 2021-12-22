@@ -77,9 +77,9 @@ public static class XmpFile
 
         XmlNamespaceManager nsmgr = CreateNamespaceManager(doc);
 
-        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: propertyName, y: MetadataNames.KEYWORDS))
+        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: propertyName, y: MetadataNames.Keywords))
         {
-            ElementItemListLoader keywordLoader = new(property: MetadataNames.KEYWORDS, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
+            ElementItemListLoader keywordLoader = new(property: MetadataNames.Keywords, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
 
             string existingRawKeywords = keywordLoader.Read(document: doc, nameManager: nsmgr);
             IEnumerable<string> existingKeywords = from record in existingRawKeywords.Split(separator: ';') select record.ToUpperInvariant();
@@ -170,33 +170,33 @@ public static class XmpFile
     {
         Contract.Ensures(Contract.Result<IEnumerable<IItemLoader>>() != null);
 
-        yield return new AttributeItemLoader(property: MetadataNames.CAMERA_MANUFACTURER, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Make");
-        yield return new ElementItemLoader(property: MetadataNames.CAMERA_MANUFACTURER, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Make");
-        yield return new AttributeItemLoader(property: MetadataNames.CAMERA_MODEL, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Model");
-        yield return new ElementItemLoader(property: MetadataNames.CAMERA_MODEL, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Model");
-        yield return new AttributeItemLoader(property: MetadataNames.ORIENTATION, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Orientation");
-        yield return new ElementItemLoader(property: MetadataNames.ORIENTATION, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Orientation");
-        yield return new AttributeItemLoader(property: MetadataNames.EXPOSURE_TIME, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:ExposureTime");
-        yield return new ElementItemLoader(property: MetadataNames.EXPOSURE_TIME, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ExposureTime");
-        yield return new AttributeItemLoader(property: MetadataNames.APERTURE, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FNumber");
-        yield return new ElementItemLoader(property: MetadataNames.APERTURE, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FNumber");
-        yield return new AttributeItemLoader(property: MetadataNames.DATE_TAKEN, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:DateTimeOriginal");
-        yield return new ElementItemLoader(property: MetadataNames.DATE_TAKEN, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:DateTimeOriginal");
-        yield return new AttributeItemLoader(property: MetadataNames.RATING, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
-        yield return new ElementItemLoader(property: MetadataNames.RATING, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
-        yield return new AttributeItemLoader(property: MetadataNames.FOCAL_LENGTH, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FocalLength");
-        yield return new ElementItemLoader(property: MetadataNames.FOCAL_LENGTH, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FocalLength");
+        yield return new AttributeItemLoader(property: MetadataNames.CameraManufacturer, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Make");
+        yield return new ElementItemLoader(property: MetadataNames.CameraManufacturer, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Make");
+        yield return new AttributeItemLoader(property: MetadataNames.CameraModel, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Model");
+        yield return new ElementItemLoader(property: MetadataNames.CameraModel, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Model");
+        yield return new AttributeItemLoader(property: MetadataNames.Orientation, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@tiff:Orientation");
+        yield return new ElementItemLoader(property: MetadataNames.Orientation, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/tiff:Orientation");
+        yield return new AttributeItemLoader(property: MetadataNames.ExposureTime, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:ExposureTime");
+        yield return new ElementItemLoader(property: MetadataNames.ExposureTime, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ExposureTime");
+        yield return new AttributeItemLoader(property: MetadataNames.Aperture, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FNumber");
+        yield return new ElementItemLoader(property: MetadataNames.Aperture, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FNumber");
+        yield return new AttributeItemLoader(property: MetadataNames.DateTaken, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:DateTimeOriginal");
+        yield return new ElementItemLoader(property: MetadataNames.DateTaken, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:DateTimeOriginal");
+        yield return new AttributeItemLoader(property: MetadataNames.Rating, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
+        yield return new ElementItemLoader(property: MetadataNames.Rating, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@xmp:Rating");
+        yield return new AttributeItemLoader(property: MetadataNames.FocalLength, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:FocalLength");
+        yield return new ElementItemLoader(property: MetadataNames.FocalLength, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:FocalLength");
 
         //yield return new AttributeItemLoader(MetadataNames.Lens, "/x:xmpmeta/rdf:RDF/rdf:Description/@aux:Lens");
         //yield return new ElementItemLoader(MetadataNames.Lens, "/x:xmpmeta/rdf:RDF/rdf:Description/aux:Lens");
-        yield return new AttributeItemLoader(property: MetadataNames.LATITUDE, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLatitude");
-        yield return new ElementItemLoader(property: MetadataNames.LATITUDE, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLatitude");
+        yield return new AttributeItemLoader(property: MetadataNames.Latitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLatitude");
+        yield return new ElementItemLoader(property: MetadataNames.Latitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLatitude");
 
-        yield return new AttributeItemLoader(property: MetadataNames.LONGITUDE, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLongitude");
-        yield return new ElementItemLoader(property: MetadataNames.LONGITUDE, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLongitude");
+        yield return new AttributeItemLoader(property: MetadataNames.Longitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/@exif:GPSLongitude");
+        yield return new ElementItemLoader(property: MetadataNames.Longitude, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:GPSLongitude");
 
-        yield return new ElementItemLoader(property: MetadataNames.ISO_SPEED, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ISOSpeedRatings/rdf:Seq/rdf:li");
-        yield return new ElementItemListLoader(property: MetadataNames.KEYWORDS, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
+        yield return new ElementItemLoader(property: MetadataNames.IsoSpeed, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/exif:ISOSpeedRatings/rdf:Seq/rdf:li");
+        yield return new ElementItemListLoader(property: MetadataNames.Keywords, pathToItem: "/x:xmpmeta/rdf:RDF/rdf:Description/dc:subject/rdf:Bag/rdf:li");
     }
 
     /// <summary>
@@ -233,7 +233,7 @@ public static class XmpFile
 
     private static string NormalizeValue(string name, string value)
     {
-        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.FOCAL_LENGTH))
+        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.FocalLength))
         {
             if (SplitParts(value: value, out uint v1, out uint v2))
             {
@@ -243,7 +243,7 @@ public static class XmpFile
             }
         }
 
-        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.APERTURE))
+        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.Aperture))
         {
             if (SplitParts(value: value, out uint v1, out uint v2))
             {
@@ -253,7 +253,7 @@ public static class XmpFile
             }
         }
 
-        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.EXPOSURE_TIME))
+        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.ExposureTime))
         {
             if (SplitParts(value: value, out uint v1, out uint v2))
             {
@@ -263,7 +263,7 @@ public static class XmpFile
             }
         }
 
-        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.ORIENTATION))
+        if (StringComparer.InvariantCultureIgnoreCase.Equals(x: name, y: MetadataNames.Orientation))
         {
             if (int.TryParse(s: value, out int orientation))
             {

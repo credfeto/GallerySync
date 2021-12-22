@@ -466,7 +466,7 @@ internal static class Program
 
     private static void AppendKeywordsForLaterProcessing(Photo sourcePhoto, Dictionary<string, KeywordEntry> keywords)
     {
-        PhotoMetadata keywordMetadata = sourcePhoto.Metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.KEYWORDS);
+        PhotoMetadata keywordMetadata = sourcePhoto.Metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.Keywords);
 
         if (keywordMetadata != null)
         {
@@ -1025,7 +1025,7 @@ internal static class Program
 
     private static List<string> ExtractKeywords(Photo sourcePhoto)
     {
-        PhotoMetadata kwd = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.KEYWORDS));
+        PhotoMetadata kwd = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Keywords));
 
         if (kwd != null)
         {
@@ -1047,7 +1047,7 @@ internal static class Program
     {
         string[] notPublishable =
         {
-            MetadataNames.TITLE, MetadataNames.DATE_TAKEN, MetadataNames.KEYWORDS, MetadataNames.RATING, MetadataNames.LATITUDE, MetadataNames.LONGITUDE, MetadataNames.COMMENT
+            MetadataNames.Title, MetadataNames.DateTaken, MetadataNames.Keywords, MetadataNames.Rating, MetadataNames.Latitude, MetadataNames.Longitude, MetadataNames.Comment
         };
 
         return notPublishable.All(predicate: item => !StringComparer.InvariantCultureIgnoreCase.Equals(x: item, y: metadata.Name));
@@ -1056,7 +1056,7 @@ internal static class Program
     private static int ExtractRating(Photo sourcePhoto)
     {
         int rating = 1;
-        PhotoMetadata rat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.RATING));
+        PhotoMetadata rat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Rating));
 
         if (rat != null)
         {
@@ -1074,7 +1074,7 @@ internal static class Program
         dateCreated = sourcePhoto.Files.Min(selector: file => file.LastModified);
         dateUpdated = sourcePhoto.Files.Max(selector: file => file.LastModified);
 
-        PhotoMetadata taken = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.DATE_TAKEN));
+        PhotoMetadata taken = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.DateTaken));
 
         if (taken != null)
         {
@@ -1098,7 +1098,7 @@ internal static class Program
     private static string ExtractTitle(Photo sourcePhoto)
     {
         string description = string.Empty;
-        PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.TITLE));
+        PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Title));
 
         if (desc != null)
         {
@@ -1111,7 +1111,7 @@ internal static class Program
     private static string ExtractDescription(Photo sourcePhoto)
     {
         string description = string.Empty;
-        PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.COMMENT));
+        PhotoMetadata desc = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Comment));
 
         if (desc != null)
         {
@@ -1124,8 +1124,8 @@ internal static class Program
     private static Location ExtractLocation(Photo sourcePhoto)
     {
         Location location = null;
-        PhotoMetadata lat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.LATITUDE));
-        PhotoMetadata lng = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.LONGITUDE));
+        PhotoMetadata lat = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Latitude));
+        PhotoMetadata lng = sourcePhoto.Metadata.FirstOrDefault(predicate: item => StringComparer.InvariantCultureIgnoreCase.Equals(x: item.Name, y: MetadataNames.Longitude));
 
         if (lat != null && lng != null)
         {
