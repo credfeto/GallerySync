@@ -27,22 +27,22 @@
         <CodeAnalysisRuleSet>$(SolutionDir)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="ExifLib.Standard" Version="1.7.0" />
-        <PackageReference Include="Credfeto.ImageLoader.Interfaces" Version="1.0.0.2" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
-        <PackageReference Include="QRCoder" Version="1.4.1" />
-        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13" />
-        <PackageReference Include="Taglib-Sharp-NetStandard" Version="1.0.0" />
+      <PackageReference Include="ExifLib.Standard" Version="1.7.0"/>
+      <PackageReference Include="Credfeto.ImageLoader.Interfaces" Version="1.0.3.5"/>
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0"/>
+      <PackageReference Include="QRCoder" Version="1.4.3"/>
+      <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13"/>
+      <PackageReference Include="Taglib-Sharp-NetStandard" Version="1.0.0"/>
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Credfeto.Gallery.FileNaming\Credfeto.Gallery.FileNaming.csproj" />
         <ProjectReference Include="..\Credfeto.Gallery.ObjectModel\Credfeto.Gallery.ObjectModel.csproj" />
     </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="AsyncFixer" Version="1.5.1" PrivateAssets="All" />
-        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.63" PrivateAssets="All" />
-        <PackageReference Include="SonarAnalyzer.CSharp" Version="8.30.0.37606" PrivateAssets="All" />
-        <PackageReference Include="Roslynator.Analyzers" Version="3.2.2" PrivateAssets="All" />
-        <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AsyncFixer" Version="1.5.1" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.64" PrivateAssets="All"/>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.33.0.40503" PrivateAssets="All"/>
+    <PackageReference Include="Roslynator.Analyzers" Version="3.3.0" PrivateAssets="All"/>
+    <PackageReference Include="SourceLink.Create.CommandLine" Version="2.8.3" PrivateAssets="All"/>
+  </ItemGroup>
 </Project>
