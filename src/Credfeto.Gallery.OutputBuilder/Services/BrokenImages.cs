@@ -32,7 +32,7 @@ public sealed class BrokenImageTracker : IBrokenImageTracker
     {
         MethodBase method = item.TargetSite;
 
-        if (method == null)
+        if (method?.DeclaringType == null)
         {
             return "Unknown";
         }

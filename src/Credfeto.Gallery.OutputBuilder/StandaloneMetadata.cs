@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using Credfeto.Gallery.FileNaming;
 using Credfeto.Gallery.ObjectModel;
@@ -38,15 +37,14 @@ internal static class StandaloneMetadata
                           UrlSafePath = urlSafePath,
                           PathHash = Hasher.HashBytes(Encoding.UTF8.GetBytes(urlSafePath)),
                           ImageExtension = Path.GetExtension(entry.LocalFileName),
-                          Files = fileGroup.Select(selector: x => new ComponentFile
-                                                                  {
-                                                                      Extension = Path.GetExtension(x)
-                                                                                      .TrimStart(trimChar: '.'),
-                                                                      Hash = string.Empty,
-                                                                      LastModified = new DateTime(year: 2014, month: 1, day: 1),
-                                                                      FileSize = 1000
-                                                                  })
-                                           .ToList()
+                          Files = fileGroup.ConvertAll(x => new ComponentFile
+                                                            {
+                                                                Extension = Path.GetExtension(x)
+                                                                                .TrimStart(trimChar: '.'),
+                                                                Hash = string.Empty,
+                                                                LastModified = new DateTime(year: 2014, month: 1, day: 1),
+                                                                FileSize = 1000
+                                                            })
                       };
 
         List<PhotoMetadata> metadata = MetadataExtraction.ExtractMetadata(sourcePhoto: photo, settings: settings);

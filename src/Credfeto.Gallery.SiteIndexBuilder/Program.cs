@@ -732,7 +732,7 @@ internal static class Program
 
     private static async Task QueueOneNewOrModifiedItemAsync(GallerySiteIndex data, GallerySiteIndex oldData, GalleryItem item)
     {
-        GalleryItem oldItem = oldData.Items.FirstOrDefault(predicate: candidate => candidate.Path == item.Path);
+        GalleryItem oldItem = oldData.Items.Find(candidate => candidate.Path == item.Path);
 
         if (oldItem == null || !ItemUpdateHelpers.AreSame(oldItem: oldItem, other: item))
         {

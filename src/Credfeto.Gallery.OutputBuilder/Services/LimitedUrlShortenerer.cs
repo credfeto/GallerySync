@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -72,7 +71,7 @@ public sealed class LimitedUrlShortenerer : ILimitedUrlShortener
 
             DateTime now = DateTime.UtcNow;
 
-            ShortenerCount counter = tracking.FirstOrDefault(predicate: item => item.Year == now.Year && item.Month == now.Month);
+            ShortenerCount counter = tracking.Find(item => item.Year == now.Year && item.Month == now.Month);
 
             if (counter == null)
             {

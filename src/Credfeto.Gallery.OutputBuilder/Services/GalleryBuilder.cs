@@ -67,7 +67,7 @@ public sealed class GalleryBuilder : IGalleryBuilder
 
         try
         {
-            Photo targetPhoto = target.FirstOrDefault(predicate: item => item.PathHash == sourcePhoto.PathHash);
+            Photo targetPhoto = Array.Find(array: target, match: item => item.PathHash == sourcePhoto.PathHash);
             bool build = targetPhoto == null;
             bool rebuild = targetPhoto != null &&
                            await this._rebuildDetection.NeedsFullResizedImageRebuildAsync(sourcePhoto: sourcePhoto,

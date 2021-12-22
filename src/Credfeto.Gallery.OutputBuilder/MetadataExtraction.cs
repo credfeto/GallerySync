@@ -50,16 +50,17 @@ internal static class MetadataExtraction
 
         ExtractXmpMetadata(sourcePhoto: sourcePhoto, metadata: metadata, rootFolder: rootFolder);
 
-        foreach (ComponentFile extension in sourcePhoto.Files.Where(predicate: candidate => !IsXmp(candidate)))
+        foreach (string extension in sourcePhoto.Files.Where(predicate: candidate => !IsXmp(candidate))
+                                                .Select(extension => extension.Extension))
         {
-            string filename = Path.Combine(path1: rootFolder, sourcePhoto.BasePath + extension.Extension);
+            string filename = Path.Combine(path1: rootFolder, sourcePhoto.BasePath + extension);
 
-            if (SupportsXmp(extension.Extension))
+            if (SupportsXmp(extension))
             {
                 ExtractMetadataFromXmp(metadata: metadata, fileName: filename);
             }
 
-            if (SupportsExif(extension.Extension))
+            if (SupportsExif(extension))
             {
                 ExtractMetadataFromImage(metadata: metadata, fileName: filename);
             }
@@ -119,9 +120,7 @@ internal static class MetadataExtraction
                         return;
                     }
 
-                    ImageTag tag = file.GetTag(TagTypes.XMP) as ImageTag;
-
-                    if (tag != null && !tag.IsEmpty)
+                    if (file.GetTag(TagTypes.XMP) is ImageTag tag && !tag.IsEmpty)
                     {
                         ExtractXmpTagCommon(metadata: metadata, tag: tag);
                     }
@@ -404,7 +403,7 @@ internal static class MetadataExtraction
 
         if (!string.IsNullOrWhiteSpace(keywords))
         {
-            PhotoMetadata existing = metadata.FirstOrDefault(predicate: candidate => candidate.Name == MetadataNames.Keywords);
+            PhotoMetadata existing = metadata.Find(candidate => candidate.Name == MetadataNames.Keywords);
 
             if (existing == null)
             {
