@@ -74,17 +74,17 @@ namespace Credfeto.Gallery.Scanner
                                                     .Select(selector: match => Path.GetFileName(match))
                                  };
 
-            foreach (var fileGroup in grouped)
+            foreach (IReadOnlyList<string> items in grouped.Select(fileGroup => fileGroup.Items.ToArray()))
             {
-                string file = fileGroup.Items.First();
+                string file = items[0];
 
                 context.FilesToProcess.Enqueue(new FileEntry
                                                {
                                                    Folder = folder,
                                                    RelativeFolder = folder.Substring(context.BaseFolder.Length + 1),
                                                    LocalFileName = file,
-                                                   AlternateFileNames = fileGroup.Items.Skip(count: 1)
-                                                                                 .ToList()
+                                                   AlternateFileNames = items.Skip(count: 1)
+                                                                             .ToList()
                                                });
             }
         }
@@ -141,7 +141,7 @@ namespace Credfeto.Gallery.Scanner
             {
                 Func<IEnumerable<string>, bool> sidecarProcessor;
 
-                if (sidecarExtensions.Any())
+                if (sidecarExtensions.Count != 0)
                 {
                     sidecarProcessor = matches => matches.Any(predicate: match => IsNotSidecarExtension(sidecarExtensions: sidecarExtensions, match: match));
                 }
