@@ -2,7 +2,7 @@
 
 namespace Credfeto.Gallery.Scanner;
 
-public class FileEntry
+public sealed class FileEntry
 {
     public string Folder { get; set; }
 
