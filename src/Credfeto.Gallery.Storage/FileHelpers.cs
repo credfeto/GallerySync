@@ -77,21 +77,14 @@ public static class FileHelpers
 
         if (bytes.Length != written.Length)
         {
-            throw new FileContentException(string.Format(format: "File {0} does not contain the bytes that were written (size different Src:{1} != Dest:{2})",
-                                                         arg0: path,
-                                                         arg1: bytes.Length,
-                                                         arg2: written.Length));
+            throw new FileContentException($"File {path} does not contain the bytes that were written (size different Src:{bytes.Length} != Dest:{written.Length})");
         }
 
         for (int pos = 0; pos < bytes.Length; ++pos)
         {
             if (bytes[pos] != written[pos])
             {
-                throw new FileContentException(string.Format(format: "File {0} does not contain the bytes that were written (different at position {1} Src:{2} != Dest:{3})",
-                                                             path,
-                                                             pos,
-                                                             bytes[pos],
-                                                             written[pos]));
+                throw new FileContentException($"File {path} does not contain the bytes that were written (different at position {pos} Src:{bytes[pos]} != Dest:{written[pos]})");
             }
         }
     }
