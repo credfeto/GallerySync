@@ -7,7 +7,7 @@ namespace Credfeto.Gallery.ObjectModel;
 
 [Serializable]
 [DebuggerDisplay(value: "BasePath: {BasePath}, Image:{ImageExtension} Hash:{PathHash}")]
-public class Photo
+public sealed class Photo
 {
     public int Version { get; set; }
 

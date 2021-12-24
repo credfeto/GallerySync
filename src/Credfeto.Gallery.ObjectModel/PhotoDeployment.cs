@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Credfeto.Gallery.ObjectModel;
 
 [Serializable]
-public class PhotoDeployment
+public sealed class PhotoDeployment
 {
     public Dictionary<string, Photo> Photos { get; } = new();
 }

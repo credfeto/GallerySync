@@ -5,7 +5,7 @@ namespace Credfeto.Gallery.ObjectModel;
 
 [Serializable]
 [DebuggerDisplay(value: "Extension: {Extension}, Hash:{Hash}")]
-public class ComponentFile
+public sealed class ComponentFile
 {
     public string Extension { get; set; }
 

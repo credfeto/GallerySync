@@ -5,7 +5,7 @@ namespace Credfeto.Gallery.ObjectModel;
 
 [Serializable]
 [DebuggerDisplay(value: "Name: {Name}, Value: {Value}")]
-public class PhotoMetadata : IEquatable<PhotoMetadata>
+public sealed class PhotoMetadata : IEquatable<PhotoMetadata>
 {
     public string Name { get; set; }
 

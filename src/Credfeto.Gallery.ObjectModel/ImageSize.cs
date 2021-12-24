@@ -5,7 +5,7 @@ namespace Credfeto.Gallery.ObjectModel;
 
 [Serializable]
 [DebuggerDisplay(value: "Width: {Width}, Height:{Height}")]
-public class ImageSize : IEquatable<ImageSize>
+public sealed class ImageSize : IEquatable<ImageSize>
 {
     public int Width { get; set; }
 

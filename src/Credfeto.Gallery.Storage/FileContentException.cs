@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Credfeto.Gallery.Storage;
 
 [Serializable]
-public class FileContentException : Exception
+public sealed class FileContentException : Exception
 {
     public FileContentException(string message)
         : base(message)
