@@ -48,10 +48,7 @@ public sealed class PhotoMetadata : IEquatable<PhotoMetadata>
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            return ((this.Name != null ? this.Name.GetHashCode() : 0) * 397) ^ (this.Value != null ? this.Value.GetHashCode() : 0);
-        }
+        return HashCode.Combine(value1: this.Name, value2: this.Value);
     }
 
     public static bool operator ==(PhotoMetadata left, PhotoMetadata right)

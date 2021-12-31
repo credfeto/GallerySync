@@ -41,13 +41,15 @@ public static class FileHelpers
                 // CommitFileChange(fileName);
             }
         }
-        catch (IOException)
+        catch (IOException exception)
         {
             // Don't care
+            Console.WriteLine(exception.Message);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException exception)
         {
             // Don't care
+            Console.WriteLine(exception.Message);
         }
     }
 
@@ -64,9 +66,10 @@ public static class FileHelpers
             {
                 DeleteFile(fileName);
             }
-            catch
+            catch (Exception exception)
             {
                 // Don't care if it fails
+                Console.WriteLine(exception.Message);
             }
         }
     }

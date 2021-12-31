@@ -55,21 +55,25 @@ public static class DirectoryScanner
     {
         string[] raw = Directory.GetFiles(path: folder, searchPattern: "*");
 
-        var grouped = from record in raw
-                      let extension = Path.GetExtension(record)
-                                          .ToLowerInvariant()
-                      where context.ExtensionsToRetrieveInOrderOfPrecendence.Contains(extension)
-                      group record by Path.GetFileNameWithoutExtension(record)
-                                          .ToLowerInvariant()
-                      into matches
-                      where context.HasRequiredExtensionMatch(matches)
-                      select new
-                             {
-                                 BaseName = matches.Key,
-                                 Items = matches.OrderByDescending(keySelector: match => ExtensionScore(scores: context.ExtensionsToRetrieveInOrderOfPrecendence, match: match))
-                                                .ThenBy(Path.GetExtension)
-                                                .Select(selector: match => Path.GetFileName(match))
-                             };
+        var grouped = raw.Select(record => new
+                                           {
+                                               record,
+                                               extension = Path.GetExtension(record)
+                                                               .ToLowerInvariant()
+                                           })
+                         .Where(t => context.ExtensionsToRetrieveInOrderOfPrecendence.Contains(value: t.extension, comparer: StringComparer.OrdinalIgnoreCase))
+                         .GroupBy(keySelector: t => Path.GetFileNameWithoutExtension(t.record)
+                                                        .ToLowerInvariant(),
+                                  elementSelector: t => t.record,
+                                  comparer: StringComparer.OrdinalIgnoreCase)
+                         .Where(context.HasRequiredExtensionMatch)
+                         .Select(matches => new
+                                            {
+                                                BaseName = matches.Key,
+                                                Items = matches.OrderByDescending(keySelector: match => ExtensionScore(scores: context.ExtensionsToRetrieveInOrderOfPrecendence, match: match))
+                                                               .ThenBy(Path.GetExtension)
+                                                               .Select(selector: Path.GetFileName)
+                                            });
 
         foreach (IReadOnlyList<string> items in grouped.Select(fileGroup => fileGroup.Items.ToArray()))
         {
@@ -152,8 +156,7 @@ public static class DirectoryScanner
 
         private static bool IsNotSidecarExtension(IReadOnlyList<string> sidecarExtensions, string match)
         {
-            return !sidecarExtensions.Contains(Path.GetExtension(match)
-                                                   .ToLowerInvariant());
+            return !sidecarExtensions.Contains(Path.GetExtension(match), comparer: StringComparer.OrdinalIgnoreCase);
         }
 
         public bool HasRequiredExtensionMatch(IEnumerable<string> matches)
