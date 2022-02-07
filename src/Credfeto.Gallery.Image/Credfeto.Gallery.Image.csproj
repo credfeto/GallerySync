@@ -28,7 +28,7 @@
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="ExifLib.Standard" Version="1.7.0"/>
-      <PackageReference Include="Credfeto.ImageLoader.Interfaces" Version="1.0.3.5"/>
+      <PackageReference Include="Credfeto.ImageLoader.Interfaces" Version="1.0.7.9"/>
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0"/>
       <PackageReference Include="QRCoder" Version="1.4.3"/>
       <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13"/>
