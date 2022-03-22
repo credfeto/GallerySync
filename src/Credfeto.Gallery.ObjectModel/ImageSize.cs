@@ -11,7 +11,7 @@ public sealed class ImageSize : IEquatable<ImageSize>
 
     public int Height { get; set; }
 
-    public bool Equals(ImageSize other)
+    public bool Equals(ImageSize? other)
     {
         if (ReferenceEquals(objA: null, objB: other))
         {
@@ -26,7 +26,7 @@ public sealed class ImageSize : IEquatable<ImageSize>
         return this.Width == other.Width && this.Height == other.Height;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (ReferenceEquals(objA: null, objB: obj))
         {

@@ -4,11 +4,11 @@ namespace Credfeto.Gallery.Scanner;
 
 public sealed class FileEntry
 {
-    public string Folder { get; set; }
+    public string Folder { get; set; } = default!;
 
-    public string RelativeFolder { get; set; }
+    public string RelativeFolder { get; set; } = default!;
 
-    public string LocalFileName { get; set; }
+    public string LocalFileName { get; set; } = default!;
 
-    public IReadOnlyList<string> AlternateFileNames { get; set; }
+    public IReadOnlyList<string> AlternateFileNames { get; set; } = default!;
 }

@@ -7,11 +7,11 @@ namespace Credfeto.Gallery.ObjectModel;
 [DebuggerDisplay(value: "Name: {Name}, Value: {Value}")]
 public sealed class PhotoMetadata : IEquatable<PhotoMetadata>
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = default!;
 
-    public string Value { get; set; }
+    public string Value { get; set; } = default!;
 
-    public bool Equals(PhotoMetadata other)
+    public bool Equals(PhotoMetadata? other)
     {
         if (ReferenceEquals(objA: null, objB: other))
         {
@@ -26,7 +26,7 @@ public sealed class PhotoMetadata : IEquatable<PhotoMetadata>
         return this.Name == other.Name && this.Value == other.Value;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (ReferenceEquals(objA: null, objB: obj))
         {

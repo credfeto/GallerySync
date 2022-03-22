@@ -12,20 +12,20 @@ public sealed class Photo
     public int Version { get; set; }
 
     [SuppressMessage(category: "Microsoft.Design", checkId: "CA1056:UriPropertiesShouldNotBeStrings", Justification = "Serialized as string")]
-    public string UrlSafePath { get; set; }
+    public string UrlSafePath { get; set; } = default!;
 
-    public string BasePath { get; set; }
+    public string BasePath { get; set; } = default!;
 
-    public string PathHash { get; set; }
+    public string PathHash { get; set; } = default!;
 
-    public string ImageExtension { get; set; }
+    public string ImageExtension { get; set; } = default!;
 
-    public IReadOnlyList<ComponentFile> Files { get; set; }
+    public IReadOnlyList<ComponentFile> Files { get; set; } = default!;
 
-    public IReadOnlyList<PhotoMetadata> Metadata { get; set; }
+    public IReadOnlyList<PhotoMetadata> Metadata { get; set; } = default!;
 
-    public IReadOnlyList<ImageSize> ImageSizes { get; set; }
+    public IReadOnlyList<ImageSize> ImageSizes { get; set; } = default!;
 
     [SuppressMessage(category: "Microsoft.Design", checkId: "CA1056:UriPropertiesShouldNotBeStrings", Justification = "Serialized as string")]
-    public string ShortUrl { get; set; }
+    public string ShortUrl { get; set; } = default!;
 }

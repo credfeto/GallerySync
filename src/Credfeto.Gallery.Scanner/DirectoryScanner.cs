@@ -32,9 +32,9 @@ public static class DirectoryScanner
 
         while (more)
         {
-            more = context.FilesToProcess.TryDequeue(out FileEntry entry);
+            more = context.FilesToProcess.TryDequeue(out FileEntry? entry);
 
-            if (more)
+            if (more && entry != null)
             {
                 ++filesFound;
                 await context.FileEmitter.FileFoundAsync(entry);
@@ -56,47 +56,47 @@ public static class DirectoryScanner
         string[] raw = Directory.GetFiles(path: folder, searchPattern: "*");
 
         var grouped = raw.Select(record => new
-                                           {
-                                               record,
-                                               extension = Path.GetExtension(record)
-                                                               .ToLowerInvariant()
-                                           })
-                         .Where(t => context.ExtensionsToRetrieveInOrderOfPrecendence.Contains(value: t.extension, comparer: StringComparer.OrdinalIgnoreCase))
-                         .GroupBy(keySelector: t => Path.GetFileNameWithoutExtension(t.record)
-                                                        .ToLowerInvariant(),
-                                  elementSelector: t => t.record,
-                                  comparer: StringComparer.OrdinalIgnoreCase)
-                         .Where(context.HasRequiredExtensionMatch)
-                         .Select(matches => new
-                                            {
-                                                BaseName = matches.Key,
-                                                Items = matches.OrderByDescending(keySelector: match => ExtensionScore(scores: context.ExtensionsToRetrieveInOrderOfPrecendence, match: match))
-                                                               .ThenBy(Path.GetExtension)
-                                                               .Select(selector: Path.GetFileName)
-                                            });
+            {
+                record,
+                extension = Path.GetExtension(record)
+                    .ToLowerInvariant()
+            })
+            .Where(t => context.ExtensionsToRetrieveInOrderOfPrecendence.Contains(value: t.extension, comparer: StringComparer.OrdinalIgnoreCase))
+            .GroupBy(keySelector: t => Path.GetFileNameWithoutExtension(t.record)
+                    .ToLowerInvariant(),
+                elementSelector: t => t.record,
+                comparer: StringComparer.OrdinalIgnoreCase)
+            .Where(context.HasRequiredExtensionMatch)
+            .Select(matches => new
+            {
+                BaseName = matches.Key,
+                Items = matches.OrderByDescending(keySelector: match => ExtensionScore(scores: context.ExtensionsToRetrieveInOrderOfPrecendence, match: match))
+                    .ThenBy(Path.GetExtension)
+                    .Select(x => Path.GetFileName(x)!)
+            });
 
         foreach (IReadOnlyList<string> items in grouped.Select(fileGroup => fileGroup.Items.ToArray()))
         {
             string file = items[0];
 
             context.FilesToProcess.Enqueue(new FileEntry
-                                           {
-                                               Folder = folder,
-                                               RelativeFolder = folder.Substring(context.BaseFolder.Length + 1),
-                                               LocalFileName = file,
-                                               AlternateFileNames = items.Skip(count: 1)
-                                                                         .ToList()
-                                           });
+            {
+                Folder = folder,
+                RelativeFolder = folder.Substring(context.BaseFolder.Length + 1),
+                LocalFileName = file,
+                AlternateFileNames = items.Skip(count: 1)
+                    .ToList()
+            });
         }
     }
 
     private static int ExtensionScore(IReadOnlyList<string> scores, string match)
     {
         string extension = Path.GetExtension(match)
-                               .ToLowerInvariant();
+            .ToLowerInvariant();
 
         var found = scores.Select((c, i) => new { Ext = c, Index = i })
-                          .FirstOrDefault(x => extension == x.Ext);
+            .FirstOrDefault(x => extension == x.Ext);
 
         return found?.Index ?? -1;
     }
@@ -104,11 +104,11 @@ public static class DirectoryScanner
     private static Task FindSubFoldersAsync(string folder, Context context)
     {
         string[] folders = Directory.GetDirectories(path: folder, searchPattern: "*")
-                                    .Where(predicate: subFolder => !IsSkipFolderName(subFolder.Substring(folder.Length + 1)))
-                                    .ToArray();
+            .Where(predicate: subFolder => !IsSkipFolderName(subFolder.Substring(folder.Length + 1)))
+            .ToArray();
 
         return Task.WhenAll(folders.Select(selector: subFolder => ScanSubFolderAsync(folder: subFolder, context: context))
-                                   .ToArray());
+            .ToArray());
     }
 
     private static bool IsSkipFolderName(string folder)

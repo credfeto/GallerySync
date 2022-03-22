@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -22,7 +23,7 @@ public static class FileHelpers
 
     private static void EnsureFolderExists(string fileName)
     {
-        string path = Path.GetDirectoryName(fileName);
+        string path = Path.GetDirectoryName(fileName)!;
 
         if (!Directory.Exists(path))
         {
@@ -185,7 +186,7 @@ public static class FileHelpers
 
         try
         {
-            string workDir = Path.GetDirectoryName(fileName);
+            string workDir = Path.GetDirectoryName(fileName)!;
 
             using (Repository repo = OpenRepository(workDir))
             {
@@ -198,7 +199,7 @@ public static class FileHelpers
 
                 Commands.Stage(repository: repo, path: localFile);
 
-                Signature author = new(name: "Mark Ridgwell", email: "@credfeto@users.noreply.github.com", when: DateTime.UtcNow);
+                Signature author = new("Mark Ridgwell", "@credfeto@users.noreply.github.com", CurrentTime());
                 Signature committer = author;
 
                 repo.Commit($"Updated {localFile}", author: author, committer: committer);
@@ -212,6 +213,12 @@ public static class FileHelpers
         {
             CommitLock.Release();
         }
+    }
+
+    [SuppressMessage("FunFair.CodeAnalysis", "FFS0002: Use an testable abstraction rather than DateTime.UtcNow", Justification = "This is the abstraction")]
+    private static DateTime CurrentTime()
+    {
+        return DateTime.UtcNow;
     }
 
     private static string GetLocalRepoFile(Repository repo, string fileName)

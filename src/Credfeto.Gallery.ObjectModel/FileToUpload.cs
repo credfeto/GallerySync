@@ -5,7 +5,7 @@ namespace Credfeto.Gallery.ObjectModel;
 [Serializable]
 public sealed class FileToUpload
 {
-    public string FileName { get; set; }
+    public string FileName { get; set; } = default!;
 
-    public bool Completed { get; set; }
+    public bool Completed { get; set; } = default!;
 }

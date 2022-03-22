@@ -7,9 +7,9 @@ namespace Credfeto.Gallery.ObjectModel;
 [DebuggerDisplay(value: "Extension: {Extension}, Hash:{Hash}")]
 public sealed class ComponentFile
 {
-    public string Extension { get; set; }
+    public string Extension { get; set; } = default!;
 
-    public string Hash { get; set; }
+    public string Hash { get; set; } = default!;
 
     public DateTime LastModified { get; set; }
 
