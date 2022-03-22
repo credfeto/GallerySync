@@ -7,7 +7,7 @@ using Credfeto.Gallery.Scanner;
 
 namespace Credfeto.Gallery.Repository.Emitters;
 
-public class PhotoInfoEmitter : IFileEmitter
+public sealed class PhotoInfoEmitter : IFileEmitter
 {
     private readonly string _basePath;
     private readonly ConcurrentBag<Photo> _photos = new();
@@ -31,6 +31,6 @@ public class PhotoInfoEmitter : IFileEmitter
     private Photo[] OrderedPhotos()
     {
         return this._photos.OrderBy(keySelector: x => x.UrlSafePath)
-                   .ToArray();
+            .ToArray();
     }
 }
