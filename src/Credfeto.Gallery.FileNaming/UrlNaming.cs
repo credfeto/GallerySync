@@ -11,29 +11,33 @@ public static class UrlNaming
 {
     private const string REPLACEMENT_CHAR = "-";
 
-    private static readonly Regex AcceptableUrlCharacters = new(pattern: @"[^\w\-/]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly TimeSpan RegexTimeOut = TimeSpan.FromSeconds(5);
 
-    private static readonly Regex NoRepeatingHyphens = new(pattern: @"(\-{2,})", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex AcceptableUrlCharacters = new(@"[^\w\-/]", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, RegexTimeOut);
 
-    private static readonly Regex NoHyphensNextToSlash = new(pattern: @"(\-*/\-*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex NoRepeatingHyphens = new(@"(\-{2,})", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, RegexTimeOut);
 
-    [SuppressMessage(category: "Microsoft.Design", checkId: "CA1055:UriReturnValuesShouldNotBeStrings", Justification = "Its a fragment")]
+    private static readonly Regex NoHyphensNextToSlash = new(@"(\-*/\-*)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, RegexTimeOut);
+
+
+    [SuppressMessage("Microsoft.Design", "CA1055:UriReturnValuesShouldNotBeStrings", Justification = "Its a fragment")]
     public static string BuildUrlSafePath(string basePath)
     {
-        string root = RemoveDiacritics(basePath.Trim() + "/", compatNorm: true, customFolding: NormaliseLWithStroke);
+        string root = RemoveDiacritics(basePath.Trim() + "/", true, NormaliseLWithStroke);
         root = RemoveApostrophes(root);
 
         return NoHyphensNextToSlash
-               .Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(root.Replace(oldValue: @"\", newValue: @"/"), replacement: REPLACEMENT_CHAR), replacement: REPLACEMENT_CHAR),
-                        replacement: "/")
-               .TrimEnd(REPLACEMENT_CHAR.ToCharArray())
-               .ToLowerInvariant();
+            .Replace(NoRepeatingHyphens.Replace(AcceptableUrlCharacters.Replace(
+                    root.Replace(@"\", @"/", StringComparison.Ordinal), REPLACEMENT_CHAR), REPLACEMENT_CHAR),
+                "/")
+            .TrimEnd(REPLACEMENT_CHAR.ToCharArray())
+            .ToLowerInvariant();
     }
 
     private static string RemoveApostrophes(string root)
     {
-        return root.Replace(oldValue: "'s", newValue: "s")
-                   .Replace(oldValue: "'S", newValue: "S");
+        return root.Replace("'s", "s", StringComparison.Ordinal)
+            .Replace("'S", "S", StringComparison.Ordinal);
     }
 
     private static IEnumerable<char> RemoveDiacriticsEnum(string src, bool compatNorm, Func<char, char> customFolding)
@@ -59,14 +63,14 @@ public static class UrlNaming
 
     internal static IEnumerable<char> RemoveDiacriticsEnum(string src, bool compatNorm)
     {
-        return RemoveDiacritics(src: src, compatNorm: compatNorm, customFolding: c => c);
+        return RemoveDiacritics(src, compatNorm, c => c);
     }
 
     public static string RemoveDiacritics(string src, bool compatNorm, Func<char, char> customFolding)
     {
         StringBuilder sb = new();
 
-        foreach (char c in RemoveDiacriticsEnum(src: src, compatNorm: compatNorm, customFolding: customFolding))
+        foreach (char c in RemoveDiacriticsEnum(src, compatNorm, customFolding))
         {
             sb.Append(c);
         }
@@ -76,7 +80,7 @@ public static class UrlNaming
 
     public static string RemoveDiacritics(string src, bool compatNorm)
     {
-        return RemoveDiacritics(src: src, compatNorm: compatNorm, customFolding: c => c);
+        return RemoveDiacritics(src, compatNorm, c => c);
     }
 
     private static char NormaliseLWithStroke(char c)

@@ -19,8 +19,8 @@ public static class Hasher
         using (SHA512 hasher = SHA512.Create())
         {
             return BitConverter.ToString(hasher.ComputeHash(bytes))
-                               .Replace(oldValue: "-", newValue: string.Empty)
-                               .ToLowerInvariant();
+                .Replace("-", string.Empty, StringComparison.Ordinal)
+                .ToLowerInvariant();
         }
     }
 }

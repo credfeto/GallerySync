@@ -18,16 +18,16 @@ public static class StringExtensions
             return string.Empty;
         }
 
-        Match match = Regex.Match(input: name, pattern: DATE_MATCH_REGEX, options: RegexOptions.Singleline);
+        Match match = Regex.Match(name, DATE_MATCH_REGEX, RegexOptions.Singleline | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(5));
 
         if (match.Success)
         {
             string datePart = match.Value.Trim();
 
-            if (DateTime.TryParse(s: datePart, out DateTime date))
+            if (DateTime.TryParse(datePart, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime date))
             {
                 string fieldEnd = name.Remove(startIndex: 0, count: match.Value.Length)
-                                      .TrimStart(NAME_PREFIX_STRIP_CHARACTERS.ToCharArray());
+                    .TrimStart(NAME_PREFIX_STRIP_CHARACTERS.ToCharArray());
 
                 return string.IsNullOrEmpty(fieldEnd)
                     ? string.Format(provider: CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), arg0: date)
@@ -45,13 +45,13 @@ public static class StringExtensions
             return string.Empty;
         }
 
-        Match match = Regex.Match(input: name, pattern: DATE_MATCH_REGEX, options: RegexOptions.Singleline);
+        Match match = Regex.Match(name, DATE_MATCH_REGEX, RegexOptions.Singleline | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(5));
 
         if (match.Success)
         {
             string datePart = match.Value.Trim();
 
-            if (DateTime.TryParse(s: datePart, out DateTime date))
+            if (DateTime.TryParse(datePart, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime date))
             {
                 return string.Format(provider: CultureInfo.InvariantCulture, GetDateFormatString(dateFormat), arg0: date);
             }
